@@ -1,6 +1,4 @@
-import { 
-    TByte, 
-} from '../constant/type'
+import { TByte } from '../constant/type'
 
 const MAX_UINT_8 = BigInt(256)
 const MAX_UINT_16 = BigInt(65536)
@@ -77,7 +75,7 @@ export const ByteArrayToString = (array: TByte[]): string => {
     return out;
 }
 
-export const ByteArrayToInt = (value: TByte[], isUnsigned: boolean) => {
+export const ByteArrayToInt = (value: TByte[], isNegative: boolean) => {
     let binaryStr = '';
 
     let MAX = MAX_UINT_8
@@ -105,11 +103,31 @@ export const ByteArrayToInt = (value: TByte[], isUnsigned: boolean) => {
         currentBinaryVal *= TWO
     }
 
-    if (isUnsigned) {
+    if (isNegative) {
         n -= MAX 
     }
     return n
 }
+
+export const AreEqual = (a1: TByte[], a2: TByte[]) => {
+    if (a1.length != a2.length){
+        return false
+    }
+    for (let i =0; i < a1.length; i++){
+        if (a1[i] != a2[i]){
+            return false
+        }
+    }
+    return true
+} 
+
+export const DecodeArrayInt = (array: TByte[][]): BigInt[] => {
+    let ret: BigInt[] = []
+    for (let i = 0; i < array.length; i++) {
+        ret[i] = ByteArrayToInt(array[i], false)
+    }
+    return ret
+} 
 
 export const IntToByteArray = (val: BigInt) => {
     return intToByteArray(val, 'int32', false)
@@ -149,3 +167,4 @@ const intToByteArray = (val: BigInt, valType: 'int8' | 'int16' | 'int32' | 'int6
     }
     return ret
 }
+

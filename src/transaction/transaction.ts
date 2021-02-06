@@ -1,7 +1,7 @@
 import { TByte } from '../constant/type'
 import { IInput } from './input'
 import { IOutput } from './output' 
-import { StringToByteArray, ByteArrayToString } from '../util'
+import { StringToByteArray, ByteArrayToString, Int64ToByteArray, IntToByteArray, ByteArrayToInt } from '../util'
 import createHash from 'create-hash'
 
 export interface ITransaction {
@@ -11,7 +11,7 @@ export interface ITransaction {
 	outputs: IOutput[] 
 }
 
-class Transaction {
+export class Transaction {
 
     static Deserialize = (serialized: TByte[]): Transaction => {
         return new Transaction(JSON.parse(ByteArrayToString(serialized)))
@@ -25,13 +25,12 @@ class Transaction {
 
     Serialize = () => StringToByteArray(JSON.stringify(this.tx))
 
-    GetTime = () => {
-        const data = new Uint8Array(this.tx.t)
-        var dataView = new DataView(data.buffer);
-        return dataView.getBigUint64(0)
-    }
+    GetTime = () => this.tx.t
+    GetTimeInt = () => ByteArrayToInt(this.GetTime(), false)
 
-    GetHash = () => createHash('sha256').update(Buffer.from(this.Serialize())).digest();
+    GetHash = () => StringToByteArray(createHash('sha256').update(Buffer.from(this.Serialize())).digest().toString())
+
+
 
     IsLugh = () => this.tx.inputs.length == 1 && this.tx.inputs[0].prev_transaction_hash.length == 0 
 }

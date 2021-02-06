@@ -2,7 +2,8 @@ export {
     IntToByteArray,
     Int64ToByteArray,
     ByteArrayToInt,
-    // ByteArrayToInt64,
     StringToByteArray,
-    ByteArrayToString
+    ByteArrayToString,
+    DecodeArrayInt,
+    AreEqual
  } from './bytes'
