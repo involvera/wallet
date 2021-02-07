@@ -9,6 +9,8 @@
   "dependencies": {
     "@types/base-x": "^3.0.6",
     "@types/create-hash": "^1.2.2",
+    "@types/tiny-secp256k1": "^1.0.0",
+    "acey": "^1.4.5",
     "base-x": "^3.0.8",
     "bip32": "^2.0.6",
     "bip39": "^3.0.3",

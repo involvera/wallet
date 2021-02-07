@@ -1,5 +1,6 @@
-import { IInput } from './input'
-import { IOutput } from './output' 
+import { Model } from 'acey'
+import { IInput, Input, InputList } from './input'
+import { IOutput, Output, OutputList } from './output' 
 import { StringToByteArray, ByteArrayToString, ByteArrayToInt, Sha256 } from '../util'
 
 export interface ITransaction {
@@ -9,27 +10,32 @@ export interface ITransaction {
 	outputs: IOutput[] 
 }
 
-export class Transaction {
+export class Transaction extends Model {
 
-    static Deserialize = (serialized: Uint8Array): Transaction => {
-        return new Transaction(JSON.parse(ByteArrayToString(serialized)))
+    static deserialize = (serialized: Uint8Array): ITransaction => {
+        return JSON.parse(ByteArrayToString(serialized))
     }
 
-    public tx: ITransaction
-    
-    constructor(tx: ITransaction) {
-        this.tx = tx
+    constructor(tx: ITransaction, options: any) {
+        super(tx, options)
+        this.setState({
+            inputs: new InputList(this.state.inputs, this.kids()),
+            outputs: new InputList(this.state.outputs, this.kids()),
+        })
     }
 
-    Serialize = () => StringToByteArray(JSON.stringify(this.tx))
+    serialize = () => StringToByteArray(this.to().string())
 
-    GetTime = () => this.tx.t
-    GetTimeInt = () => ByteArrayToInt(this.GetTime(), false)
+    getTime = () => this.state.t
+    getTimeInt = () => ByteArrayToInt(this.getTime(), false)
 
-    GetHash = () => Sha256(this.Serialize())
+    getInputAt = (idx: number) => this.getInputs().nodeAt(idx) as Input
+    getOutputAt = (idx: number) => this.getOutputs().nodeAt(idx) as Output
 
+    getHash = () => Sha256(this.serialize())
+    getInputs = (): InputList => this.state.inputs
+    getOutputs = (): OutputList => this.state.outputs
 
-
-    IsLugh = () => this.tx.inputs.length == 1 && this.tx.inputs[0].prev_transaction_hash.length == 0 
+    gsLugh = () => this.getInputs().count() == 1 && this.getInputAt(0) && this.getInputAt(0).prevTxHash().length == 0
 }
 

@@ -1,3 +1,4 @@
+import { Model, Collection } from 'acey'
 import { TByte } from '../constant/type'
 import { StringToByteArray, ByteArrayToString, ByteArrayToInt, DecodeArrayInt } from '../util'
 
@@ -9,26 +10,32 @@ export interface IOutput {
 	ta:				Uint8Array[]
 }
 
-export class Output {
-    static Deserialize = (serialized: Uint8Array) => {
-        return new Output(JSON.parse(ByteArrayToString(serialized)))
-    }
-
-    public output: IOutput
-    
-    constructor(output: IOutput) {
-        this.output = output
-    }
-
-    Serialize = () => StringToByteArray(JSON.stringify(this.output))
-
-	GetValue = () => this.output.value
-	GetValueBigInt = () => ByteArrayToInt(this.GetValue(), false)
-
-	IsValueAbove = (val: BigInt) => val < this.GetValueBigInt()
+export class Output extends Model {
 	
-	GetInputIndexes = () => this.output.input_indexes
-	GetInputIndexesBigInt = () => DecodeArrayInt(this.GetInputIndexes())
+    static deserialize = (serialized: Uint8Array): IOutput => {
+        return JSON.parse(ByteArrayToString(serialized))
+    }
 
-	GetPubKH = () => this.output.pub_key_hash
+    constructor(output: IOutput, options: any) {
+		super(output, options)
+	}
+
+    serialize = () => StringToByteArray(this.to().string())
+
+	getValue = (): Uint8Array => this.state.value
+	getValueBigInt = () => ByteArrayToInt(this.getValue(), false)
+
+	isValueAbove = (val: BigInt) => val < this.getValueBigInt()
+	
+	getInputIndexes = (): Uint8Array[] => this.state.input_indexes
+	getInputIndexesBigInt = () => DecodeArrayInt(this.getInputIndexes())
+
+	getPubKH = (): Uint8Array => this.state.pub_key_hash
+}
+
+export class OutputList extends Collection {
+    
+    constructor(initialState: any, options: any){
+        super(initialState, [Output, OutputList], options)
+    }
 }

@@ -1,4 +1,5 @@
-import { StringToByteArray, ByteArrayToString, ByteArrayToInt } from '../util'
+import { Collection, Model } from 'acey'
+import { StringToByteArray, ByteArrayToString, ByteArrayToInt, AreEqual } from '../util'
 
 export interface IInput {
     prev_transaction_hash: Uint8Array
@@ -6,21 +7,28 @@ export interface IInput {
     sign: Uint8Array
 }
 
-export class Input {
+export class Input extends Model {
 
-    static Deserialize = (serialized: Uint8Array) => {
-        return new Input(JSON.parse(ByteArrayToString(serialized)))
+    static deserialize = (serialized: Uint8Array): IInput => {
+        return JSON.parse(ByteArrayToString(serialized))
     }
 
-    public input: IInput
+    constructor(input: IInput, options: any) {
+        super(input, options)
+    }
+
+    prevTxHash = (): Uint8Array => this.state.prev_transaction_hash
     
-    constructor(input: IInput) {
-        this.input = input
+    serialize = () => StringToByteArray(this.to().string())
+
+    getVout = (): Uint8Array => this.state.vout
+    getVoutBigInt = () => ByteArrayToInt(this.getVout(), AreEqual(this.getVout(), new Uint8Array([255,255,255,255])))
+}
+
+export class InputList extends Collection {
+    
+    constructor(initialState: any, options: any){
+        super(initialState, [Input, InputList], options)
     }
-
-    Serialize = () => StringToByteArray(JSON.stringify(this.input))
-
-    GetVout = () => this.input.vout
-    GetVoutBigInt = () => ByteArrayToInt(this.GetVout(), JSON.stringify(this.GetVout()) == [255,255,255,255].toString())
 
 }

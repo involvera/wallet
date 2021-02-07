@@ -72,7 +72,7 @@ export const ByteArrayToString = (array: Uint8Array): string => {
     return out;
 }
 
-export const ByteArrayToInt = (value: Uint8Array, isNegative: boolean) => {
+export const ByteArrayToInt = (value: Uint8Array, isNegative: boolean): BigInt => {
     let binaryStr = '';
 
     let MAX = MAX_UINT_8
@@ -134,7 +134,7 @@ export const Int64ToByteArray = (val: BigInt) => {
     return intToByteArray(val, 'int64', false)
 }
 
-const intToByteArray = (val: BigInt, valType: 'int8' | 'int16' | 'int32' | 'int64', isUnsigned: boolean) => {
+const intToByteArray = (val: BigInt, valType: 'int8' | 'int16' | 'int32' | 'int64', isUnsigned: boolean): Uint8Array => {
     const M = {'int8': MAX_UINT_8, 'int16': MAX_UINT_16, 'int32': MAX_UINT_32, 'int64': MAX_UINT_64}[valType]
     const N_BYTE = {'int8': 8, 'int16': 16, 'int32': 32, 'int64': 64}[valType]
     const CURRENT_MIN_INT = (M / TWO) * MINUS
