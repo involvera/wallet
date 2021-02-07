@@ -7,3 +7,5 @@ export {
     DecodeArrayInt,
     AreEqual
  } from './bytes'
+
+ export { Sha256 } from './hash'

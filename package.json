@@ -7,11 +7,11 @@
     "start": "tsc && node ./dist/index.js"
   },
   "dependencies": {
-    "@types/bs58check": "^2.1.0",
+    "@types/base-x": "^3.0.6",
     "@types/create-hash": "^1.2.2",
+    "base-x": "^3.0.8",
     "bip32": "^2.0.6",
     "bip39": "^3.0.3",
-    "bs58check": "^2.1.2",
     "create-hash": "^1.2.0",
     "safe-buffer": "^5.2.1",
     "tiny-secp256k1": "^1.1.6",

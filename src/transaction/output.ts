@@ -1,17 +1,16 @@
 import { TByte } from '../constant/type'
-import { StringToByteArray, ByteArrayToString, Int64ToByteArray, IntToByteArray, ByteArrayToInt, DecodeArrayInt } from '../util'
+import { StringToByteArray, ByteArrayToString, ByteArrayToInt, DecodeArrayInt } from '../util'
 
 export interface IOutput {
-	input_indexes: TByte[][] 
-	value:        TByte[]
-	pub_key_hash:   TByte[]
+	input_indexes: Uint8Array[] 
+	value:        Uint8Array
+	pub_key_hash:   Uint8Array
 	k:              TByte,
-	ta:         TByte[][]
+	ta:				Uint8Array[]
 }
 
-class Output {
-
-    static Deserialize = (serialized: TByte[]) => {
+export class Output {
+    static Deserialize = (serialized: Uint8Array) => {
         return new Output(JSON.parse(ByteArrayToString(serialized)))
     }
 
@@ -32,5 +31,4 @@ class Output {
 	GetInputIndexesBigInt = () => DecodeArrayInt(this.GetInputIndexes())
 
 	GetPubKH = () => this.output.pub_key_hash
-	
 }

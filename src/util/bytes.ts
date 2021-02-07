@@ -1,5 +1,3 @@
-import { TByte } from '../constant/type'
-
 const MAX_UINT_8 = BigInt(256)
 const MAX_UINT_16 = BigInt(65536)
 const MAX_UINT_32 = BigInt(4294967296)
@@ -10,19 +8,18 @@ const ONE = BigInt(1)
 const ZERO = BigInt(0)
 const MINUS = BigInt(-1)
 
-export const StringToByteArray = (str: string): TByte[] => {
-    let utf8 = [];
+export const StringToByteArray = (str: string): Uint8Array => {
+    let utf8 = new Uint8Array(str.length)
     for (let i = 0; i < str.length; i++) {
         let charcode = str.charCodeAt(i);
-        if (charcode < 0x80) utf8.push(charcode);
+        if (charcode < 0x80) utf8[i] = charcode;
         else if (charcode < 0x800) {
-            utf8.push(0xc0 | (charcode >> 6),
-                      0x80 | (charcode & 0x3f));
+            utf8[i] = 0xc0 | (charcode >> 6), 0x80 | (charcode & 0x3f);
         }
         else if (charcode < 0xd800 || charcode >= 0xe000) {
-            utf8.push(0xe0 | (charcode >> 12),
+            utf8[i] = 0xe0 | (charcode >> 12),
                       0x80 | ((charcode>>6) & 0x3f),
-                      0x80 | (charcode & 0x3f));
+                      0x80 | (charcode & 0x3f);
         }
         // surrogate pair
         else {
@@ -32,16 +29,16 @@ export const StringToByteArray = (str: string): TByte[] => {
             // 20 bits of 0x0-0xFFFFF into two halves
             charcode = 0x10000 + (((charcode & 0x3ff)<<10)
                       | (str.charCodeAt(i) & 0x3ff));
-            utf8.push(0xf0 | (charcode >>18),
+            utf8[i] = 0xf0 | (charcode >>18),
                       0x80 | ((charcode>>12) & 0x3f),
                       0x80 | ((charcode>>6) & 0x3f),
-                      0x80 | (charcode & 0x3f));
+                      0x80 | (charcode & 0x3f);
         }
     }
-    return utf8 as TByte[]
+    return utf8
 }
 
-export const ByteArrayToString = (array: TByte[]): string => {
+export const ByteArrayToString = (array: Uint8Array): string => {
     var out, i, len, c;
     var char2, char3;
 
@@ -75,7 +72,7 @@ export const ByteArrayToString = (array: TByte[]): string => {
     return out;
 }
 
-export const ByteArrayToInt = (value: TByte[], isNegative: boolean) => {
+export const ByteArrayToInt = (value: Uint8Array, isNegative: boolean) => {
     let binaryStr = '';
 
     let MAX = MAX_UINT_8
@@ -109,7 +106,7 @@ export const ByteArrayToInt = (value: TByte[], isNegative: boolean) => {
     return n
 }
 
-export const AreEqual = (a1: TByte[], a2: TByte[]) => {
+export const AreEqual = (a1: Uint8Array, a2: Uint8Array) => {
     if (a1.length != a2.length){
         return false
     }
@@ -121,7 +118,7 @@ export const AreEqual = (a1: TByte[], a2: TByte[]) => {
     return true
 } 
 
-export const DecodeArrayInt = (array: TByte[][]): BigInt[] => {
+export const DecodeArrayInt = (array: Uint8Array[]): BigInt[] => {
     let ret: BigInt[] = []
     for (let i = 0; i < array.length; i++) {
         ret[i] = ByteArrayToInt(array[i], false)
@@ -149,7 +146,6 @@ const intToByteArray = (val: BigInt, valType: 'int8' | 'int16' | 'int32' | 'int6
         throw new Error("unsigned overflow")
     }
 
-    var ret: TByte[] = []
     if (val < ZERO) {
         val = ((CURRENT_MAX_INT+ONE) * TWO) + BigInt(val)
     }
@@ -160,9 +156,10 @@ const intToByteArray = (val: BigInt, valType: 'int8' | 'int16' | 'int32' | 'int6
         binary = `0${binary}`
     }
     
+    var ret = new Uint8Array(binary.length / 8)
     i = 0;
     while (i < binary.length){
-        ret.unshift(parseInt(binary.substr(i, 8), 2) as TByte)
+        ret[(binary.length / 8) - 1 - i] = parseInt(binary.substr(i, 8), 2)
         i += 8
     }
     return ret

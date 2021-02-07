@@ -1,15 +1,14 @@
-import { TByte } from '../constant/type'
-import { StringToByteArray, ByteArrayToString, Int64ToByteArray, IntToByteArray, ByteArrayToInt } from '../util'
+import { StringToByteArray, ByteArrayToString, ByteArrayToInt } from '../util'
 
 export interface IInput {
-    prev_transaction_hash: TByte[]
-    vout: TByte[]
-    sign: TByte[]
+    prev_transaction_hash: Uint8Array
+    vout: Uint8Array
+    sign: Uint8Array
 }
 
 export class Input {
 
-    static Deserialize = (serialized: TByte[]) => {
+    static Deserialize = (serialized: Uint8Array) => {
         return new Input(JSON.parse(ByteArrayToString(serialized)))
     }
 

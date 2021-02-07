@@ -1,19 +1,17 @@
-import { TByte } from '../constant/type'
 import { IInput } from './input'
 import { IOutput } from './output' 
-import { StringToByteArray, ByteArrayToString, Int64ToByteArray, IntToByteArray, ByteArrayToInt } from '../util'
-import createHash from 'create-hash'
+import { StringToByteArray, ByteArrayToString, ByteArrayToInt, Sha256 } from '../util'
 
 export interface ITransaction {
-    lh:      TByte[]
-	t:       TByte[]
+    lh:      Uint8Array
+	t:       Uint8Array
 	inputs:  IInput[]
 	outputs: IOutput[] 
 }
 
 export class Transaction {
 
-    static Deserialize = (serialized: TByte[]): Transaction => {
+    static Deserialize = (serialized: Uint8Array): Transaction => {
         return new Transaction(JSON.parse(ByteArrayToString(serialized)))
     }
 
@@ -28,7 +26,7 @@ export class Transaction {
     GetTime = () => this.tx.t
     GetTimeInt = () => ByteArrayToInt(this.GetTime(), false)
 
-    GetHash = () => StringToByteArray(createHash('sha256').update(Buffer.from(this.Serialize())).digest().toString())
+    GetHash = () => Sha256(this.Serialize())
 
 
 
