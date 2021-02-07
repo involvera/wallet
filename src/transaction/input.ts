@@ -17,11 +17,11 @@ export class Input extends Model {
         super(input, options)
     }
 
-    prevTxHash = (): Uint8Array => this.state.prev_transaction_hash
+    prevTxHash = (): Uint8Array => StringToByteArray(Buffer.from(this.state.prev_transaction_hash, 'base64').toString('utf-8'))
     
     serialize = () => StringToByteArray(this.to().string())
 
-    getVout = (): Uint8Array => this.state.vout
+    getVout = (): Uint8Array => StringToByteArray(Buffer.from(this.state.vout, 'base64').toString('utf-8'))
     getVoutBigInt = () => ByteArrayToInt(this.getVout(), AreEqual(this.getVout(), new Uint8Array([255,255,255,255])))
 }
 

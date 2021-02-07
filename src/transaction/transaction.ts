@@ -1,7 +1,13 @@
 import { Model } from 'acey'
-import { IInput, Input, InputList } from './input'
-import { IOutput, Output, OutputList } from './output' 
-import { StringToByteArray, ByteArrayToString, ByteArrayToInt, Sha256 } from '../util'
+import { 
+    IOutput, Output, OutputList,
+    IInput, Input, InputList,
+} from '.'
+
+import { 
+    StringToByteArray, ByteArrayToString, ByteArrayToInt, 
+    Sha256 
+} from '../util'
 
 export interface ITransaction {
     lh:      Uint8Array
@@ -26,7 +32,7 @@ export class Transaction extends Model {
 
     serialize = () => StringToByteArray(this.to().string())
 
-    getTime = () => this.state.t
+    getTime = () => StringToByteArray(Buffer.from(this.state.t, 'base64').toString('utf-8'))
     getTimeInt = () => ByteArrayToInt(this.getTime(), false)
 
     getInputAt = (idx: number) => this.getInputs().nodeAt(idx) as Input

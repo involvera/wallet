@@ -22,7 +22,7 @@ export class Output extends Model {
 
     serialize = () => StringToByteArray(this.to().string())
 
-	getValue = (): Uint8Array => this.state.value
+	getValue = (): Uint8Array => StringToByteArray(Buffer.from(this.state.value, 'base64').toString('utf-8'))
 	getValueBigInt = () => ByteArrayToInt(this.getValue(), false)
 
 	isValueAbove = (val: BigInt) => val < this.getValueBigInt()
@@ -30,7 +30,7 @@ export class Output extends Model {
 	getInputIndexes = (): Uint8Array[] => this.state.input_indexes
 	getInputIndexesBigInt = () => DecodeArrayInt(this.getInputIndexes())
 
-	getPubKH = (): Uint8Array => this.state.pub_key_hash
+	getPubKH = (): Uint8Array => StringToByteArray(Buffer.from(this.state.pub_key_hash, 'base64').toString('utf-8'))
 }
 
 export class OutputList extends Collection {
