@@ -8,6 +8,15 @@ const ONE = BigInt(1)
 const ZERO = BigInt(0)
 const MINUS = BigInt(-1)
 
+
+export const B64ToBigInt = (b64: string, isNegative: boolean): BigInt => {
+    return ByteArrayToInt(B64ToByteArray(b64), isNegative)
+}
+
+export const B64ToByteArray = (b64: string): Uint8Array => {
+    return new Uint8Array(Buffer.from(b64, 'base64'))
+}
+
 export const StringToByteArray = (str: string): Uint8Array => {
     let utf8 = new Uint8Array(str.length)
     for (let i = 0; i < str.length; i++) {
@@ -126,12 +135,7 @@ export const ByteArrayToInt = (value: Uint8Array, isNegative: boolean): BigInt =
 
         }
     }
-
-    if (isNegative) {
-        n -= MAX 
-    }
-
-    return n
+    return isNegative ? n - MAX : n
 }
 
 export const AreEqual = (a1: Uint8Array, a2: Uint8Array) => {

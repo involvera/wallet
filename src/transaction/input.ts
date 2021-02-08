@@ -1,5 +1,5 @@
 import { Collection, Model } from 'acey'
-import { StringToByteArray, ByteArrayToString, ByteArrayToInt, AreEqual } from '../util'
+import { StringToByteArray, ByteArrayToString, ByteArrayToInt, AreEqual, B64ToByteArray } from '../util'
 
 export interface IInput {
     prev_transaction_hash: Uint8Array
@@ -9,19 +9,13 @@ export interface IInput {
 
 export class Input extends Model {
 
-    static deserialize = (serialized: Uint8Array): IInput => {
-        return JSON.parse(ByteArrayToString(serialized))
-    }
-
     constructor(input: IInput, options: any) {
         super(input, options)
     }
 
-    prevTxHash = (): Uint8Array => StringToByteArray(Buffer.from(this.state.prev_transaction_hash, 'base64').toString('utf-8'))
-    
-    serialize = () => StringToByteArray(this.to().string())
+    prevTxHash = (): Uint8Array => B64ToByteArray(this.state.prev_transaction_hash)
 
-    getVout = (): Uint8Array => StringToByteArray(Buffer.from(this.state.vout, 'base64').toString('utf-8'))
+    getVout = (): Uint8Array => B64ToByteArray(this.state.vout)
     getVoutBigInt = () => ByteArrayToInt(this.getVout(), AreEqual(this.getVout(), new Uint8Array([255,255,255,255])))
 }
 

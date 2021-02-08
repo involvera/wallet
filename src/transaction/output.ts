@@ -1,6 +1,6 @@
 import { Model, Collection } from 'acey'
 import { TByte } from '../constant/type'
-import { StringToByteArray, ByteArrayToString, ByteArrayToInt, DecodeArrayInt } from '../util'
+import { StringToByteArray, ByteArrayToString, ByteArrayToInt, DecodeArrayInt, B64ToByteArray } from '../util'
 
 export interface IOutput {
 	input_indexes: Uint8Array[] 
@@ -12,17 +12,11 @@ export interface IOutput {
 
 export class Output extends Model {
 	
-    static deserialize = (serialized: Uint8Array): IOutput => {
-        return JSON.parse(ByteArrayToString(serialized))
-    }
-
     constructor(output: IOutput, options: any) {
 		super(output, options)
 	}
 
-    serialize = () => StringToByteArray(this.to().string())
-
-	getValue = (): Uint8Array => StringToByteArray(Buffer.from(this.state.value, 'base64').toString('utf-8'))
+	getValue = (): Uint8Array => B64ToByteArray(this.state.value)
 	getValueBigInt = () => ByteArrayToInt(this.getValue(), false)
 
 	isValueAbove = (val: BigInt) => val < this.getValueBigInt()
@@ -30,7 +24,7 @@ export class Output extends Model {
 	getInputIndexes = (): Uint8Array[] => this.state.input_indexes
 	getInputIndexesBigInt = () => DecodeArrayInt(this.getInputIndexes())
 
-	getPubKH = (): Uint8Array => StringToByteArray(Buffer.from(this.state.pub_key_hash, 'base64').toString('utf-8'))
+	getPubKH = (): Uint8Array => B64ToByteArray(this.state.pub_key_hash)
 }
 
 export class OutputList extends Collection {

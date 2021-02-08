@@ -5,7 +5,9 @@ export {
     StringToByteArray,
     ByteArrayToString,
     DecodeArrayInt,
-    AreEqual
+    AreEqual,
+    B64ToBigInt,
+    B64ToByteArray
  } from './bytes'
 
  export { Sha256 } from './hash'

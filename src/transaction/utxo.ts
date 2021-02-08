@@ -1,5 +1,5 @@
 import { Collection, Model } from 'acey'
-import { ByteArrayToString, IntToByteArray, StringToByteArray } from '../util'
+import { B64ToByteArray, ByteArrayToString, IntToByteArray, StringToByteArray } from '../util'
 import { Output, InputList } from '.'
 
 export interface IUTXO {
@@ -19,18 +19,18 @@ export class UTXO extends Model {
         })
     }
 
-    txID = (): Uint8Array => StringToByteArray(Buffer.from(this.state.tx_id, 'base64').toString('utf-8'))
+    txID = () => B64ToByteArray(this.state.tx_id)
     idx = (): BigInt => BigInt(this.state.idx)
     output = (): Output => this.state.output
     mr = (): number => this.state.mr
-    cch = (): Uint8Array => StringToByteArray(Buffer.from(this.state.cch, 'base64').toString('utf-8'))
+    cch = (): Uint8Array => B64ToByteArray(this.state.cch)
 
 }
 
 export class UTXOList extends Collection {
 
-    static deserialize = (serialized: Uint8Array): IUTXO[] => {
-        return JSON.parse(ByteArrayToString(serialized))
+    static parse = (json: string): IUTXO[] => {
+        return JSON.parse(json)
     }
 
     constructor(list: IUTXO[] = [], options: any){
@@ -53,6 +53,4 @@ export class UTXOList extends Collection {
         })
         return total
     }
-
-    serialize = () => StringToByteArray(this.to().string())
 }

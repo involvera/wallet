@@ -5,8 +5,9 @@ import {
 } from '.'
 
 import { 
-    StringToByteArray, ByteArrayToString, ByteArrayToInt, 
-    Sha256 
+    StringToByteArray, ByteArrayToInt, 
+    Sha256, 
+    B64ToByteArray
 } from '../util'
 
 export interface ITransaction {
@@ -18,10 +19,6 @@ export interface ITransaction {
 
 export class Transaction extends Model {
 
-    static deserialize = (serialized: Uint8Array): ITransaction => {
-        return JSON.parse(ByteArrayToString(serialized))
-    }
-
     constructor(tx: ITransaction, options: any) {
         super(tx, options)
         this.setState({
@@ -30,15 +27,13 @@ export class Transaction extends Model {
         })
     }
 
-    serialize = () => StringToByteArray(this.to().string())
-
-    getTime = () => StringToByteArray(Buffer.from(this.state.t, 'base64').toString('utf-8'))
+    getTime = () => B64ToByteArray(this.state.t)
     getTimeInt = () => ByteArrayToInt(this.getTime(), false)
 
     getInputAt = (idx: number) => this.getInputs().nodeAt(idx) as Input
     getOutputAt = (idx: number) => this.getOutputs().nodeAt(idx) as Output
 
-    getHash = () => Sha256(this.serialize())
+    getHash = () => Sha256(this.to().string())
     getInputs = (): InputList => this.state.inputs
     getOutputs = (): OutputList => this.state.outputs
 
