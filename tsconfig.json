@@ -18,9 +18,8 @@
       "types": []
     },
     "include": [
-      "src/**/*",
-      "test/**/*.ts",
-      "index.ts"
+        "src/**/*",
+        "index.ts"
     ],
     "exclude": [
       "node_modules",

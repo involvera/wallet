@@ -1,5 +1,5 @@
 import { Collection, Model } from 'acey'
-import { B64ToByteArray, ByteArrayToString, IntToByteArray, StringToByteArray } from '../util'
+import { B64ToByteArray, IntToByteArray } from '../util'
 import { Output, InputList } from '.'
 
 export interface IUTXO {
@@ -11,7 +11,6 @@ export interface IUTXO {
 }
 
 export class UTXO extends Model {
-
     constructor(utxo: IUTXO, options: any) {
         super(utxo, options)
         this.setState({
@@ -24,14 +23,9 @@ export class UTXO extends Model {
     output = (): Output => this.state.output
     mr = (): number => this.state.mr
     cch = (): Uint8Array => B64ToByteArray(this.state.cch)
-
 }
 
 export class UTXOList extends Collection {
-
-    static parse = (json: string): IUTXO[] => {
-        return JSON.parse(json)
-    }
 
     constructor(list: IUTXO[] = [], options: any){
         super(list, [UTXO, UTXOList], options)

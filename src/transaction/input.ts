@@ -1,5 +1,5 @@
 import { Collection, Model } from 'acey'
-import { StringToByteArray, ByteArrayToString, ByteArrayToInt, AreEqual, B64ToByteArray } from '../util'
+import { ByteArrayToInt, AreEqual, B64ToByteArray } from '../util'
 
 export interface IInput {
     prev_transaction_hash: Uint8Array

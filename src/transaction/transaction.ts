@@ -5,7 +5,7 @@ import {
 } from '.'
 
 import { 
-    StringToByteArray, ByteArrayToInt, 
+    ByteArrayToInt, 
     Sha256, 
     B64ToByteArray
 } from '../util'
