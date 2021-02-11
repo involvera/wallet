@@ -5,7 +5,7 @@ import * as bip32 from 'bip32'
 import { B64ToByteArray, Sha256 } from '../util'
 import { ec as EC } from 'elliptic'
 
-import fetch from 'node-fetch'
+import fetch, { Response } from 'node-fetch'
 import { ROOT_API_URL } from '../constant/api'
 import { UTXOList } from '../transaction'
 
@@ -32,108 +32,109 @@ class Wallet extends Model {
     }
 
     private _throwErrorIsSeedNotSet = () => {
-        if (!this.isSeedSet()){
+        if (!this.seed().isSet()){
             throw new Error("You need to set a seed to the wallet in order to perform this action.")
         }
     }
 
-    setSeed = (mnemonic: string, pass: string) => {
-        this.setState({ seed: bip39.mnemonicToSeedSync(mnemonic, pass).toString('hex') }).store()
+    refreshAllData = async () => {
+        await this.utxos().fetch()
+        await this.cch().fetch()
     }
 
-    isSeedSet = () => this.state.seed.length > 0
+    public seed = () => {
+        const get = () => Buffer.from(this.state.seed, 'hex')
+        const set = (mnemonic: string, pass: string) => this.setState({ seed: bip39.mnemonicToSeedSync(mnemonic, pass).toString('hex') }).store()
+        const isSet = () => this.state.seed.length > 0
+        
+        return { get, set, isSet }
+    }
 
-    fetchAuthContract = async () => {
-        try {
-            const res = await fetch(ROOT_API_URL + '/contract', { method: 'GET' })
-            if (res.status == 200) {
-                this.setState({ contract: await res.json() }).store()
-            }
-            return res.status
-        } catch(e){
-            throw new Error(e);
+    public key = () => {
+        this._throwErrorIsSeedNotSet() 
+        const master = () => bip32.fromSeed(this.seed().get())
+        const priv = () => master()?.privateKey as Buffer
+        const pub = () => master().publicKey as Buffer
+        const pubHex = () => pub().toString('hex')
+
+        return { master, priv, pub, pubHex }
+    }
+
+    public auth = () => {
+        const get = (): IAuthContract | null => this.state.contract || null
+        const isExpired = () => {
+            const contract = get()
+            return !contract ? true : !(new Date(contract.next_change * 1000) > new Date())
         }
+        const Fetch = async () => {
+            try {
+                const res = await fetch(ROOT_API_URL + '/contract', { method: 'GET' })
+                if (res.status == 200) {
+                    this.setState({ contract: await res.json() }).store()
+                }
+                return res.status
+            } catch(e){
+                throw new Error(e);
+            }            
+        }
+        const refresh = async () => isExpired() && await Fetch()
+        const reset = () => this.setState({ contract: {value: "", next_change: 0} })
+
+        return { get, isExpired, refresh, fetch: Fetch, reset }
     }
 
-    fetchCCHList = async () => {
-        if (this.getUTXOS().count() > 0){
-            await this.refreshAuthContract()
-            try {
-                const res = await fetch(ROOT_API_URL + '/cch', {
-                    method: 'GET',
-                    headers: {
-                        pubkey: this.pubKHex() as string,
-                        signature: this.signAuthentificationContract()
+    cch = () => {
+        const get = (): Array<any> => this.state.cch_list || [] 
+        const Fetch = async () => {
+            if (this.utxos().get().count() > 0){
+                await this.auth().refresh()
+                try {
+                    const res = await fetch(ROOT_API_URL + '/cch', {
+                        method: 'GET',
+                        headers: this.signHeader()
+                    })
+                    if (res.status == 200){
+                        const list = await res.json()
+                        this.setState({ cch_list: get().concat(list || []) }).store()
                     }
+                    return res.status
+                } catch (e){
+                    throw new Error(e)
+                }
+            }
+        }
+
+        return { get, fetch: Fetch }
+    }
+
+    utxos = () => {
+        const get = (): UTXOList => this.state.utxos
+        const Fetch = async () => {
+            await this.auth().refresh()
+            try {
+                const res = await fetch(ROOT_API_URL + '/utxos', {
+                    method: 'GET',
+                    headers: this.signHeader()
                 })
                 if (res.status == 200){
-                    const list = await res.json()
-                    this.setState({ cch_list: this.getCCHList().concat(list || []) }).store()
+                    const json = await res.json()
+                    get().setState(json.utxos || []).store()
                 }
                 return res.status
             } catch (e){
                 throw new Error(e)
             }
         }
+        return { get, fetch: Fetch }
     }
 
-    fetchUTXOList = async () => {
-        await this.refreshAuthContract()
-        try {
-            const res = await fetch(ROOT_API_URL + '/utxos', {
-                method: 'GET',
-                headers: {
-                    pubkey: this.pubKHex() as string,
-                    signature: this.signAuthentificationContract()
-                }
-            })
-            if (res.status == 200){
-                const json = await res.json()
-                this.getUTXOS().setState(json.utxos || []).store()
-            }
-            return res.status
-        } catch (e){
-            throw new Error(e)
+    signHeader = () => {
+        return {
+            pubkey: this.key().pubHex() as string,
+            signature: Buffer.from(this.signValue(Sha256(B64ToByteArray(this.state.contract.value)))).toString('hex')
         }
     }
-
-    refreshAuthContract = async () => {
-        if (this.isAuthContractExpired()){
-            await this.fetchAuthContract()
-        }
-    }
-
-    isAuthContractExpired = () => {
-        const contract = this.getAuthContract()
-        return !contract ? true : !(new Date(contract.next_change * 1000) > new Date())
-    }
-
-    getAuthContract = (): IAuthContract | null => this.state.contract || null
-    getCCHList = (): Array<any> => this.state.cch_list || [] 
-    getUTXOS = (): UTXOList => this.state.utxos
-
-    masterKey = (): bip32.BIP32Interface  => {
-        this._throwErrorIsSeedNotSet() 
-        return bip32.fromSeed(this.seed())
-    }
-
-    seed = () => Buffer.from(this.state.seed, 'hex')
-
-    privateKey = () => {
-        this._throwErrorIsSeedNotSet()
-        return this.masterKey()?.privateKey as Buffer
-    }
-
-    publicKey = () => {
-        this._throwErrorIsSeedNotSet()
-        return this.masterKey()?.publicKey as Buffer
-    }
-
-    pubKHex = () => this.publicKey().toString('hex')
-    sign = (value: Buffer) => ec.sign(value, this.masterKey().privateKey as Buffer).toDER()
-
-    signAuthentificationContract = () => Buffer.from(this.sign(this.authentificationContractValue())).toString('hex')
-    authentificationContractValue = () => Sha256(B64ToByteArray(this.state.contract.value))
+    signValue = (value: Buffer) => ec.sign(value, this.key().priv()).toDER()
 }
 
 
