@@ -91,11 +91,11 @@ class Wallet extends Model {
                 try {
                     const res = await fetch(ROOT_API_URL + '/cch', {
                         method: 'GET',
-                        headers: this.signHeader()
+                        headers: Object.assign({}, this.signHeader(), {last_cch: get().length == 0 ? '' : Buffer.from(B64ToByteArray(get()[0])).toString('hex') })
                     })
                     if (res.status == 200){
-                        const list = await res.json()
-                        this.setState({ cch_list: get().concat(list || []) }).store()
+                        const list = await res.json() || []
+                        this.setState({ cch_list: get().concat( list.filter((elem: any) => elem != null)) }).store()
                     }
                     return res.status
                 } catch (e){
