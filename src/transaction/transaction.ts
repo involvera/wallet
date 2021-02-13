@@ -4,11 +4,7 @@ import {
     IInput, Input, InputList,
 } from '.'
 
-import { 
-    ByteArrayToInt, 
-    Sha256, 
-    B64ToByteArray
-} from '../util'
+import { ByteArrayToInt, Sha256, B64ToByteArray } from '../util'
 
 export interface ITransaction {
     lh:      Uint8Array
@@ -37,6 +33,6 @@ export class Transaction extends Model {
     getInputs = (): InputList => this.state.inputs
     getOutputs = (): OutputList => this.state.outputs
 
-    gsLugh = () => this.getInputs().count() == 1 && this.getInputAt(0) && this.getInputAt(0).prevTxHash().length == 0
+    gsLugh = () => this.getInputs().count() == 1 && this.getInputAt(0) && this.getInputAt(0).get().prevTxHash().length == 0
 }
 

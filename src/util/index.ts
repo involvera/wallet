@@ -5,7 +5,6 @@ export {
     StringToByteArray,
     ByteArrayToString,
     DecodeArrayInt,
-    AreEqual,
     B64ToBigInt,
     B64ToByteArray
  } from './bytes'

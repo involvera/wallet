@@ -138,18 +138,6 @@ export const ByteArrayToInt = (value: Uint8Array, isNegative: boolean): BigInt =
     return isNegative ? n - MAX : n
 }
 
-export const AreEqual = (a1: Uint8Array, a2: Uint8Array) => {
-    if (a1.length != a2.length){
-        return false
-    }
-    for (let i =0; i < a1.length; i++){
-        if (a1[i] != a2[i]){
-            return false
-        }
-    }
-    return true
-} 
-
 export const DecodeArrayInt = (array: Uint8Array[]): BigInt[] => {
     let ret: BigInt[] = []
     for (let i = 0; i < array.length; i++) {

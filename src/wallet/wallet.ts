@@ -84,7 +84,7 @@ class Wallet extends Model {
     }
 
     cch = () => {
-        const get = (): Array<any> => this.state.cch_list || [] 
+        const get = (): Array<string> => this.state.cch_list || [] 
         const Fetch = async () => {
             if (this.utxos().get().count() > 0){
                 await this.auth().refresh()
@@ -94,7 +94,7 @@ class Wallet extends Model {
                         headers: Object.assign({}, this.signHeader(), {last_cch: get().length == 0 ? '' : Buffer.from(B64ToByteArray(get()[0])).toString('hex') })
                     })
                     if (res.status == 200){
-                        const list = await res.json() || []
+                        let list = await res.json() || []
                         this.setState({ cch_list: get().concat( list.filter((elem: any) => elem != null)) }).store()
                     }
                     return res.status
@@ -118,6 +118,7 @@ class Wallet extends Model {
                 })
                 if (res.status == 200){
                     const json = await res.json()
+                    console.log(json.melted_value)
                     get().setState(json.utxos || []).store()
                 }
                 return res.status

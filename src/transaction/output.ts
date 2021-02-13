@@ -1,6 +1,6 @@
 import { Model, Collection } from 'acey'
 import { TByte } from '../constant/type'
-import { StringToByteArray, ByteArrayToString, ByteArrayToInt, DecodeArrayInt, B64ToByteArray } from '../util'
+import { ByteArrayToInt, DecodeArrayInt, B64ToByteArray } from '../util'
 
 export interface IOutput {
 	input_indexes: Uint8Array[] 
@@ -16,19 +16,22 @@ export class Output extends Model {
 		super(output, options)
 	}
 
-	getValue = (): Uint8Array => B64ToByteArray(this.state.value)
-	getValueBigInt = () => ByteArrayToInt(this.getValue(), false)
+	get = () => {
+		const value = (): Uint8Array => B64ToByteArray(this.state.value)
+		const valueBigInt = () => ByteArrayToInt(value(), false)
+		const inputIndexes = (): Uint8Array[] => this.state.input_indexes
+		const inputIndexesBigInt = () => DecodeArrayInt(inputIndexes())
+		const pubKH = (): Uint8Array => B64ToByteArray(this.state.pub_key_hash)
 
-	isValueAbove = (val: BigInt) => val < this.getValueBigInt()
-	
-	getInputIndexes = (): Uint8Array[] => this.state.input_indexes
-	getInputIndexesBigInt = () => DecodeArrayInt(this.getInputIndexes())
+		return {
+			value, valueBigInt, inputIndexes, inputIndexesBigInt, pubKH
+		}
+	}
 
-	getPubKH = (): Uint8Array => B64ToByteArray(this.state.pub_key_hash)
+	isValueAbove = (val: BigInt) => val < this.get().valueBigInt()
 }
 
 export class OutputList extends Collection {
-    
     constructor(initialState: any, options: any){
         super(initialState, [Output, OutputList], options)
     }
