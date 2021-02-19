@@ -2,12 +2,16 @@ import { Collection, Model } from 'acey'
 import { B64ToByteArray, IntToByteArray } from '../util'
 import { Output, InputList } from '.'
 import { wallet } from '../models'
-import { CYCLE_IN_LUGH } from '../constant'
+import { CYCLE_IN_LUGH, ROOT_API_URL } from '../constant'
+import { CalculateOutputMeltedValue } from '../util/output'
+import fetch from 'node-fetch'
+import { ITransaction, Transaction } from './transaction'
  
 export interface IUTXO {
     tx_id: Uint8Array
     idx: BigInt
     output: Output
+    tx: null | ITransaction 
     mr: number
     cch: Uint8Array
 }
@@ -16,7 +20,8 @@ export class UTXO extends Model {
     constructor(utxo: IUTXO, options: any) {
         super(utxo, options)
         this.setState({
-            output: new Output(this.state.output, this.kids())
+            output: new Output(this.state.output, this.kids()),
+            tx: utxo.tx ? new Transaction(utxo.tx, this.kids()) : null
         })
     }
 
@@ -26,7 +31,8 @@ export class UTXO extends Model {
         const output = (): Output => this.state.output
         const MR = (): number => this.state.mr
         const CCH = (): Uint8Array => B64ToByteArray(this.state.cch)
-
+        const tx = (): Transaction | null => this.state.tx
+    
         const meltedValueRatio = () => {
             const list = wallet.cch().get() 
             let count = 0
@@ -46,25 +52,12 @@ export class UTXO extends Model {
             return r
         }
 
-        const meltedValue = () => {
-            /* 
-                The value owned by an UTXO can excess the 2^53 limit of JS for precision, but once divided by 2 it can't.
-                So we divide the value by 2 to get the right precision, because the maximum value for an output value is between 2^53 & 2^54.
-                Then we add it back at the end because the maximum value for a melted output is < 2^53
-            */
-            const DIVIDER = 2
-            const safeNumberValueInt = BigInt(output().get().valueBigInt()) / BigInt(DIVIDER)
-            const nStr = output().get().valueBigInt().toString()
-            const isLastNumberOdd = parseInt(nStr[nStr.length-1]) % 2 == 1
-            const mr = meltedValueRatio()
-            const rest = isLastNumberOdd ? (1 * mr) : 0
-
-            return Math.floor(((Number(safeNumberValueInt) * mr) * DIVIDER) + rest)
-        }
+        const meltedValue = () => CalculateOutputMeltedValue(output().get().valueBigInt(), meltedValueRatio())
 
         return { 
             meltedValue, meltedValueRatio,
-            cch: CCH, mr: MR, txID, idx, output
+            cch: CCH, mr: MR, txID, idx, output,
+            tx
         }
     }
 }
@@ -84,7 +77,58 @@ export class UTXOList extends Collection {
         )
     }
 
+    fetchPrevTxList = async (headerSignature: any) => {
+        const listUnFetchedTxHash = this.get().listUnFetchedTxHash()
+        if (listUnFetchedTxHash.length == 0)
+            return 
+
+        try { 
+            const response = await fetch(ROOT_API_URL + '/transactions/list', {
+                method: 'GET',
+                headers: Object.assign({}, headerSignature, {list: listUnFetchedTxHash})
+            })
+            if (response.status == 200){
+                let list = await response.json()
+                list = list || []
+                for (let i = 0; i < listUnFetchedTxHash.length; i++){
+                    const UTXO = this.get().UTXOByTxHash(listUnFetchedTxHash[i])
+                    UTXO?.setState({ tx: new Transaction(list[i], this.kids())}).store()
+                }
+            }
+            return response.status
+        } catch (e){
+            throw new Error(e)
+        }
+    } 
+        
     get = () => {
+        const listUnFetchedTxHash = () => {
+            const ret: string[] = []
+            for (let i = 0; i < this.count(); i++){
+                const utxo = this.nodeAt(i) as UTXO
+                !utxo.get().tx() && ret.push(Buffer.from(utxo.get().txID()).toString('hex'))
+            }
+            return ret
+        }
+
+        const UTXOByTxHash = (txHashHex: string): UTXO | undefined => {
+            const u = this.find((utxo: UTXO) => Buffer.from(utxo.get().txID()).toString('hex') === txHashHex)
+            return u ? u as UTXO : undefined
+        }
+
+        const requiredList = (amountRequired: number): UTXOList => {
+            let ret: UTXO[] = []
+            let amountGot = 0
+
+            for (let i = 0; i < this.count(); i++){
+                this.push(this.nodeAt(i))
+                amountGot += (this.nodeAt(i) as UTXO).get().meltedValue()
+                if (amountGot > amountRequired) 
+                    break
+            }
+            return this.newCollection(ret) as UTXOList
+        }
+
         const totalValue = () => {
             let total = BigInt(0)
             this.map((utxo: UTXO) => {
@@ -92,6 +136,7 @@ export class UTXOList extends Collection {
             })
             return total
         }
+
         const totalMeltedValue = () => {
             let total = 0
             this.map((utxo: UTXO) => {
@@ -100,6 +145,10 @@ export class UTXOList extends Collection {
             return total
         }
 
-        return { totalValue, totalMeltedValue }
+        return { 
+            totalMeltedValue, requiredList, 
+            totalValue, UTXOByTxHash,
+            listUnFetchedTxHash
+        }
     }
 }

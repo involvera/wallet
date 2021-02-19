@@ -9,4 +9,8 @@ export {
     B64ToByteArray
  } from './bytes'
 
- export { Sha256 } from './hash'
+ export { Sha256, Ripemd160 } from './hash'
+ export * from './array'
+ export * from './crypto'
+ export * from './output'
+ export * from './wallet'

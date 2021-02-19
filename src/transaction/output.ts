@@ -1,6 +1,7 @@
 import { Model, Collection } from 'acey'
 import { TByte } from '../constant/type'
-import { ByteArrayToInt, DecodeArrayInt, B64ToByteArray } from '../util'
+import { ByteArrayToInt, DecodeArrayInt, B64ToByteArray, Int64ToByteArray } from '../util'
+import { EncodeArrayInt } from '../util/bytes'
 
 export interface IOutput {
 	input_indexes: Uint8Array[] 
@@ -12,6 +13,18 @@ export interface IOutput {
 
 export class Output extends Model {
 	
+
+	static NewOutput = (pubKeyHash: Uint8Array, value: BigInt, inputIDX: number[], kind: TByte, ta: Uint8Array[]) => {
+		const out: IOutput = {
+			value: Int64ToByteArray(value),
+			pub_key_hash: pubKeyHash,
+			input_indexes: EncodeArrayInt(inputIDX),
+			k: kind,
+			ta
+		}
+		return new Output(out, {})
+	}
+
     constructor(output: IOutput, options: any) {
 		super(output, options)
 	}
@@ -35,4 +48,17 @@ export class OutputList extends Collection {
     constructor(initialState: any, options: any){
         super(initialState, [Output, OutputList], options)
     }
+
+	get = () => {
+		const totalValue = () => {
+            let total = BigInt(0)
+            this.map((out: Output) => {
+				total += BigInt(out.get().valueBigInt())
+            })
+            return total
+		}
+		return { totalValue }
+	}
 }
+
+

@@ -1,40 +1,31 @@
 import { Model } from 'acey'
 
-import * as bip39 from 'bip39'
-import * as bip32 from 'bip32'
 import { B64ToByteArray, Sha256 } from '../util'
 import { ec as EC } from 'elliptic'
 
-import fetch, { Response } from 'node-fetch'
+import fetch from 'node-fetch'
 import { ROOT_API_URL } from '../constant/api'
 import { UTXOList } from '../transaction'
 
-let ec = new EC('secp256k1');
+import AuthContract from './auth-contract'
+import Fees from './fees'
+import Costs from './costs'
+import Keys from './keys'
 
-interface IAuthContract {
-    value: Uint8Array,
-    next_change: number
-}
+const ec = new EC('secp256k1');
 
 class Wallet extends Model {
-    static NewMnemonic = (): string => {
-        return bip39.generateMnemonic()
-    }
 
     constructor(initialState: any, options: any){
         super(initialState, options)
         this.setState({ 
-            seed: initialState.seed || '',
+            seed: new Keys(initialState.seed || '', this.kids()),
             utxos: new UTXOList(initialState.utxos || [], this.kids()),
             cch_list: initialState.cch_list || [],
-            contract: initialState.contract || {value: "", next_change: 0}
+            contract: new AuthContract(initialState.contract, this.kids()),
+            fees: new Fees(initialState.fees, this.kids()),
+            costs: new Costs(initialState.costs, this.kids())
         })
-    }
-
-    private _throwErrorIsSeedNotSet = () => {
-        if (!this.seed().isSet()){
-            throw new Error("You need to set a seed to the wallet in order to perform this action.")
-        }
     }
 
     refreshAllData = async () => {
@@ -42,56 +33,23 @@ class Wallet extends Model {
         await this.cch().fetch()
     }
 
-    public seed = () => {
-        const get = () => Buffer.from(this.state.seed, 'hex')
-        const set = (mnemonic: string, pass: string) => this.setState({ seed: bip39.mnemonicToSeedSync(mnemonic, pass).toString('hex') }).store()
-        const isSet = () => this.state.seed.length > 0
-        
-        return { get, set, isSet }
-    }
+    public keys = (): Keys => this.state.keys
+    public auth = (): AuthContract => this.state.contracts
+    public fees = (): Fees => this.state.fees
+    public costs = (): Costs => this.state.costs
 
-    public key = () => {
-        this._throwErrorIsSeedNotSet() 
-        const master = () => bip32.fromSeed(this.seed().get())
-        const priv = () => master()?.privateKey as Buffer
-        const pub = () => master().publicKey as Buffer
-        const pubHex = () => pub().toString('hex')
-
-        return { master, priv, pub, pubHex }
-    }
-
-    public auth = () => {
-        const get = (): IAuthContract | null => this.state.contract || null
-        const isExpired = () => {
-            const contract = get()
-            return !contract ? true : !(new Date(contract.next_change * 1000) > new Date())
-        }
-        const Fetch = async () => {
-            try {
-                const res = await fetch(ROOT_API_URL + '/contract', { method: 'GET' })
-                if (res.status == 200) {
-                    this.setState({ contract: await res.json() }).store()
-                }
-                return res.status
-            } catch(e){
-                throw new Error(e);
-            }            
-        }
-        const refresh = async () => isExpired() && await Fetch()
-        const reset = () => this.setState({ contract: {value: "", next_change: 0} })
-
-        return { get, isExpired, refresh, fetch: Fetch, reset }
-    }
 
     cch = () => {
         const get = (): Array<string> => this.state.cch_list || [] 
+        const last = () => get().length == 0 ? '' : Buffer.from(B64ToByteArray(get()[0]))
+
         const Fetch = async () => {
             if (this.utxos().get().count() > 0){
                 await this.auth().refresh()
                 try {
                     const res = await fetch(ROOT_API_URL + '/cch', {
                         method: 'GET',
-                        headers: Object.assign({}, this.signHeader(), {last_cch: get().length == 0 ? '' : Buffer.from(B64ToByteArray(get()[0])).toString('hex') })
+                        headers: Object.assign({}, this.sign().header(), {last_cch: last().toString('hex') })
                     })
                     if (res.status == 200){
                         let list = await res.json() || []
@@ -104,7 +62,7 @@ class Wallet extends Model {
             }
         }
 
-        return { get, fetch: Fetch }
+        return { get, fetch: Fetch, last }
     }
 
     utxos = () => {
@@ -114,11 +72,10 @@ class Wallet extends Model {
             try {
                 const res = await fetch(ROOT_API_URL + '/utxos', {
                     method: 'GET',
-                    headers: this.signHeader()
+                    headers: this.sign().header()
                 })
                 if (res.status == 200){
                     const json = await res.json()
-                    console.log(json.melted_value)
                     get().setState(json.utxos || []).store()
                 }
                 return res.status
@@ -129,13 +86,19 @@ class Wallet extends Model {
         return { get, fetch: Fetch }
     }
 
-    signHeader = () => {
+    sign = () => {
+        const value = (val:Buffer) => ec.sign(val, this.keys().get().priv()).toDER()
         return {
-            pubkey: this.key().pubHex() as string,
-            signature: Buffer.from(this.signValue(Sha256(B64ToByteArray(this.state.contract.value)))).toString('hex')
+            value,
+            header: () => {
+                return {
+                    pubkey: this.keys().get().pubHex() as string,
+                    signature: Buffer.from(value(Sha256(B64ToByteArray(this.state.contract.value)))).toString('hex')
+                }
+            }
         }
     }
-    signValue = (value: Buffer) => ec.sign(value, this.key().priv()).toDER()
+
 }
 
 
