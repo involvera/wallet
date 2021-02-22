@@ -21,7 +21,7 @@ export class UTXO extends Model {
         super(utxo, options)
         this.setState({
             output: new Output(this.state.output, this.kids()),
-            tx: utxo.tx ? new Transaction(utxo.tx, this.kids()) : null
+            tx: utxo && utxo.tx ? new Transaction(utxo.tx, this.kids()) : null
         })
     }
 

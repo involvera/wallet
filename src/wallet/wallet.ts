@@ -2,15 +2,17 @@ import { Model } from 'acey'
 
 import { B64ToByteArray, Sha256 } from '../util'
 import { ec as EC } from 'elliptic'
+import TxBuild from './tx-builder' 
 
 import fetch from 'node-fetch'
 import { ROOT_API_URL } from '../constant/api'
-import { UTXOList } from '../transaction'
+import { Transaction, UTXOList } from '../transaction'
 
 import AuthContract from './auth-contract'
 import Fees from './fees'
 import Costs from './costs'
 import Keys from './keys'
+import { EMPTY_CODE } from '../script/constant'
 
 const ec = new EC('secp256k1');
 
@@ -19,7 +21,7 @@ class Wallet extends Model {
     constructor(initialState: any, options: any){
         super(initialState, options)
         this.setState({ 
-            seed: new Keys(initialState.seed || '', this.kids()),
+            seed: new Keys(initialState.seed || {seed: ''}, this.kids()),
             utxos: new UTXOList(initialState.utxos || [], this.kids()),
             cch_list: initialState.cch_list || [],
             contract: new AuthContract(initialState.contract, this.kids()),
@@ -28,15 +30,54 @@ class Wallet extends Model {
         })
     }
 
-    refreshAllData = async () => {
+    fetchAllWalletData = async () => {
         await this.utxos().fetch()
         await this.cch().fetch()
+        await this.fees().fetch()
+        await this.costs().fetch()
     }
 
-    public keys = (): Keys => this.state.keys
-    public auth = (): AuthContract => this.state.contracts
+    public keys = (): Keys => this.state.seed
+    public auth = (): AuthContract => this.state.contract
     public fees = (): Fees => this.state.fees
     public costs = (): Costs => this.state.costs
+
+    buildTX = () => {
+
+        const fetchFees = async () => {
+            try {
+                const status = await this.fees().fetch()
+                if (status != 200)
+                    throw new Error("Can't fetch transaction fees.")
+                
+            } catch (e){
+                throw new Error(e)
+            }
+        }  
+
+        const toPKH = async (pubKH: Uint8Array, amount: number): Promise<Transaction> => {
+            await fetchFees()
+
+            const to: Uint8Array[] = []
+            const ta: Uint8Array[][] = []
+            const emptyTa: Uint8Array[] = []
+            to.push(pubKH)
+            ta.push(emptyTa)
+
+            const builder = new TxBuild({ 
+                wallet: this,
+                to,
+                amount_required: [amount],
+                ta,
+                kinds: new Uint8Array([EMPTY_CODE])
+            })
+            return await builder.newTx()
+        }
+
+        return {
+            toPKH
+        }
+    }
 
 
     cch = () => {
@@ -76,6 +117,8 @@ class Wallet extends Model {
                 })
                 if (res.status == 200){
                     const json = await res.json()
+                    console.log(this.sign().header())
+
                     get().setState(json.utxos || []).store()
                 }
                 return res.status
@@ -93,7 +136,7 @@ class Wallet extends Model {
             header: () => {
                 return {
                     pubkey: this.keys().get().pubHex() as string,
-                    signature: Buffer.from(value(Sha256(B64ToByteArray(this.state.contract.value)))).toString('hex')
+                    signature: Buffer.from(value(Sha256(B64ToByteArray(this.auth().get().value())))).toString('hex')
                 }
             }
         }
