@@ -17,7 +17,7 @@ export default class Keys extends Model {
     }
     
     set = (mnemonic: string, pass: string) => {
-        this.setState({ seed: bip39.mnemonicToSeedSync(mnemonic, pass).toString('hex') }).store()
+        return this.setState({ seed: bip39.mnemonicToSeedSync(mnemonic, pass).toString('hex') })
     }
 
     isSet = () => this.state.seed.length > 0

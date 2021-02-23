@@ -183,13 +183,13 @@ const intToByteArray = (val: BigInt, valType: 'int8' | 'int16' | 'int32' | 'int6
     for (var i = 0; i < length; i++){
         binary = `0${binary}`
     }
-    
-    var ret = new Uint8Array(binary.length / 8)
+
+    let ret: number[] = []
     i = 0;
     while (i < binary.length){
-        ret[(binary.length / 8) - 1 - i] = parseInt(binary.substr(i, 8), 2)
+        ret.push(parseInt(binary.substr(i, 8), 2))
         i += 8
     }
-    return ret
+    return new Uint8Array(ret)
 }
 

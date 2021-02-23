@@ -74,9 +74,7 @@ class Wallet extends Model {
             return await builder.newTx()
         }
 
-        return {
-            toPKH
-        }
+        return { toPKH }
     }
 
 

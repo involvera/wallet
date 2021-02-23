@@ -32,5 +32,5 @@ export default class AuthContract extends Model {
         }            
     }
     refresh = async () => this.isExpired() && await this.fetch()
-    reset = () => this.setState({ value: "", next_change: 0 }).store()
+    reset = () => this.setState({ value: "", next_change: 0 })
 }

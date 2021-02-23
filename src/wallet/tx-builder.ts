@@ -86,7 +86,7 @@ export default class TxBuild {
             throw LAST_CCH_NOT_FOUND_ERROR
         
         const tx = new Transaction({
-            t: Int64ToByteArray(BigInt((new Date().getTime() / 1000))),
+            t: Int64ToByteArray(BigInt(Math.floor((new Date().getTime() / 1000)))),
             inputs: inputs.to().plain(), 
             outputs: outputs.to().plain(),
             lh: this.wallet.cch().last() as Buffer
@@ -126,11 +126,11 @@ export default class TxBuild {
         const pushOutput = (toIndex: number, fromIdx: number, toIdx: number) => {
             const inputIdxLength = toIdx - fromIdx + 1
             const target = this.ta[toIndex]
-    
             outputs.push(Output.NewOutput(this.to[toIndex], currentRealAmountToSend, newIntArrayFilled(inputIdxLength, fromIdx), this.kinds[toIndex] as TByte, target))
         }
 
         const pushSurplusOutput = (lastUTXOIdx: number) => {
+            console.log(outputs.to().string())
             const totalUsed = outputs.get().totalValue()
             const emptyTa: Uint8Array[] = []
             outputs.push(Output.NewOutput(this.wallet.keys().get().pubHash(), utxos.get().totalValue()-totalUsed, newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), EMPTY_CODE, emptyTa))

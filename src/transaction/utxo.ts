@@ -121,7 +121,7 @@ export class UTXOList extends Collection {
             let amountGot = 0
 
             for (let i = 0; i < this.count(); i++){
-                this.push(this.nodeAt(i))
+                ret.push(this.nodeAt(i) as UTXO)
                 amountGot += (this.nodeAt(i) as UTXO).get().meltedValue()
                 if (amountGot > amountRequired) 
                     break

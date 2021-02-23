@@ -51,9 +51,10 @@ export class OutputList extends Collection {
 
 	get = () => {
 		const totalValue = () => {
-            let total = BigInt(0)
+			let total = BigInt(0)
             this.map((out: Output) => {
 				total += BigInt(out.get().valueBigInt())
+				console.log(total)
             })
             return total
 		}
