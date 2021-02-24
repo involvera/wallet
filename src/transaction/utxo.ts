@@ -1,5 +1,4 @@
 import { Collection, Model } from 'acey'
-import { B64ToByteArray, IntToByteArray } from '../util'
 import { Output, InputList } from '.'
 import { wallet } from '../models'
 import { CYCLE_IN_LUGH, ROOT_API_URL } from '../constant'

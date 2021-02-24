@@ -1,12 +1,12 @@
 export { 
-    IntToByteArray,
-    Int64ToByteArray,
-    ByteArrayToInt,
-    StringToByteArray,
-    ByteArrayToString,
-    DecodeArrayInt,
+    EncodeInt,
+    EncodeArrayInt,
+    EncodeInt64,
+    EncodeString,
+    DecodeString,
     B64ToBigInt,
-    B64ToByteArray
+    B64ToByteArray,
+    DecodeArrayInt,
  } from './bytes'
 
  export { Sha256, Ripemd160 } from './hash'

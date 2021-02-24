@@ -10,14 +10,14 @@ const MINUS = BigInt(-1)
 
 
 export const B64ToBigInt = (b64: string, isNegative: boolean): BigInt => {
-    return ByteArrayToInt(B64ToByteArray(b64), isNegative)
+    return DecodeInt(B64ToByteArray(b64), isNegative)
 }
 
 export const B64ToByteArray = (b64: string): Uint8Array => {
     return new Uint8Array(Buffer.from(b64, 'base64'))
 }
 
-export const StringToByteArray = (str: string): Uint8Array => {
+export const EncodeString = (str: string): Uint8Array => {
     let utf8 = new Uint8Array(str.length)
     for (let i = 0; i < str.length; i++) {
         let charcode = str.charCodeAt(i);
@@ -47,7 +47,7 @@ export const StringToByteArray = (str: string): Uint8Array => {
     return utf8
 }
 
-export const ByteArrayToString = (array: Uint8Array): string => {
+export const DecodeString = (array: Uint8Array): string => {
     var out, i, len, c;
     var char2, char3;
 
@@ -81,7 +81,7 @@ export const ByteArrayToString = (array: Uint8Array): string => {
     return out;
 }
 
-export const ByteArrayToInt = (value: Uint8Array, isNegative: boolean): BigInt => {
+export const DecodeInt = (value: Uint8Array, isNegative: boolean): BigInt => {
     let n = BigInt(0);
     let MAX = MAX_UINT_8
     switch(value.length){
@@ -141,7 +141,7 @@ export const ByteArrayToInt = (value: Uint8Array, isNegative: boolean): BigInt =
 export const EncodeArrayInt = (array: number[]): Uint8Array[] => {
     let ret: Uint8Array[] = []
     for (let i = 0; i < array.length; i++) {
-        ret[i] = IntToByteArray(BigInt(array[i]))
+        ret[i] = EncodeInt(BigInt(array[i]))
     }
     return ret
 }
@@ -149,16 +149,16 @@ export const EncodeArrayInt = (array: number[]): Uint8Array[] => {
 export const DecodeArrayInt = (array: Uint8Array[]): BigInt[] => {
     let ret: BigInt[] = []
     for (let i = 0; i < array.length; i++) {
-        ret[i] = ByteArrayToInt(array[i], false)
+        ret[i] = DecodeInt(array[i], false)
     }
     return ret
 } 
 
-export const IntToByteArray = (val: BigInt) => {
+export const EncodeInt = (val: BigInt) => {
     return intToByteArray(val, 'int32', false)
 }
 
-export const Int64ToByteArray = (val: BigInt) => {
+export const EncodeInt64 = (val: BigInt) => {
     return intToByteArray(val, 'int64', false)
 }
 

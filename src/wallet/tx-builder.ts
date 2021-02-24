@@ -2,7 +2,7 @@ import { TByte } from "../constant";
 import { LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
 import { EMPTY_CODE } from "../script/constant";
 import { InputList, Output, OutputList, Transaction, UTXO } from "../transaction"
-import { Int64ToByteArray, NewEmptyDoubleUint8Array, PopUint8Array, PushToUint8Array } from "../util";
+import { NewEmptyDoubleUint8Array, PopUint8Array, PushToUint8Array } from "../util";
 import { CalculateOutputValueFromMelted } from "../util/output";
 import Wallet from './wallet'
 
