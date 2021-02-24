@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "tsc && node ./dist/index.js"
+    "start": "tsc && node ./dist/index.js",
+    "test": "mocha -r ts-node/register tests/index.ts"
   },
   "dependencies": {
     "@types/base-x": "^3.0.6",
@@ -26,6 +27,7 @@
     "node-fetch": "^2.6.1",
     "safe-buffer": "^5.2.1",
     "tiny-secp256k1": "^1.1.6",
+    "ts-node": "^9.1.1",
     "tweetnacl": "^1.0.3",
     "typescript": "^4.1.3"
   }
