@@ -8,12 +8,12 @@ import fetch from 'node-fetch'
 import { ITransaction, Transaction } from './transaction'
  
 export interface IUTXO {
-    tx_id: Uint8Array
-    idx: BigInt
+    tx_id: string
+    idx: number
     output: Output
     tx: null | ITransaction 
     mr: number
-    cch: Uint8Array
+    cch: string
 }
 
 export class UTXO extends Model {
@@ -26,20 +26,19 @@ export class UTXO extends Model {
     }
 
     get = () => {
-        const txID = () => B64ToByteArray(this.state.tx_id)
-        const idx = (): BigInt => BigInt(this.state.idx)
+        const txID = (): string => this.state.tx_id
+        const idx = (): number => this.state.idx
         const output = (): Output => this.state.output
         const MR = (): number => this.state.mr
-        const CCH = (): Uint8Array => B64ToByteArray(this.state.cch)
+        const CCH = (): string => this.state.cch
         const tx = (): Transaction | null => this.state.tx
     
         const meltedValueRatio = () => {
             const list = wallet.cch().get() 
             let count = 0
             for (const cch of list){
-                if (JSON.stringify(B64ToByteArray(cch)) == JSON.stringify(CCH())){
+                if (cch === CCH())
                     break
-                }
                 count++
             }
             if (count == list.length) 
@@ -52,7 +51,7 @@ export class UTXO extends Model {
             return r
         }
 
-        const meltedValue = () => CalculateOutputMeltedValue(output().get().valueBigInt(), meltedValueRatio())
+        const meltedValue = () => CalculateOutputMeltedValue(output().get().value(), meltedValueRatio())
 
         return { 
             meltedValue, meltedValueRatio,
@@ -71,7 +70,7 @@ export class UTXOList extends Collection {
     toInputs = () => {
         return new InputList(
             this.map((utxo: UTXO) => {
-                return {prev_transaction_hash: utxo.get().txID(), vout: IntToByteArray(utxo.get().idx()), sign: new Uint8Array()}
+                return {prev_transaction_hash: utxo.get().txID(), vout: utxo.get().idx(), sign: ''}
             }),
             {}
         )
@@ -106,13 +105,13 @@ export class UTXOList extends Collection {
             const ret: string[] = []
             for (let i = 0; i < this.count(); i++){
                 const utxo = this.nodeAt(i) as UTXO
-                !utxo.get().tx() && ret.push(Buffer.from(utxo.get().txID()).toString('hex'))
+                !utxo.get().tx() && ret.push(utxo.get().txID())
             }
             return ret
         }
 
         const UTXOByTxHash = (txHashHex: string): UTXO | undefined => {
-            const u = this.find((utxo: UTXO) => Buffer.from(utxo.get().txID()).toString('hex') === txHashHex)
+            const u = this.find((utxo: UTXO) => utxo.get().txID() === txHashHex)
             return u ? u as UTXO : undefined
         }
 
@@ -132,7 +131,7 @@ export class UTXOList extends Collection {
         const totalValue = () => {
             let total = BigInt(0)
             this.map((utxo: UTXO) => {
-                total += BigInt(utxo.get().output().get().valueBigInt())
+                total += BigInt(utxo.get().output().get().value())
             })
             return total
         }

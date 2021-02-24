@@ -4,9 +4,9 @@ import { ByteArrayToInt, DecodeArrayInt, B64ToByteArray, Int64ToByteArray } from
 import { EncodeArrayInt } from '../util/bytes'
 
 export interface IOutput {
-	input_indexes: Uint8Array[] 
-	value:        Uint8Array
-	pub_key_hash:   Uint8Array
+	input_indexes: number[]
+	value:        BigInt
+	pub_key_hash:   string
 	k:              TByte,
 	ta:				Uint8Array[]
 }
@@ -14,11 +14,11 @@ export interface IOutput {
 export class Output extends Model {
 	
 
-	static NewOutput = (pubKeyHash: Uint8Array, value: BigInt, inputIDX: number[], kind: TByte, ta: Uint8Array[]) => {
+	static NewOutput = (pub_key_hash: string, value: BigInt, inputIDX: number[], kind: TByte, ta: Uint8Array[]) => {
 		const out: IOutput = {
-			value: Int64ToByteArray(value),
-			pub_key_hash: pubKeyHash,
-			input_indexes: EncodeArrayInt(inputIDX),
+			value,
+			pub_key_hash,
+			input_indexes: inputIDX,
 			k: kind,
 			ta
 		}
@@ -30,18 +30,16 @@ export class Output extends Model {
 	}
 
 	get = () => {
-		const value = (): Uint8Array => B64ToByteArray(this.state.value)
-		const valueBigInt = () => ByteArrayToInt(value(), false)
-		const inputIndexes = (): Uint8Array[] => this.state.input_indexes
-		const inputIndexesBigInt = () => DecodeArrayInt(inputIndexes())
-		const pubKH = (): Uint8Array => B64ToByteArray(this.state.pub_key_hash)
+		const value = (): BigInt => this.state.value
+		const inputIndexes = (): number[] => this.state.input_indexes
+		const pubKH = (): string => this.state.pub_key_hash
 
 		return {
-			value, valueBigInt, inputIndexes, inputIndexesBigInt, pubKH
+			value, inputIndexes, pubKH
 		}
 	}
 
-	isValueAbove = (val: BigInt) => val < this.get().valueBigInt()
+	isValueAbove = (val: BigInt) => val < this.get().value()
 }
 
 export class OutputList extends Collection {
@@ -53,8 +51,7 @@ export class OutputList extends Collection {
 		const totalValue = () => {
 			let total = BigInt(0)
             this.map((out: Output) => {
-				total += BigInt(out.get().valueBigInt())
-				console.log(total)
+				total += BigInt(out.get().value())
             })
             return total
 		}

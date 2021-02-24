@@ -8,7 +8,7 @@ import Wallet from './wallet'
 
 export interface ITXBuild {
     wallet:         Wallet
-	to:             Uint8Array[]
+	to:             string[]
 	amount_required: number[]
 	kinds:          Uint8Array
 	ta:             Uint8Array[][]
@@ -16,7 +16,7 @@ export interface ITXBuild {
 
 export default class TxBuild {
 
-	private to:             Uint8Array[]
+	private to:             string[]
     private amount_required: number[]
 	private kinds:          Uint8Array
     private ta:             Uint8Array[][]
@@ -86,10 +86,10 @@ export default class TxBuild {
             throw LAST_CCH_NOT_FOUND_ERROR
         
         const tx = new Transaction({
-            t: Int64ToByteArray(BigInt(Math.floor((new Date().getTime() / 1000)))),
+            t: Math.floor((new Date().getTime() / 1000)),
             inputs: inputs.to().plain(), 
             outputs: outputs.to().plain(),
-            lh: this.wallet.cch().last() as Buffer
+            lh: this.wallet.cch().last()
         }, {})
 
         return this._makeTxWithFees(tx)
@@ -133,7 +133,7 @@ export default class TxBuild {
             console.log(outputs.to().string())
             const totalUsed = outputs.get().totalValue()
             const emptyTa: Uint8Array[] = []
-            outputs.push(Output.NewOutput(this.wallet.keys().get().pubHash(), utxos.get().totalValue()-totalUsed, newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), EMPTY_CODE, emptyTa))
+            outputs.push(Output.NewOutput(this.wallet.keys().get().pubHashHex(), utxos.get().totalValue()-totalUsed, newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), EMPTY_CODE, emptyTa))
         }
 
         const totalInEscrow = utxos.get().totalMeltedValue()

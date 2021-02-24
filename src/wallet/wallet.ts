@@ -55,10 +55,10 @@ class Wallet extends Model {
             }
         }  
 
-        const toPKH = async (pubKH: Uint8Array, amount: number): Promise<Transaction> => {
+        const toPKH = async (pubKH: string, amount: number): Promise<Transaction> => {
             await fetchFees()
 
-            const to: Uint8Array[] = []
+            const to: string[] = []
             const ta: Uint8Array[][] = []
             const emptyTa: Uint8Array[] = []
             to.push(pubKH)
@@ -80,7 +80,7 @@ class Wallet extends Model {
 
     cch = () => {
         const get = (): Array<string> => this.state.cch_list || [] 
-        const last = () => get().length == 0 ? '' : Buffer.from(B64ToByteArray(get()[0]))
+        const last = () => get().length == 0 ? '' : get()[0]
 
         const Fetch = async () => {
             if (this.utxos().get().count() > 0){
@@ -88,7 +88,7 @@ class Wallet extends Model {
                 try {
                     const res = await fetch(ROOT_API_URL + '/cch', {
                         method: 'GET',
-                        headers: Object.assign({}, this.sign().header(), {last_cch: last().toString('hex') })
+                        headers: Object.assign({}, this.sign().header(), {last_cch: last() })
                     })
                     if (res.status == 200){
                         let list = await res.json() || []

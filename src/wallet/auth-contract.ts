@@ -15,8 +15,8 @@ export default class AuthContract extends Model {
     }
 
     get = () => {
-        const nextChange = () => this.state.next_change
-        const value = () => this.state.value
+        const nextChange = (): number => this.state.next_change
+        const value = (): string => this.state.value
         return { value, nextChange }
     }
 

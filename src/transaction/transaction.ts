@@ -10,8 +10,8 @@ import { ByteArrayToInt, Sha256, B64ToByteArray, StringToByteArray } from '../ut
 import { UTXO, UTXOList } from './utxo'
 
 export interface ITransaction {
-    lh:      Uint8Array
-	t:       Uint8Array
+    lh:      string
+	t:       number
 	inputs:  IInput[]
 	outputs: IOutput[] 
 }
@@ -26,7 +26,7 @@ export class Transaction extends Model {
         })
     }
 
-    isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as Input) .get().prevTxHash().length == 0
+    isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as Input).get().prevTxHash().length == 0
 
     sign = async (utxos: UTXOList) => {
         await utxos.fetchPrevTxList(wallet.sign().header())
@@ -36,20 +36,19 @@ export class Transaction extends Model {
             const prevTx = (utxos.nodeAt(i) as UTXO).get().tx() as Transaction
             const signature = wallet.sign().value(Buffer.from(prevTx.to().string()))
             const input = this.get().inputs().nodeAt(i) as Input
-            input.setState({ sign: StringToByteArray(Buffer.from(signature).toString()) })
+            input.setState({ sign: Buffer.from(signature).toString('hex') })
         }
     }
 
     get = () => {
-        const time = () => B64ToByteArray(this.state.t)
-        const timeInt64 = () => ByteArrayToInt(time(), false)
+        const time = (): number => this.state.t
 
         const hash = () => Sha256(this.to().string())
         const inputs = (): InputList => this.state.inputs
         const outputs = (): OutputList => this.state.outputs
 
         return {
-            time, timeInt64,
+            time,
             hash, inputs, outputs
         }
     }
