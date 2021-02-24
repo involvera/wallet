@@ -190,6 +190,6 @@ const intToByteArray = (val: BigInt, valType: 'int8' | 'int16' | 'int32' | 'int6
         ret.push(parseInt(binary.substr(i, 8), 2))
         i += 8
     }
-    return new Uint8Array(ret)
+    return new Uint8Array(ret.reverse())
 }
 
