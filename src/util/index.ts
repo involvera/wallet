@@ -2,6 +2,7 @@ export {
     EncodeInt,
     EncodeArrayInt,
     EncodeInt64,
+    DecodeInt,
     EncodeString,
     DecodeString,
     B64ToBigInt,

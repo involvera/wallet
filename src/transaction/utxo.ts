@@ -1,10 +1,10 @@
 import { Collection, Model } from 'acey'
 import { Output, InputList } from '.'
-import { wallet } from '../models'
 import { CYCLE_IN_LUGH, ROOT_API_URL } from '../constant'
 import { CalculateOutputMeltedValue } from '../util/output'
 import fetch from 'node-fetch'
 import { ITransaction, Transaction } from './transaction'
+import { IHeaderSignature } from '../wallet/wallet'
  
 export interface IUTXO {
     tx_id: string
@@ -32,15 +32,14 @@ export class UTXO extends Model {
         const CCH = (): string => this.state.cch
         const tx = (): Transaction | null => this.state.tx
     
-        const meltedValueRatio = () => {
-            const list = wallet.cch().get() 
+        const meltedValueRatio = (CCHList: string[]) => {
             let count = 0
-            for (const cch of list){
+            for (const cch of CCHList){
                 if (cch === CCH())
                     break
                 count++
             }
-            if (count == list.length) 
+            if (count == CCHList.length) 
                 return 0
             
             const r = MR() - ((1 / CYCLE_IN_LUGH) * count)
@@ -50,7 +49,7 @@ export class UTXO extends Model {
             return r
         }
 
-        const meltedValue = () => CalculateOutputMeltedValue(output().get().value(), meltedValueRatio())
+        const meltedValue = (CCHList: string[]) => CalculateOutputMeltedValue(output().get().value(), meltedValueRatio(CCHList))
 
         return { 
             meltedValue, meltedValueRatio,
@@ -75,7 +74,7 @@ export class UTXOList extends Collection {
         )
     }
 
-    fetchPrevTxList = async (headerSignature: any) => {
+    fetchPrevTxList = async (headerSignature: IHeaderSignature) => {
         const listUnFetchedTxHash = this.get().listUnFetchedTxHash()
         if (listUnFetchedTxHash.length == 0)
             return 
@@ -83,7 +82,7 @@ export class UTXOList extends Collection {
         try { 
             const response = await fetch(ROOT_API_URL + '/transactions/list', {
                 method: 'GET',
-                headers: Object.assign({}, headerSignature, {list: listUnFetchedTxHash})
+                headers: Object.assign({}, headerSignature as any, {list: listUnFetchedTxHash})
             })
             if (response.status == 200){
                 let list = await response.json()
@@ -114,13 +113,13 @@ export class UTXOList extends Collection {
             return u ? u as UTXO : undefined
         }
 
-        const requiredList = (amountRequired: number): UTXOList => {
+        const requiredList = (amountRequired: number, CCHList: string[]): UTXOList => {
             let ret: UTXO[] = []
             let amountGot = 0
 
             for (let i = 0; i < this.count(); i++){
                 ret.push(this.nodeAt(i) as UTXO)
-                amountGot += (this.nodeAt(i) as UTXO).get().meltedValue()
+                amountGot += (this.nodeAt(i) as UTXO).get().meltedValue(CCHList)
                 if (amountGot > amountRequired) 
                     break
             }
@@ -135,10 +134,10 @@ export class UTXOList extends Collection {
             return total
         }
 
-        const totalMeltedValue = () => {
+        const totalMeltedValue = (CCHList: string[]) => {
             let total = 0
             this.map((utxo: UTXO) => {
-                total += utxo.get().meltedValue()
+                total += utxo.get().meltedValue(CCHList)
             })
             return total
         }

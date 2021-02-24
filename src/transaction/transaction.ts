@@ -1,12 +1,11 @@
 import { Model } from 'acey'
 import { 
-    IOutput, Output, OutputList,
+    IOutput, OutputList,
     IInput, Input, InputList,
 } from '.'
-import { PUBKH_LENGTH } from '../constant'
-import { wallet } from '../models'
 
-import { ByteArrayToInt, Sha256, B64ToByteArray, StringToByteArray } from '../util'
+import { Sha256} from '../util'
+import Wallet from '../wallet/wallet'
 import { UTXO, UTXOList } from './utxo'
 
 export interface ITransaction {
@@ -28,7 +27,7 @@ export class Transaction extends Model {
 
     isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as Input).get().prevTxHash().length == 0
 
-    sign = async (utxos: UTXOList) => {
+    sign = async (utxos: UTXOList, wallet: Wallet) => {
         await utxos.fetchPrevTxList(wallet.sign().header())
         const inputs = this.get().inputs()
 

@@ -71,8 +71,8 @@ export default class TxBuild {
     }
 
     setupUTXOs = (amountRequired: number) => {
-        const availableUTXOs = this.wallet.utxos().get().get().requiredList(amountRequired)
-        if (availableUTXOs.get().totalMeltedValue() < amountRequired){
+        const availableUTXOs = this.wallet.utxos().get().get().requiredList(amountRequired, this.wallet.cch().get())
+        if (availableUTXOs.get().totalMeltedValue(this.wallet.cch().get()) < amountRequired){
             throw NOT_ENOUGH_FUNDS_ERROR
         }
         return availableUTXOs
@@ -115,11 +115,11 @@ export default class TxBuild {
         }
 
         const getMeltedValueAtUTXOIndex = (index: number) => {
-            return (utxos.nodeAt(index) as UTXO).get().meltedValue()
+            return (utxos.nodeAt(index) as UTXO).get().meltedValue(this.wallet.cch().get())
         }
 
         const refreshCurrentRealAmountToSend = (val: number) => {
-            const mr = (utxos.nodeAt(utxoIndex) as UTXO).get().meltedValueRatio()
+            const mr = (utxos.nodeAt(utxoIndex) as UTXO).get().meltedValueRatio(this.wallet.cch().get())
             currentRealAmountToSend = BigInt(currentRealAmountToSend) + BigInt(CalculateOutputValueFromMelted(val, mr))
         }
 
@@ -136,7 +136,7 @@ export default class TxBuild {
             outputs.push(Output.NewOutput(this.wallet.keys().get().pubHashHex(), utxos.get().totalValue()-totalUsed, newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), EMPTY_CODE, emptyTa))
         }
 
-        const totalInEscrow = utxos.get().totalMeltedValue()
+        const totalInEscrow = utxos.get().totalMeltedValue(this.wallet.cch().get())
         const totalToSend = this.totalAmount()
         let totalToSendLeft = totalToSend
         let amountsLeftToTakeInCurrentUTXO = getMeltedValueAtUTXOIndex(utxoIndex)

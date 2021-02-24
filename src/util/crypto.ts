@@ -1,5 +1,3 @@
 import * as bip39 from 'bip39'
 
-export const NewMnemonic = (): string => {
-    return bip39.generateMnemonic()
-}
+export const NewMnemonic = (): string => bip39.generateMnemonic()

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 
-import { Int64ToByteArray, IntToByteArray, ByteArrayToInt } from '../src/util'
+import { EncodeInt64, EncodeInt, DecodeInt } from '../src/util'
 
 const ZERO = BigInt(0)
 
@@ -116,175 +116,217 @@ const MAX_UINT_32_BYTES = new Uint8Array([0, 0, 0, 0, 1, 0, 0, 0])
 describe('Testing int encoding/decoding', () => {
 
     it('negative int8 1/4', () => {
-        expect(IntToByteArray(RAND_NEG_INT_8_1).toString()).to.equal(RAND_NEG_INT_8_1_BYTES.toString());
+        expect(EncodeInt(RAND_NEG_INT_8_1).toString()).to.equal(RAND_NEG_INT_8_1_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_8_1_BYTES, true).toString()).to.equal(RAND_NEG_INT_8_1.toString());
     });
 
     it('negative int8 2/4', () => {
-        expect(IntToByteArray(RAND_NEG_INT_8_2).toString()).to.equal(RAND_NEG_INT_8_2_BYTES.toString());
+        expect(EncodeInt(RAND_NEG_INT_8_2).toString()).to.equal(RAND_NEG_INT_8_2_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_8_2_BYTES, true).toString()).to.equal(RAND_NEG_INT_8_2.toString());
     });
 
     it('negative int8 3/4', () => {
-        expect(IntToByteArray(RAND_NEG_INT_8_3).toString()).to.equal(RAND_NEG_INT_8_3_BYTES.toString());
+        expect(EncodeInt(RAND_NEG_INT_8_3).toString()).to.equal(RAND_NEG_INT_8_3_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_8_3_BYTES, true).toString()).to.equal(RAND_NEG_INT_8_3.toString());
     });
 
     it('negative int8 4/4', () => {
-        expect(IntToByteArray(RAND_NEG_INT_8_4).toString()).to.equal(RAND_NEG_INT_8_4_BYTES.toString());
+        expect(EncodeInt(RAND_NEG_INT_8_4).toString()).to.equal(RAND_NEG_INT_8_4_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_8_4_BYTES, true).toString()).to.equal(RAND_NEG_INT_8_4.toString());
     });
 
     it('positive int8 1/4', () => {
-        expect(IntToByteArray(RAND_POS_INT_8_1).toString()).to.equal(RAND_POS_INT_8_1_BYTES.toString());
+        expect(EncodeInt(RAND_POS_INT_8_1).toString()).to.equal(RAND_POS_INT_8_1_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_8_1_BYTES, false).toString()).to.equal(RAND_POS_INT_8_1.toString());
     });
 
     it('positive int8 2/4', () => {
-        expect(IntToByteArray(RAND_POS_INT_8_2).toString()).to.equal(RAND_POS_INT_8_2_BYTES.toString());
+        expect(EncodeInt(RAND_POS_INT_8_2).toString()).to.equal(RAND_POS_INT_8_2_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_8_2_BYTES, false).toString()).to.equal(RAND_POS_INT_8_2.toString());
     });
 
     it('positive int8 3/4', () => {
-        expect(IntToByteArray(RAND_POS_INT_8_3).toString()).to.equal(RAND_POS_INT_8_3_BYTES.toString());
+        expect(EncodeInt(RAND_POS_INT_8_3).toString()).to.equal(RAND_POS_INT_8_3_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_8_3_BYTES, false).toString()).to.equal(RAND_POS_INT_8_3.toString());
     });
 
     it('positive int8 4/4', () => {
-        expect(IntToByteArray(RAND_POS_INT_8_4).toString()).to.equal(RAND_POS_INT_8_4_BYTES.toString());
+        expect(EncodeInt(RAND_POS_INT_8_4).toString()).to.equal(RAND_POS_INT_8_4_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_8_4_BYTES, false).toString()).to.equal(RAND_POS_INT_8_4.toString());
     });
 
-
     it('negative int16 1/4', () => {
-        expect(IntToByteArray(RAND_NEG_INT_16_1).toString()).to.equal(RAND_NEG_INT_16_1_BYTES.toString());
+        expect(EncodeInt(RAND_NEG_INT_16_1).toString()).to.equal(RAND_NEG_INT_16_1_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_16_1_BYTES, true).toString()).to.equal(RAND_NEG_INT_16_1.toString());
     });
 
     it('negative int16 2/4', () => {
-        expect(IntToByteArray(RAND_NEG_INT_16_2).toString()).to.equal(RAND_NEG_INT_16_2_BYTES.toString());
+        expect(EncodeInt(RAND_NEG_INT_16_2).toString()).to.equal(RAND_NEG_INT_16_2_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_16_2_BYTES, true).toString()).to.equal(RAND_NEG_INT_16_2.toString());
     });
 
     it('negative int16 3/4', () => {
-        expect(IntToByteArray(RAND_NEG_INT_16_3).toString()).to.equal(RAND_NEG_INT_16_3_BYTES.toString());
+        expect(EncodeInt(RAND_NEG_INT_16_3).toString()).to.equal(RAND_NEG_INT_16_3_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_16_3_BYTES, true).toString()).to.equal(RAND_NEG_INT_16_3.toString());
     });
 
     it('negative int16 4/4', () => {
-        expect(IntToByteArray(RAND_NEG_INT_16_4).toString()).to.equal(RAND_NEG_INT_16_4_BYTES.toString());
+        expect(EncodeInt(RAND_NEG_INT_16_4).toString()).to.equal(RAND_NEG_INT_16_4_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_16_4_BYTES, true).toString()).to.equal(RAND_NEG_INT_16_4.toString());
     });
 
     it('positive int16 1/4', () => {
-        expect(IntToByteArray(RAND_POS_INT_16_1).toString()).to.equal(RAND_POS_INT_16_1_BYTES.toString());
+        expect(EncodeInt(RAND_POS_INT_16_1).toString()).to.equal(RAND_POS_INT_16_1_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_16_1_BYTES, false).toString()).to.equal(RAND_POS_INT_16_1.toString());
     });
 
     it('positive int16 2/4', () => {
-        expect(IntToByteArray(RAND_POS_INT_16_2).toString()).to.equal(RAND_POS_INT_16_2_BYTES.toString());
+        expect(EncodeInt(RAND_POS_INT_16_2).toString()).to.equal(RAND_POS_INT_16_2_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_16_2_BYTES, false).toString()).to.equal(RAND_POS_INT_16_2.toString());
     });
 
     it('positive int16 3/4', () => {
-        expect(IntToByteArray(RAND_POS_INT_16_3).toString()).to.equal(RAND_POS_INT_16_3_BYTES.toString());
+        expect(EncodeInt(RAND_POS_INT_16_3).toString()).to.equal(RAND_POS_INT_16_3_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_16_3_BYTES, false).toString()).to.equal(RAND_POS_INT_16_3.toString());
     });
 
     it('positive int16 4/4', () => {
-        expect(IntToByteArray(RAND_POS_INT_16_4).toString()).to.equal(RAND_POS_INT_16_4_BYTES.toString());
+        expect(EncodeInt(RAND_POS_INT_16_4).toString()).to.equal(RAND_POS_INT_16_4_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_16_4_BYTES, false).toString()).to.equal(RAND_POS_INT_16_4.toString());
     });
 
     it('negative int32 1/4', () => {
-        expect(IntToByteArray(RAND_NEG_INT_32_1).toString()).to.equal(RAND_NEG_INT_32_1_BYTES.toString());
+        expect(EncodeInt(RAND_NEG_INT_32_1).toString()).to.equal(RAND_NEG_INT_32_1_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_32_1_BYTES, true).toString()).to.equal(RAND_NEG_INT_32_1.toString());
     });
 
     it('negative int32 2/4', () => {
-        expect(IntToByteArray(RAND_NEG_INT_32_2).toString()).to.equal(RAND_NEG_INT_32_2_BYTES.toString());
+        expect(EncodeInt(RAND_NEG_INT_32_2).toString()).to.equal(RAND_NEG_INT_32_2_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_32_2_BYTES, true).toString()).to.equal(RAND_NEG_INT_32_2.toString());
     });
 
     it('negative int32 3/4', () => {
-        expect(IntToByteArray(RAND_NEG_INT_32_3).toString()).to.equal(RAND_NEG_INT_32_3_BYTES.toString());
+        expect(EncodeInt(RAND_NEG_INT_32_3).toString()).to.equal(RAND_NEG_INT_32_3_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_32_3_BYTES, true).toString()).to.equal(RAND_NEG_INT_32_3.toString());
     });
 
     it('negative int32 4/4', () => {
-        expect(IntToByteArray(RAND_NEG_INT_32_4).toString()).to.equal(RAND_NEG_INT_32_4_BYTES.toString());
+        expect(EncodeInt(RAND_NEG_INT_32_4).toString()).to.equal(RAND_NEG_INT_32_4_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_32_4_BYTES, true).toString()).to.equal(RAND_NEG_INT_32_4.toString());
     });
 
     it('positive int32 1/4', () => {
-        expect(IntToByteArray(RAND_POS_INT_32_1).toString()).to.equal(RAND_POS_INT_32_1_BYTES.toString());
+        expect(EncodeInt(RAND_POS_INT_32_1).toString()).to.equal(RAND_POS_INT_32_1_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_32_1_BYTES, false).toString()).to.equal(RAND_POS_INT_32_1.toString());
     });
 
     it('positive int32 2/4', () => {
-        expect(IntToByteArray(RAND_POS_INT_32_2).toString()).to.equal(RAND_POS_INT_32_2_BYTES.toString());
+        expect(EncodeInt(RAND_POS_INT_32_2).toString()).to.equal(RAND_POS_INT_32_2_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_32_2_BYTES, false).toString()).to.equal(RAND_POS_INT_32_2.toString());
     });
 
     it('positive int32 3/4', () => {
-        expect(IntToByteArray(RAND_POS_INT_32_3).toString()).to.equal(RAND_POS_INT_32_3_BYTES.toString());
+        expect(EncodeInt(RAND_POS_INT_32_3).toString()).to.equal(RAND_POS_INT_32_3_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_32_3_BYTES, false).toString()).to.equal(RAND_POS_INT_32_3.toString());
     });
 
     it('positive int32 4/4', () => {
-        expect(IntToByteArray(RAND_POS_INT_32_4).toString()).to.equal(RAND_POS_INT_32_4_BYTES.toString());
+        expect(EncodeInt(RAND_POS_INT_32_4).toString()).to.equal(RAND_POS_INT_32_4_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_32_4_BYTES, false).toString()).to.equal(RAND_POS_INT_32_4.toString());
     });
     
     it('negative int64 1/4', () => {
-        expect(Int64ToByteArray(RAND_NEG_INT_64_1).toString()).to.equal(RAND_NEG_INT_64_1_BYTES.toString());
+        expect(EncodeInt64(RAND_NEG_INT_64_1).toString()).to.equal(RAND_NEG_INT_64_1_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_64_1_BYTES, true).toString()).to.equal(RAND_NEG_INT_64_1.toString());
     });
     
     it('negative int64 2/4', () => {
-        expect(Int64ToByteArray(RAND_NEG_INT_64_2).toString()).to.equal(RAND_NEG_INT_64_2_BYTES.toString());
+        expect(EncodeInt64(RAND_NEG_INT_64_2).toString()).to.equal(RAND_NEG_INT_64_2_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_64_2_BYTES, true).toString()).to.equal(RAND_NEG_INT_64_2.toString());
     });
 
     it('negative int64 3/4', () => {
-        expect(Int64ToByteArray(RAND_NEG_INT_64_3).toString()).to.equal(RAND_NEG_INT_64_3_BYTES.toString());
+        expect(EncodeInt64(RAND_NEG_INT_64_3).toString()).to.equal(RAND_NEG_INT_64_3_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_64_3_BYTES, true).toString()).to.equal(RAND_NEG_INT_64_3.toString());
     });
 
     it('negative int64 4/4', () => {
-        expect(Int64ToByteArray(RAND_NEG_INT_64_4).toString()).to.equal(RAND_NEG_INT_64_4_BYTES.toString());
+        expect(EncodeInt64(RAND_NEG_INT_64_4).toString()).to.equal(RAND_NEG_INT_64_4_BYTES.toString());
+        expect(DecodeInt(RAND_NEG_INT_64_4_BYTES, true).toString()).to.equal(RAND_NEG_INT_64_4.toString());
     });
 
     it('positive int64 1/4', () => {
-        expect(Int64ToByteArray(RAND_POS_INT_64_1).toString()).to.equal(RAND_POS_INT_64_1_BYTES.toString());
+        expect(EncodeInt64(RAND_POS_INT_64_1).toString()).to.equal(RAND_POS_INT_64_1_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_64_1_BYTES, false).toString()).to.equal(RAND_POS_INT_64_1.toString());
     });
 
     it('positive int64 2/4', () => {
-        expect(Int64ToByteArray(RAND_POS_INT_64_2).toString()).to.equal(RAND_POS_INT_64_2_BYTES.toString());
+        expect(EncodeInt64(RAND_POS_INT_64_2).toString()).to.equal(RAND_POS_INT_64_2_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_64_2_BYTES, false).toString()).to.equal(RAND_POS_INT_64_2.toString());
     });
 
     it('positive int64 3/4', () => {
-        expect(Int64ToByteArray(RAND_POS_INT_64_3).toString()).to.equal(RAND_POS_INT_64_3_BYTES.toString());
+        expect(EncodeInt64(RAND_POS_INT_64_3).toString()).to.equal(RAND_POS_INT_64_3_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_64_3_BYTES, false).toString()).to.equal(RAND_POS_INT_64_3.toString());
     });
 
     it('positive int64 4/4', () => {
-        expect(Int64ToByteArray(RAND_POS_INT_64_4).toString()).to.equal(RAND_POS_INT_64_4_BYTES.toString());
+        expect(EncodeInt64(RAND_POS_INT_64_4).toString()).to.equal(RAND_POS_INT_64_4_BYTES.toString());
+        expect(DecodeInt(RAND_POS_INT_64_4_BYTES, false).toString()).to.equal(RAND_POS_INT_64_4.toString());
     });
 
     it('max int8', () => {
-        expect(IntToByteArray(MAX_INT_8).toString()).to.equal(MAX_INT_8_BYTES.toString());
+        expect(EncodeInt(MAX_INT_8).toString()).to.equal(MAX_INT_8_BYTES.toString());
+        expect(DecodeInt(MAX_INT_8_BYTES, false).toString()).to.equal(MAX_INT_8.toString());
     });
 
     it('max int16', () => {
-        expect(IntToByteArray(MAX_INT_16).toString()).to.equal(MAX_INT_16_BYTES.toString());
+        expect(EncodeInt(MAX_INT_16).toString()).to.equal(MAX_INT_16_BYTES.toString());
+        expect(DecodeInt(MAX_INT_16_BYTES, false).toString()).to.equal(MAX_INT_16.toString());
     });
 
     it('max int32', () => {
-        expect(IntToByteArray(MAX_INT_32).toString()).to.equal(MAX_INT_32_BYTES.toString());
+        expect(EncodeInt(MAX_INT_32).toString()).to.equal(MAX_INT_32_BYTES.toString());
+        expect(DecodeInt(MAX_INT_32_BYTES, false).toString()).to.equal(MAX_INT_32.toString());
     });
 
     it('max int64', () => {
-        expect(Int64ToByteArray(MAX_INT_64).toString()).to.equal(MAX_INT_64_BYTES.toString());
+        expect(EncodeInt64(MAX_INT_64).toString()).to.equal(MAX_INT_64_BYTES.toString());
+        expect(DecodeInt(MAX_INT_64_BYTES, false).toString()).to.equal(MAX_INT_64.toString());
     });
 
     it('min int8', () => {
-        expect(IntToByteArray(MIN_INT_8).toString()).to.equal(MIN_INT_8_BYTES.toString());
+        expect(EncodeInt(MIN_INT_8).toString()).to.equal(MIN_INT_8_BYTES.toString());
+        expect(DecodeInt(MIN_INT_8_BYTES, true).toString()).to.equal(MIN_INT_8.toString());
     });
 
     it('min int16', () => {
-        expect(IntToByteArray(MIN_INT_16).toString()).to.equal(MIN_INT_16_BYTES.toString());
+        expect(EncodeInt(MIN_INT_16).toString()).to.equal(MIN_INT_16_BYTES.toString());
+        expect(DecodeInt(MIN_INT_16_BYTES, true).toString()).to.equal(MIN_INT_16.toString());
     });
 
     it('min int32', () => {
-        expect(IntToByteArray(MIN_INT_32).toString()).to.equal(MIN_INT_32_BYTES.toString());
+        expect(EncodeInt(MIN_INT_32).toString()).to.equal(MIN_INT_32_BYTES.toString());
+        expect(DecodeInt(MIN_INT_32_BYTES, true).toString()).to.equal(MIN_INT_32.toString());
     });
 
     it('min int64', () => {
-        expect(Int64ToByteArray(MIN_INT_64).toString()).to.equal(MIN_INT_64_BYTES.toString());
+        expect(EncodeInt64(MIN_INT_64).toString()).to.equal(MIN_INT_64_BYTES.toString());
+        expect(DecodeInt(MIN_INT_64_BYTES, true).toString()).to.equal(MIN_INT_64.toString());
     });
 
     it('max uint8', () => {
-        expect(IntToByteArray(MAX_UINT_8).toString()).to.equal(MAX_UINT_8_BYTES.toString());
+        expect(EncodeInt(MAX_UINT_8).toString()).to.equal(MAX_UINT_8_BYTES.toString());
+        expect(DecodeInt(MAX_UINT_8_BYTES, false).toString()).to.equal(MAX_UINT_8.toString());
     });
 
     it('max uint16', () => {
-        expect(IntToByteArray(MAX_UINT_16).toString()).to.equal(MAX_UINT_16_BYTES.toString());
+        expect(EncodeInt(MAX_UINT_16).toString()).to.equal(MAX_UINT_16_BYTES.toString());
+        expect(DecodeInt(MAX_UINT_16_BYTES, false).toString()).to.equal(MAX_UINT_16.toString());
     });
 
     it('max uint32', () => {
-        expect(Int64ToByteArray(MAX_UINT_32).toString()).to.equal(MAX_UINT_32_BYTES.toString());
+        expect(EncodeInt64(MAX_UINT_32).toString()).to.equal(MAX_UINT_32_BYTES.toString());
+        expect(DecodeInt(MAX_UINT_32_BYTES, false).toString()).to.equal(MAX_UINT_32.toString());
     });
 })

@@ -16,7 +16,12 @@ import { EMPTY_CODE } from '../script/constant'
 
 const ec = new EC('secp256k1');
 
-class Wallet extends Model {
+export interface IHeaderSignature {
+    pubkey: string
+    signature: string
+}
+
+export default class Wallet extends Model {
 
     constructor(initialState: any, options: any){
         super(initialState, options)
@@ -88,7 +93,7 @@ class Wallet extends Model {
                 try {
                     const res = await fetch(ROOT_API_URL + '/cch', {
                         method: 'GET',
-                        headers: Object.assign({}, this.sign().header(), {last_cch: last() })
+                        headers: Object.assign({}, this.sign().header() as any, {last_cch: last() })
                     })
                     if (res.status == 200){
                         let list = await res.json() || []
@@ -111,7 +116,7 @@ class Wallet extends Model {
             try {
                 const res = await fetch(ROOT_API_URL + '/utxos', {
                     method: 'GET',
-                    headers: this.sign().header()
+                    headers: this.sign().header() as any
                 })
                 if (res.status == 200){
                     const json = await res.json()
@@ -131,7 +136,7 @@ class Wallet extends Model {
         const value = (val:Buffer) => ec.sign(val, this.keys().get().priv()).toDER()
         return {
             value,
-            header: () => {
+            header: (): IHeaderSignature => {
                 return {
                     pubkey: this.keys().get().pubHex() as string,
                     signature: Buffer.from(value(Sha256(B64ToByteArray(this.auth().get().value())))).toString('hex')
@@ -142,5 +147,3 @@ class Wallet extends Model {
 
 }
 
-
-export default Wallet

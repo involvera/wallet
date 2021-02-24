@@ -1,7 +1,5 @@
 import { Model, Collection } from 'acey'
 import { TByte } from '../constant/type'
-import { ByteArrayToInt, DecodeArrayInt, B64ToByteArray, Int64ToByteArray } from '../util'
-import { EncodeArrayInt } from '../util/bytes'
 
 export interface IOutput {
 	input_indexes: number[]
