@@ -22,4 +22,10 @@ describe('Testing wallets methods', () => {
     });
 
 
+    it('Address: ', () => {
+        const w = new Wallet({}, {})
+        w.keys().set("solution benefit width ankle joy diamond kitchen account portion deer eye acid", "coucou")
+        expect(w.keys().get().address()).to.eq("1G7EDQGMMuRaSsXysJTNTJd6N6i24Mm1cT")
+    }) 
+
 })

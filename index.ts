@@ -1,11 +1,14 @@
 import {config  } from 'acey'
 import LocalStorage from 'acey-node-store'
-import { wallet, wallet2 } from './src/models'
 
+import WalletModel from './src/wallet/wallet'
+
+const wallet = new WalletModel({}, { key: 'wallet', connected: true })
+const wallet2 = new WalletModel({}, {key: 'wallet2', connected: true })
 
 const initWallets = () => {
-    wallet2.keys().set("social brief stool panel scene whale pledge tribe domain proof essence clog", "coucou")
-    wallet.keys().set("film dirt damage apart carry horse enroll carry power prison flush bulb", "coucou")
+    wallet2.keys().set("social brief stool panel scene whale pledge tribe domain proof essence clog", "coucou").store()
+    wallet.keys().set("film dirt damage apart carry horse enroll carry power prison flush bulb", "coucou").store()
 }
 
 const main = async () => {

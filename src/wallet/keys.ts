@@ -2,7 +2,7 @@ import { Model } from 'acey'
 
 import * as bip39 from 'bip39'
 import * as bip32 from 'bip32'
-import { ToPubKeyHash } from '../util/wallet'
+import { GetAddressFromPubKeyHash, ToPubKeyHash } from '../util/wallet'
 
 export default class Keys extends Model {
 
@@ -31,10 +31,12 @@ export default class Keys extends Model {
         const pubHex = () => pub().toString('hex')
         const pubHash = () => ToPubKeyHash(pub())
         const pubHashHex = () => pubHash().toString('hex')
+        const address = () => GetAddressFromPubKeyHash(pubHash())
 
         return { 
             seed, master, priv, pub, 
-            pubHex, pubHash, pubHashHex 
+            pubHex, pubHash, pubHashHex,
+            address
         }
     }
 }

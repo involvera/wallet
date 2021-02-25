@@ -64,8 +64,8 @@ export default class Wallet extends Model {
             await fetchFees()
 
             const to: string[] = []
-            const ta: Uint8Array[][] = []
-            const emptyTa: Uint8Array[] = []
+            const ta: Buffer[][] = []
+            const emptyTa: Buffer[] = []
             to.push(pubKH)
             ta.push(emptyTa)
 
@@ -74,7 +74,7 @@ export default class Wallet extends Model {
                 to,
                 amount_required: [amount],
                 ta,
-                kinds: new Uint8Array([EMPTY_CODE])
+                kinds: Buffer.from([EMPTY_CODE])
             })
             return await builder.newTx()
         }

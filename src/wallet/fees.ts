@@ -9,7 +9,7 @@ export default class Fees extends Model {
     }
     
     get = () => {
-        const feePerByte = (): number => this.state.fees.fee_per_byte 
+        const feePerByte = (): number => this.state.fee_per_byte 
         const pubKHToSend = (): string => this.state.to_pkh_hex
 
         return { feePerByte, pubKHToSend }

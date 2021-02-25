@@ -2,7 +2,6 @@ import { TByte } from "../constant";
 import { LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
 import { EMPTY_CODE } from "../script/constant";
 import { InputList, Output, OutputList, Transaction, UTXO } from "../transaction"
-import { NewEmptyDoubleUint8Array, PopUint8Array, PushToUint8Array } from "../util";
 import { CalculateOutputValueFromMelted } from "../util/output";
 import Wallet from './wallet'
 
@@ -10,16 +9,16 @@ export interface ITXBuild {
     wallet:         Wallet
 	to:             string[]
 	amount_required: number[]
-	kinds:          Uint8Array
-	ta:             Uint8Array[][]
+	kinds:          Buffer
+	ta:             Buffer[][]
 }
 
 export default class TxBuild {
 
 	private to:             string[]
     private amount_required: number[]
-	private kinds:          Uint8Array
-    private ta:             Uint8Array[][]
+	private kinds:          Buffer
+    private ta:             Buffer[][]
     private wallet: Wallet
 
     constructor(txb: ITXBuild){
@@ -42,21 +41,22 @@ export default class TxBuild {
     private _addTXFeesToBuild = (fees: number) => {
         this.to.push(this.wallet.fees().get().pubKHToSend())
         this.amount_required.push(fees)
-        this.kinds = PushToUint8Array(this.kinds, 0)
-        this.ta.push(NewEmptyDoubleUint8Array())
+        this.kinds = Buffer.concat([this.kinds, Buffer.from([0])])
+        const ab: Buffer[] = []
+        this.ta.push(ab)
     }
 
     private _removeLastUTXO = () => {
         this.to.pop()
         this.amount_required.pop()
-        this.kinds = PopUint8Array(this.kinds)
+        this.kinds = this.kinds.slice(0, this.kinds.length - 1)
         this.ta.pop()
     }
 
     private _makeTxWithFees = (tx: Transaction): Transaction => {
-        const fees = Buffer.from(tx.to().string()).length
+        const fees = Buffer.from(tx.to().string()).length * this.wallet.fees().get().feePerByte()
         this._addTXFeesToBuild(fees)
-        const { inputs, outputs } = this._generateMeltingPuts(fees)
+        const { inputs, outputs } = this._generateMeltingPuts()
         
         const shouldRecall = inputs.count() != tx.get().inputs().count() || outputs.count() != tx.get().outputs().count()
         tx.setState({ 
@@ -80,7 +80,7 @@ export default class TxBuild {
 
     newTx = () => {
         this._checkStructureBuild()
-        const { inputs, outputs } = this._generateMeltingPuts(0)
+        const { inputs, outputs } = this._generateMeltingPuts()
         const lastCCH = this.wallet.cch().last()
         if (!lastCCH)
             throw LAST_CCH_NOT_FOUND_ERROR
@@ -95,14 +95,14 @@ export default class TxBuild {
         return this._makeTxWithFees(tx)
     }
 
-    _generateMeltingPuts = (fees: number) => {
+    _generateMeltingPuts = () => {
         let outputs = new OutputList([], {})
         const utxos = this.setupUTXOs(this.totalAmount())
         const amounts = this.amount_required
         const nInputs = utxos.count()
+        const CCHList = this.wallet.cch().get()
 
-
-        let currentRealAmountToSend: BigInt = BigInt(0)
+        let currentRealAmountToSend: number = 0 
         let toIndex = 0
         let utxoIndex = 0
     
@@ -115,12 +115,12 @@ export default class TxBuild {
         }
 
         const getMeltedValueAtUTXOIndex = (index: number) => {
-            return (utxos.nodeAt(index) as UTXO).get().meltedValue(this.wallet.cch().get())
+            return (utxos.nodeAt(index) as UTXO).get().meltedValue(CCHList)
         }
 
         const refreshCurrentRealAmountToSend = (val: number) => {
-            const mr = (utxos.nodeAt(utxoIndex) as UTXO).get().meltedValueRatio(this.wallet.cch().get())
-            currentRealAmountToSend = BigInt(currentRealAmountToSend) + BigInt(CalculateOutputValueFromMelted(val, mr))
+            const mr = (utxos.nodeAt(utxoIndex) as UTXO).get().meltedValueRatio(CCHList)
+            currentRealAmountToSend = currentRealAmountToSend + Number(CalculateOutputValueFromMelted(val, mr))
         }
 
         const pushOutput = (toIndex: number, fromIdx: number, toIdx: number) => {
@@ -130,13 +130,12 @@ export default class TxBuild {
         }
 
         const pushSurplusOutput = (lastUTXOIdx: number) => {
-            console.log(outputs.to().string())
             const totalUsed = outputs.get().totalValue()
-            const emptyTa: Uint8Array[] = []
-            outputs.push(Output.NewOutput(this.wallet.keys().get().pubHashHex(), utxos.get().totalValue()-totalUsed, newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), EMPTY_CODE, emptyTa))
+            const emptyTa: Buffer[] = []
+            outputs.push(Output.NewOutput(this.wallet.keys().get().pubHashHex(), Number(utxos.get().totalValue()-totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), EMPTY_CODE, emptyTa))
         }
 
-        const totalInEscrow = utxos.get().totalMeltedValue(this.wallet.cch().get())
+        const totalInEscrow = utxos.get().totalMeltedValue(CCHList)
         const totalToSend = this.totalAmount()
         let totalToSendLeft = totalToSend
         let amountsLeftToTakeInCurrentUTXO = getMeltedValueAtUTXOIndex(utxoIndex)
@@ -144,7 +143,7 @@ export default class TxBuild {
         while (totalToSendLeft > 0){
             let fromUTXOIdx = utxoIndex
             let meltedAmountLeftToSendInCurrentOutput = amounts[toIndex]
-            currentRealAmountToSend = BigInt(0)
+            currentRealAmountToSend = 0
 
             while (meltedAmountLeftToSendInCurrentOutput > 0){
 

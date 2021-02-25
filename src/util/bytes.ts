@@ -13,75 +13,11 @@ export const B64ToBigInt = (b64: string, isNegative: boolean): BigInt => {
     return DecodeInt(B64ToByteArray(b64), isNegative)
 }
 
-export const B64ToByteArray = (b64: string): Uint8Array => {
-    return new Uint8Array(Buffer.from(b64, 'base64'))
+export const B64ToByteArray = (b64: string): Buffer => {
+    return Buffer.from(b64, 'base64')
 }
 
-export const EncodeString = (str: string): Uint8Array => {
-    let utf8 = new Uint8Array(str.length)
-    for (let i = 0; i < str.length; i++) {
-        let charcode = str.charCodeAt(i);
-        if (charcode < 0x80) utf8[i] = charcode;
-        else if (charcode < 0x800) {
-            utf8[i] = 0xc0 | (charcode >> 6), 0x80 | (charcode & 0x3f);
-        }
-        else if (charcode < 0xd800 || charcode >= 0xe000) {
-            utf8[i] = 0xe0 | (charcode >> 12),
-                      0x80 | ((charcode>>6) & 0x3f),
-                      0x80 | (charcode & 0x3f);
-        }
-        // surrogate pair
-        else {
-            i++;
-            // UTF-16 encodes 0x10000-0x10FFFF by
-            // subtracting 0x10000 and splitting the
-            // 20 bits of 0x0-0xFFFFF into two halves
-            charcode = 0x10000 + (((charcode & 0x3ff)<<10)
-                      | (str.charCodeAt(i) & 0x3ff));
-            utf8[i] = 0xf0 | (charcode >>18),
-                      0x80 | ((charcode>>12) & 0x3f),
-                      0x80 | ((charcode>>6) & 0x3f),
-                      0x80 | (charcode & 0x3f);
-        }
-    }
-    return utf8
-}
-
-export const DecodeString = (array: Uint8Array): string => {
-    var out, i, len, c;
-    var char2, char3;
-
-    out = "";
-    len = array.length;
-    i = 0;
-    while(i < len) {
-    c = array[i++];
-    switch(c >> 4)
-    { 
-      case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
-        // 0xxxxxxx
-        out += String.fromCharCode(c);
-        break;
-      case 12: case 13:
-        // 110x xxxx   10xx xxxx
-        char2 = array[i++];
-        out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
-        break;
-      case 14:
-        // 1110 xxxx  10xx xxxx  10xx xxxx
-        char2 = array[i++];
-        char3 = array[i++];
-        out += String.fromCharCode(((c & 0x0F) << 12) |
-                       ((char2 & 0x3F) << 6) |
-                       ((char3 & 0x3F) << 0));
-        break;
-    }
-    }
-
-    return out;
-}
-
-export const DecodeInt = (value: Uint8Array, isNegative: boolean): BigInt => {
+export const DecodeInt = (value: Buffer, isNegative: boolean): BigInt => {
     let n = BigInt(0);
     let MAX = MAX_UINT_8
     switch(value.length){
@@ -138,15 +74,15 @@ export const DecodeInt = (value: Uint8Array, isNegative: boolean): BigInt => {
     return isNegative ? n - MAX : n
 }
 
-export const EncodeArrayInt = (array: number[]): Uint8Array[] => {
-    let ret: Uint8Array[] = []
+export const EncodeArrayInt = (array: number[]): Buffer[] => {
+    let ret: Buffer[] = []
     for (let i = 0; i < array.length; i++) {
         ret[i] = EncodeInt(BigInt(array[i]))
     }
     return ret
 }
 
-export const DecodeArrayInt = (array: Uint8Array[]): BigInt[] => {
+export const DecodeArrayInt = (array: Buffer[]): BigInt[] => {
     let ret: BigInt[] = []
     for (let i = 0; i < array.length; i++) {
         ret[i] = DecodeInt(array[i], false)
@@ -162,7 +98,7 @@ export const EncodeInt64 = (val: BigInt) => {
     return intToByteArray(val, 'int64', false)
 }
 
-const intToByteArray = (val: BigInt, valType: 'int8' | 'int16' | 'int32' | 'int64', isUnsigned: boolean): Uint8Array => {
+const intToByteArray = (val: BigInt, valType: 'int8' | 'int16' | 'int32' | 'int64', isUnsigned: boolean): Buffer => {
     const M = {'int8': MAX_UINT_8, 'int16': MAX_UINT_16, 'int32': MAX_UINT_32, 'int64': MAX_UINT_64}[valType]
     const N_BYTE = {'int8': 8, 'int16': 16, 'int32': 32, 'int64': 64}[valType]
     const CURRENT_MIN_INT = (M / TWO) * MINUS
@@ -190,6 +126,6 @@ const intToByteArray = (val: BigInt, valType: 'int8' | 'int16' | 'int32' | 'int6
         ret.push(parseInt(binary.substr(i, 8), 2))
         i += 8
     }
-    return new Uint8Array(ret.reverse())
+    return Buffer.from(ret.reverse())
 }
 

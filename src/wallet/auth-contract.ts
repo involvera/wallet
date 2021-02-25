@@ -2,12 +2,6 @@ import { Model } from 'acey'
 import fetch from 'node-fetch'
 import { ROOT_API_URL } from '../constant'
 
-
-interface IAuthContract {
-    value: Uint8Array,
-    next_change: number
-}
-
 export default class AuthContract extends Model {
 
     constructor(initialState: any, options: any) {

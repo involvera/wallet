@@ -1,18 +1,21 @@
 import { Model, Collection } from 'acey'
+import { MAX_IS_2_POW_53 } from '../constant/errors'
 import { TByte } from '../constant/type'
 
 export interface IOutput {
 	input_indexes: number[]
-	value:        BigInt
+	value:        number
 	pub_key_hash:   string
 	k:              TByte,
-	ta:				Uint8Array[]
+	ta:				Buffer[]
 }
 
 export class Output extends Model {
-	
 
-	static NewOutput = (pub_key_hash: string, value: BigInt, inputIDX: number[], kind: TByte, ta: Uint8Array[]) => {
+	static NewOutput = (pub_key_hash: string, value: number, inputIDX: number[], kind: TByte, ta: Buffer[]) => {
+		if (value > Math.pow(2, 53))
+			throw MAX_IS_2_POW_53
+		
 		const out: IOutput = {
 			value,
 			pub_key_hash,

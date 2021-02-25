@@ -96,8 +96,8 @@ export class UTXOList extends Collection {
         } catch (e){
             throw new Error(e)
         }
-    } 
-        
+    }
+
     get = () => {
         const listUnFetchedTxHash = () => {
             const ret: string[] = []
