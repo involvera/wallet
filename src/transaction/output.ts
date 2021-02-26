@@ -1,11 +1,20 @@
 import { Model, Collection } from 'acey'
 import { MAX_IS_2_POW_53 } from '../constant/errors'
 import { TByte } from '../constant/type'
+import { ByteArrayToB64, DecodeArrayInt, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeInt64 } from '../util'
 
 export interface IOutput {
 	input_indexes: number[]
 	value:        number
 	pub_key_hash:   string
+	k:              TByte,
+	ta:				Buffer[]
+}
+
+export interface IOutputRaw {
+	input_indexes: Buffer[]
+	value:        Buffer
+	pub_key_hash:   Buffer
 	k:              TByte,
 	ta:				Buffer[]
 }
@@ -30,13 +39,40 @@ export class Output extends Model {
 		super(output, options)
 	}
 
+	toRaw = () => {
+		const def = (): IOutputRaw  => {
+			return {
+				input_indexes: EncodeArrayInt(this.get().inputIndexes()),
+				value: EncodeInt64(this.get().value()),
+				pub_key_hash: Buffer.from(this.get().pubKH(), 'hex'),
+				k: this.get().K(),
+				ta: this.get().target()
+			}
+		}
+
+		const base64 = () => {
+			const raw = def()
+			return {
+				input_indexes: DoubleByteArrayToB64Array(raw.input_indexes),
+				value: ByteArrayToB64(raw.value), 
+				pub_key_hash: ByteArrayToB64(raw.pub_key_hash),
+				k: raw.k,
+				ta: DoubleByteArrayToB64Array(raw.ta)
+			}
+		}
+
+		return { default: def, base64 }
+	}
+
 	get = () => {
-		const value = (): BigInt => this.state.value
+		const value = (): BigInt => this.state.value 
 		const inputIndexes = (): number[] => this.state.input_indexes
 		const pubKH = (): string => this.state.pub_key_hash
+		const K = (): TByte => this.state.k
+		const target = (): Buffer[] => this.state.ta
 
 		return {
-			value, inputIndexes, pubKH
+			value, inputIndexes, pubKH, K, target
 		}
 	}
 

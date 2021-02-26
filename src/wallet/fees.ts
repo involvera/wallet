@@ -4,15 +4,15 @@ import { ROOT_API_URL } from '../constant'
 
 export default class Fees extends Model {
 
-    constructor(initialState = {fee_per_byte: 0, to_pkh_hex: ""}, options: any){
+    constructor(initialState = {fee_per_byte: 0, address: ""}, options: any){
         super(initialState, options)
     }
     
     get = () => {
         const feePerByte = (): number => this.state.fee_per_byte 
-        const pubKHToSend = (): string => this.state.to_pkh_hex
+        const addressToSend = (): string => this.state.address
 
-        return { feePerByte, pubKHToSend }
+        return { feePerByte, addressToSend }
     }
 
     isSet = () => this.get().feePerByte() > 0

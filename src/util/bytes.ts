@@ -17,6 +17,17 @@ export const B64ToByteArray = (b64: string): Buffer => {
     return Buffer.from(b64, 'base64')
 }
 
+export const DoubleByteArrayToB64Array = (array: Buffer[]): string[] => {
+    const ret: string[] = []
+    for (let b of array)
+        ret.push(ByteArrayToB64(b))
+    return ret
+}
+
+export const ByteArrayToB64 = (b: Buffer): string => {
+    return b.toString('base64')
+}
+
 export const DecodeInt = (value: Buffer, isNegative: boolean): BigInt => {
     let n = BigInt(0);
     let MAX = MAX_UINT_8

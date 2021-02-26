@@ -25,14 +25,13 @@ export const GetAddressFromPubKeyHash = (pubKeyHash: Buffer): string => {
 
     const fullPayload = Buffer.concat([pubKeyHash, chksum])
     const address = EncodeBase58(fullPayload)
-    console.log(address)
 
     return (VERSION+1).toString() + address
 }
 
 export const PubKeyHashFromAddress = (address: string) => {
     let pubKeyHash = DecodeBase58(address.slice(1, address.length))
-    return pubKeyHash.slice(0, pubKeyHash.length - ADDR_CHECKSUM_LENGTH - 1)
+    return pubKeyHash.slice(0, pubKeyHash.length - ADDR_CHECKSUM_LENGTH)
 }
 
 const checksum = (payload: Buffer): Buffer => {

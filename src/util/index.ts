@@ -3,6 +3,8 @@ export {
     EncodeArrayInt,
     EncodeInt64,
     DecodeInt,
+    ByteArrayToB64,
+    DoubleByteArrayToB64Array,
     B64ToBigInt,
     B64ToByteArray,
     DecodeArrayInt,

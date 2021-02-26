@@ -18,7 +18,9 @@ const main = async () => {
 
     // await wallet.fetchAllWalletData()
     const tx = await wallet.buildTX().toPKH(wallet2.keys().get().pubHashHex(), 1000000)
+    // console.log('\n\n\n')
     console.log(tx.to().string())
+    // console.log(JSON.stringify(tx.toRaw().base64()))
 
     // const kp = nacl.sign.keyPair.fromSeed(wallet.keys().get().seed())
     // console.log(kp.publicKey.length, kp.secretKey.length)

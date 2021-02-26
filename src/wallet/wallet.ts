@@ -28,7 +28,7 @@ export default class Wallet extends Model {
         this.setState({ 
             seed: new Keys(initialState.seed || {seed: ''}, this.kids()),
             utxos: new UTXOList(initialState.utxos || [], this.kids()),
-            cch_list: initialState.cch_list || [],
+            cch: initialState.cch || {list: [], last_height: 0},
             contract: new AuthContract(initialState.contract, this.kids()),
             fees: new Fees(initialState.fees, this.kids()),
             costs: new Costs(initialState.costs, this.kids())
@@ -84,8 +84,14 @@ export default class Wallet extends Model {
 
 
     cch = () => {
-        const get = (): Array<string> => this.state.cch_list || [] 
-        const last = () => get().length == 0 ? '' : get()[0]
+
+        const get = () => {
+            const list = (): string[] => this.state.cch.list 
+            const last = () => list().length == 0 ? '' : list()[0]
+            const lastHeight = (): number => this.state.cch.last_height
+            
+            return { list, last, lastHeight }
+        }
 
         const Fetch = async () => {
             if (this.utxos().get().count() > 0){
@@ -93,11 +99,12 @@ export default class Wallet extends Model {
                 try {
                     const res = await fetch(ROOT_API_URL + '/cch', {
                         method: 'GET',
-                        headers: Object.assign({}, this.sign().header() as any, {last_cch: last() })
+                        headers: Object.assign({}, this.sign().header() as any, {last_cch: get().last() })
                     })
                     if (res.status == 200){
-                        let list = await res.json() || []
-                        this.setState({ cch_list: get().concat( list.filter((elem: any) => elem != null)) }).store()
+                        let { list, last_height} = await res.json()
+                        list = list || []
+                        this.setState({ cch: { list: get().list().concat(list.filter((elem: any) => elem != null)), last_height } } ).store()
                     }
                     return res.status
                 } catch (e){
@@ -106,7 +113,7 @@ export default class Wallet extends Model {
             }
         }
 
-        return { get, fetch: Fetch, last }
+        return { get, fetch: Fetch }
     }
 
     utxos = () => {

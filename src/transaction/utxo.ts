@@ -86,6 +86,7 @@ export class UTXOList extends Collection {
             })
             if (response.status == 200){
                 let list = await response.json()
+                console.log(list)
                 list = list || []
                 for (let i = 0; i < listUnFetchedTxHash.length; i++){
                     const UTXO = this.get().UTXOByTxHash(listUnFetchedTxHash[i])
