@@ -55,14 +55,12 @@ export default class TxBuild {
     }
 
     private _makeTxWithFees = (tx: Transaction): Transaction => {
-        const fees = (Buffer.from(JSON.stringify(tx.toRaw().base64())).length + (tx.get().inputs().count() * BILLED_SIGNATURE_LENGTH)) * this.wallet.fees().get().feePerByte()
+        const fees = tx.get().billedSize() * this.wallet.fees().get().feePerByte()
         this._addTXFeesToBuild(fees)
         const { utxos, outputs } = this._generateMeltingPuts()
         const inputs = utxos.toInputs()
 
         const shouldRecall = inputs.count() != tx.get().inputs().count() || outputs.count() != tx.get().outputs().count()
-
-
         tx.setState({ 
             inputs: new InputList(inputs.to().plain(), tx.kids()),
             outputs: new OutputList(outputs.to().plain(), tx.kids()),
@@ -82,23 +80,25 @@ export default class TxBuild {
         return availableUTXOs
     }
 
-    newTx = () => {
+    newTx = async () => {
         this._checkStructureBuild()
         const { outputs, utxos } = this._generateMeltingPuts()
         const lastCCH = this.wallet.cch().get().last()
         if (!lastCCH)
             throw LAST_CCH_NOT_FOUND_ERROR
         
-        const tx = new Transaction({
+        let tx = new Transaction({
             t: Math.floor((new Date().getTime() / 1000)),
             inputs: utxos.toInputs().to().plain(), 
             outputs: outputs.to().plain(),
             lh: this.wallet.cch().get().lastHeight()
         }, {})
 
-        tx.sign(utxos, this.wallet)
-
-        return this._makeTxWithFees(tx)
+        tx = this._makeTxWithFees(tx)
+        if (await tx.sign(utxos, this.wallet)){
+            return tx
+        }
+        return null
     }
 
     _generateMeltingPuts = () => {

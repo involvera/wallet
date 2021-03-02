@@ -1,5 +1,5 @@
 import { Collection, Model } from 'acey'
-import { ByteArrayToB64, EncodeInt64 } from '../util'
+import { ByteArrayToB64, EncodeInt } from '../util'
 
 export interface IInput {
     prev_transaction_hash: string
@@ -31,7 +31,7 @@ export class Input extends Model {
         const def = (): IInputRaw => {
             return {
                 prev_transaction_hash: Buffer.from(this.get().prevTxHash(), 'hex'),
-                vout: EncodeInt64(BigInt(this.get().vout())),
+                vout: EncodeInt(BigInt(this.get().vout())),
                 sign: Buffer.from(this.get().signature(), 'hex')
             }
         }

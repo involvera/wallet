@@ -5,10 +5,13 @@ import {
 } from '.'
 
 import { ByteArrayToB64, EncodeInt, EncodeInt64, Sha256} from '../util'
-import Wallet from '../wallet/wallet'
+import Wallet, { IHeaderSignature } from '../wallet/wallet'
 import { IInputRaw } from './input'
 import { IOutputRaw, Output } from './output'
 import { UTXO, UTXOList } from './utxo'
+
+import fetch from 'node-fetch'
+import { BILLED_SIGNATURE_LENGTH, ROOT_API_URL } from '../constant'
 
 export interface ITransaction {
     lh:      number
@@ -34,22 +37,41 @@ export class Transaction extends Model {
         })
     }
 
+    broadcast = async (headerSign: IHeaderSignature) => {
+        try {
+            const response = await fetch(ROOT_API_URL + '/transaction', {
+                method: 'POST',
+                headers: Object.assign(headerSign as any, {'content-type': 'application/json'}),
+                body: JSON.stringify(this.toRaw().base64())
+            })
+            if (response.status == 200){
+                console.log('success')
+            } else {
+                const text = await response.text()
+                console.log(text)
+            }
+            return true
+        } catch (e){
+            throw new Error(e)
+        }
+        return false
+    }
+
     isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as Input).get().prevTxHash().length == 0
 
     sign = async (utxos: UTXOList, wallet: Wallet) => {
         try {
             await utxos.fetchPrevTxList(wallet.sign().header())
             const inputs = this.get().inputs()
-
             for (let i = 0; i < inputs.count(); i++){
                 const prevTx = (utxos.nodeAt(i) as UTXO).get().tx() as Transaction
-                const signature = wallet.sign().value(Buffer.from(prevTx.to().string()))
+                const signature = wallet.sign().value(Sha256(prevTx.to().string()))
                 const input = this.get().inputs().nodeAt(i) as Input
                 input.setState({ sign: Buffer.from(signature).toString('hex') })
             }
             return true
         } catch (e) {
-            throw new Error("e");            
+            throw new Error(e);            
         }
     }
 
@@ -60,9 +82,19 @@ export class Transaction extends Model {
         const inputs = (): InputList => this.state.inputs
         const outputs = (): OutputList => this.state.outputs
 
+        const billedSize = (): number => {
+            const totalSignatureSizeInputs = inputs().reduce((total: number, input: Input) => {
+                const sigLen = input.toRaw().base64().sign.length
+                total += sigLen
+                return total
+            }, 0) as any
+            return (Buffer.from(JSON.stringify(this.toRaw().base64())).length + (this.get().inputs().count() * BILLED_SIGNATURE_LENGTH)) - totalSignatureSizeInputs
+        }
+
         return {
             time, lughHeight,
-            hash, inputs, outputs
+            hash, inputs, outputs,
+            billedSize
         }
     }
 
@@ -94,12 +126,12 @@ export class Transaction extends Model {
             const raw = def()
             const inputs = this.get().inputs()
             const outputs = this.get().outputs()
-    
+
             return {
                 lh: ByteArrayToB64(raw.lh), 
                 t: ByteArrayToB64(raw.t), 
-                inputs: inputs.map((i: Input) => i.toRaw().base64()),
-                outputs: outputs.map((i: Input) => i.toRaw().base64())
+                inputs: inputs.map((inp: Input) => inp.toRaw().base64()),
+                outputs: outputs.map((out: Output) => out.toRaw().base64())
             }
         }
 

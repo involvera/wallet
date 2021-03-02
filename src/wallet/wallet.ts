@@ -60,7 +60,7 @@ export default class Wallet extends Model {
             }
         }  
 
-        const toPKH = async (pubKH: string, amount: number): Promise<Transaction> => {
+        const toPKH = async (pubKH: string, amount: number): Promise<Transaction | null> => {
             await fetchFees()
 
             const to: string[] = []
@@ -127,8 +127,6 @@ export default class Wallet extends Model {
                 })
                 if (res.status == 200){
                     const json = await res.json()
-                    console.log(this.sign().header())
-
                     get().setState(json.utxos || []).store()
                 }
                 return res.status

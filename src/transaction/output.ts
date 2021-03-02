@@ -37,6 +37,7 @@ export class Output extends Model {
 
     constructor(output: IOutput, options: any) {
 		super(output, options)
+		output && !output.input_indexes && this.setState({ input_indexes: [] })
 	}
 
 	toRaw = () => {
