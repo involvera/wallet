@@ -47,8 +47,9 @@ export default class Wallet extends Model {
     public fees = (): Fees => this.state.fees
     public costs = (): Costs => this.state.costs
 
-    buildTX = () => {
+    public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
 
+    buildTX = () => {
         const fetchFees = async () => {
             try {
                 const status = await this.fees().fetch()
@@ -58,7 +59,7 @@ export default class Wallet extends Model {
             } catch (e){
                 throw new Error(e)
             }
-        }  
+        }
 
         const toPKH = async (pubKH: string, amount: number): Promise<Transaction | null> => {
             await fetchFees()
@@ -84,7 +85,6 @@ export default class Wallet extends Model {
 
 
     cch = () => {
-
         const get = () => {
             const list = (): string[] => this.state.cch.list 
             const last = () => list().length == 0 ? '' : list()[0]

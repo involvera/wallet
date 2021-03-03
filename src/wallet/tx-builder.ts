@@ -1,7 +1,7 @@
 import { BILLED_SIGNATURE_LENGTH, TByte } from "../constant";
 import { LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
 import { EMPTY_CODE } from "../script/constant";
-import { InputList, Output, OutputList, Transaction, UTXO } from "../transaction"
+import { InputList, Output, OutputList, Transaction, UTXO, UTXOList } from "../transaction"
 import { PubKeyHashFromAddress } from "../util";
 import { CalculateOutputValueFromMelted } from "../util/output";
 import Wallet from './wallet'
@@ -54,7 +54,7 @@ export default class TxBuild {
         this.ta.pop()
     }
 
-    private _makeTxWithFees = (tx: Transaction): Transaction => {
+    private _makeTxWithFees = (tx: Transaction): UTXOList => {
         const fees = tx.get().billedSize() * this.wallet.fees().get().feePerByte()
         this._addTXFeesToBuild(fees)
         const { utxos, outputs } = this._generateMeltingPuts()
@@ -69,7 +69,7 @@ export default class TxBuild {
             this._removeLastUTXO()
             return this._makeTxWithFees(tx)
         }
-        return tx
+        return utxos
     }
 
     setupUTXOs = (amountRequired: number) => {
@@ -86,16 +86,15 @@ export default class TxBuild {
         const lastCCH = this.wallet.cch().get().last()
         if (!lastCCH)
             throw LAST_CCH_NOT_FOUND_ERROR
-        
+
         let tx = new Transaction({
             t: Math.floor((new Date().getTime() / 1000)),
             inputs: utxos.toInputs().to().plain(), 
             outputs: outputs.to().plain(),
             lh: this.wallet.cch().get().lastHeight()
         }, {})
-
-        tx = this._makeTxWithFees(tx)
-        if (await tx.sign(utxos, this.wallet)){
+        
+        if (await tx.sign(this._makeTxWithFees(tx), this.wallet)){
             return tx
         }
         return null

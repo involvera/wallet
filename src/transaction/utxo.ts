@@ -5,6 +5,7 @@ import { CalculateOutputMeltedValue } from '../util/output'
 import fetch from 'node-fetch'
 import { ITransaction, Transaction } from './transaction'
 import { IHeaderSignature } from '../wallet/wallet'
+import { Input } from './input'
  
 export interface IUTXO {
     tx_id: string
@@ -72,6 +73,15 @@ export class UTXOList extends Collection {
             }),
             {}
         )
+    }
+
+    removeUTXOsFromInputs = (inputs: InputList) => {
+        inputs.map((i: Input) => {
+            this.deleteBy((utxo: UTXO) => {
+                return utxo.get().txID() == i.get().prevTxHash() && utxo.get().idx() == i.get().vout()
+            })
+        })
+        this.action().store()
     }
 
     fetchPrevTxList = async (headerSignature: IHeaderSignature) => {

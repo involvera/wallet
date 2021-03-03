@@ -4,7 +4,7 @@ import {
     IInput, Input, InputList,
 } from '.'
 
-import { ByteArrayToB64, EncodeInt, EncodeInt64, Sha256} from '../util'
+import { ByteArrayToB64, EncodeInt, EncodeInt64, Sha256 } from '../util'
 import Wallet, { IHeaderSignature } from '../wallet/wallet'
 import { IInputRaw } from './input'
 import { IOutputRaw, Output } from './output'
@@ -37,24 +37,33 @@ export class Transaction extends Model {
         })
     }
 
-    broadcast = async (headerSign: IHeaderSignature) => {
+    verify = async (headerSig: IHeaderSignature) => {
+        const response = await fetch(ROOT_API_URL + '/transaction/verify', {
+            method: 'POST',
+            headers: Object.assign(headerSig as any, {'content-type': 'application/json'}),
+            body: JSON.stringify(this.toRaw().base64())
+        })
+        if (response.status == 200){
+            return "OK"
+        }
+        return await response.text()
+    }
+
+    broadcast = async (wallet: Wallet) => {
         try {
             const response = await fetch(ROOT_API_URL + '/transaction', {
                 method: 'POST',
-                headers: Object.assign(headerSign as any, {'content-type': 'application/json'}),
+                headers: Object.assign(wallet.sign().header() as any, {'content-type': 'application/json'}),
                 body: JSON.stringify(this.toRaw().base64())
             })
-            if (response.status == 200){
-                console.log('success')
-            } else {
-                const text = await response.text()
-                console.log(text)
+
+            if (response.status === 201){
+                wallet.utxos().get().removeUTXOsFromInputs(this.get().inputs())
             }
-            return true
+            return response
         } catch (e){
             throw new Error(e)
         }
-        return false
     }
 
     isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as Input).get().prevTxHash().length == 0
@@ -63,12 +72,15 @@ export class Transaction extends Model {
         try {
             await utxos.fetchPrevTxList(wallet.sign().header())
             const inputs = this.get().inputs()
+
             for (let i = 0; i < inputs.count(); i++){
                 const prevTx = (utxos.nodeAt(i) as UTXO).get().tx() as Transaction
-                const signature = wallet.sign().value(Sha256(prevTx.to().string()))
+                const signature = wallet.sign().value(prevTx.get().hashSig())
                 const input = this.get().inputs().nodeAt(i) as Input
                 input.setState({ sign: Buffer.from(signature).toString('hex') })
             }
+            console.log('YES?')
+
             return true
         } catch (e) {
             throw new Error(e);            
@@ -81,20 +93,22 @@ export class Transaction extends Model {
         const hash = () => Sha256(this.to().string())
         const inputs = (): InputList => this.state.inputs
         const outputs = (): OutputList => this.state.outputs
+        const hashSig = () => Sha256(this.to().string())
 
         const billedSize = (): number => {
             const totalSignatureSizeInputs = inputs().reduce((total: number, input: Input) => {
-                const sigLen = input.toRaw().base64().sign.length
-                total += sigLen
+                total += input.toRaw().base64().sign.length
                 return total
             }, 0) as any
+
             return (Buffer.from(JSON.stringify(this.toRaw().base64())).length + (this.get().inputs().count() * BILLED_SIGNATURE_LENGTH)) - totalSignatureSizeInputs
         }
 
         return {
             time, lughHeight,
             hash, inputs, outputs,
-            billedSize
+            billedSize,
+            hashSig
         }
     }
 
