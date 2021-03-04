@@ -20,3 +20,4 @@ export {
  export * from './crypto'
  export * from './output'
  export * from './wallet'
+ export * from './is'
