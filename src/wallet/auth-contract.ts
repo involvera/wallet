@@ -4,7 +4,7 @@ import { ROOT_API_URL } from '../constant'
 
 export default class AuthContract extends Model {
 
-    constructor(initialState: any, options: any) {
+    constructor(initialState: any = {next_change: 0, value: ""}, options: any) {
         super(initialState, options)
     }
 

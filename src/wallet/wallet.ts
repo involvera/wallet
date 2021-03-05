@@ -13,6 +13,9 @@ import Fees from './fees'
 import Costs from './costs'
 import Keys from './keys'
 import { EMPTY_CODE } from '../script/constant'
+import Info from './info'
+import { NewApplicationProposalScript } from '../script/scripts'
+import { PUBKEY_H_BURNER } from '../constant'
 
 const ec = new EC('secp256k1');
 
@@ -31,21 +34,33 @@ export default class Wallet extends Model {
             cch: initialState.cch || {list: [], last_height: 0},
             contract: new AuthContract(initialState.contract, this.kids()),
             fees: new Fees(initialState.fees, this.kids()),
+            info: new Info(initialState.info, this.kids()),
             costs: new Costs(initialState.costs, this.kids())
         })
     }
 
-    fetchAllWalletData = async () => {
-        await this.utxos().fetch()
-        await this.cch().fetch()
-        await this.fees().fetch()
-        await this.costs().fetch()
+    refreshWalletData = async () => {
+        await this.auth().refresh()
+        const response = await fetch(ROOT_API_URL + '/wallet', {
+            method: 'GET',
+            headers: this.sign().header() as any
+        })
+        if (response.status == 200){
+            const json = await response.json()
+            this.info().setState(json.info).store()
+            this.cch()._assignJSONResponse(json.cch)
+            this.auth().setState(json.contract).store()
+            this.fees().setState(json.fees).store()
+            this.utxos().get().setState(json.utxos || []).store()
+            this.costs().setState(json.costs).store()
+        }
     }
 
     public keys = (): Keys => this.state.seed
     public auth = (): AuthContract => this.state.contract
     public fees = (): Fees => this.state.fees
     public costs = (): Costs => this.state.costs
+    public info = (): Info => this.state.info
 
     public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
 
@@ -61,8 +76,39 @@ export default class Wallet extends Model {
             }
         }
 
+        const fetchCosts = async () => {
+            try {
+                const status = await this.costs().fetch()
+                if (status != 200)
+                    throw new Error("Can't fetch costs.")
+                
+            } catch (e){
+                throw new Error(e)
+            }
+        }
+
+        const applicationProposal = async () => {
+            await this.refreshWalletData()
+            const childIdx = this.info().get().countTotalContent() + 1
+            const script = NewApplicationProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx)) 
+
+            const to: string[] = []
+            const ta: Buffer[][] = []
+            to.push(PUBKEY_H_BURNER)
+            ta.push(script.targetScript())
+
+            const builder = new TxBuild({ 
+                wallet: this,
+                to,
+                amount_required: [this.costs().get().proposal()],
+                ta,
+                kinds: Buffer.from([script.kind()])
+            })
+            return await builder.newTx()
+        }
+
         const toPKH = async (pubKH: string, amount: number): Promise<Transaction | null> => {
-            await fetchFees()
+            await this.refreshWalletData()
 
             const to: string[] = []
             const ta: Buffer[][] = []
@@ -77,10 +123,11 @@ export default class Wallet extends Model {
                 ta,
                 kinds: Buffer.from([EMPTY_CODE])
             })
+
             return await builder.newTx()
         }
 
-        return { toPKH }
+        return { toPKH, applicationProposal }
     }
 
 
@@ -93,6 +140,12 @@ export default class Wallet extends Model {
             return { list, last, lastHeight }
         }
 
+        const _assignJSONResponse = (json: any) => {
+            let { list, last_height} = json
+            list = list || []
+            this.setState({ cch: { list: get().list().concat(list.filter((elem: any) => elem != null)), last_height } } ).store()
+        }
+
         const Fetch = async () => {
             if (this.utxos().get().count() > 0){
                 await this.auth().refresh()
@@ -101,19 +154,14 @@ export default class Wallet extends Model {
                         method: 'GET',
                         headers: Object.assign({}, this.sign().header() as any, {last_cch: get().last() })
                     })
-                    if (res.status == 200){
-                        let { list, last_height} = await res.json()
-                        list = list || []
-                        this.setState({ cch: { list: get().list().concat(list.filter((elem: any) => elem != null)), last_height } } ).store()
-                    }
+                    res.status == 200 && _assignJSONResponse(await res.json())
                     return res.status
                 } catch (e){
                     throw new Error(e)
                 }
             }
         }
-
-        return { get, fetch: Fetch }
+        return { get, fetch: Fetch, _assignJSONResponse }
     }
 
     utxos = () => {

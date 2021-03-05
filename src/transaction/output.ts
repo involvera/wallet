@@ -1,7 +1,8 @@
 import { Model, Collection } from 'acey'
 import { MAX_IS_2_POW_53 } from '../constant/errors'
 import { TByte } from '../constant/type'
-import { ByteArrayToB64, DecodeArrayInt, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeInt64 } from '../util'
+import { ByteArrayToB64, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeInt64 } from '../util'
+import { ToArrayBuffer } from '../util/bytes'
 
 export interface IOutput {
 	input_indexes: number[]
@@ -34,7 +35,7 @@ export class Output extends Model {
 		}
 		return new Output(out, {})
 	}
-
+	
     constructor(output: IOutput, options: any) {
 		super(output, options)
 		output && !output.input_indexes && this.setState({ input_indexes: [] })
@@ -47,7 +48,7 @@ export class Output extends Model {
 				value: EncodeInt64(this.get().value()),
 				pub_key_hash: Buffer.from(this.get().pubKH(), 'hex'),
 				k: this.get().K(),
-				ta: this.get().target()
+				ta: ToArrayBuffer(this.get().target())
 			}
 		}
 
@@ -84,6 +85,15 @@ export class OutputList extends Collection {
     constructor(initialState: any, options: any){
         super(initialState, [Output, OutputList], options)
     }
+
+	containsToPubKH = (pubKH: string) => {
+		for (let i = 0; i < this.count(); i++){
+			const out = this.nodeAt(i) as Output
+			if (out.get().pubKH() === pubKH)
+				return true
+		}
+		return false
+	}
 
 	get = () => {
 		const totalValue = () => {

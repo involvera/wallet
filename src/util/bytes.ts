@@ -8,6 +8,13 @@ const ONE = BigInt(1)
 const ZERO = BigInt(0)
 const MINUS = BigInt(-1)
 
+export const ToArrayBuffer = (arr: any[]): Buffer[] => {
+    let ret: Buffer[] = []
+    for (let i = 0; i < arr.length; i++){
+        ret.push(Buffer.from(arr[i]))
+    }
+    return ret
+}
 
 export const B64ToBigInt = (b64: string, isNegative: boolean): BigInt => {
     return DecodeInt(B64ToByteArray(b64), isNegative)

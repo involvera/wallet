@@ -12,6 +12,7 @@ import { UTXO, UTXOList } from './utxo'
 
 import fetch from 'node-fetch'
 import { BILLED_SIGNATURE_LENGTH, ROOT_API_URL } from '../constant'
+import TxBuild from '../wallet/tx-builder'
 
 export interface ITransaction {
     lh:      number
@@ -56,9 +57,12 @@ export class Transaction extends Model {
                 headers: Object.assign(wallet.sign().header() as any, {'content-type': 'application/json'}),
                 body: JSON.stringify(this.toRaw().base64())
             })
-
             if (response.status === 201){
+                /* TO IMPROVE */
                 wallet.utxos().get().removeUTXOsFromInputs(this.get().inputs())
+                if (this.get().outputs().containsToPubKH(wallet.keys().get().pubHashHex())){
+                    await wallet.utxos().fetch()
+                }
             }
             return response
         } catch (e){
@@ -79,7 +83,6 @@ export class Transaction extends Model {
                 const input = this.get().inputs().nodeAt(i) as Input
                 input.setState({ sign: Buffer.from(signature).toString('hex') })
             }
-            console.log('YES?')
 
             return true
         } catch (e) {
@@ -151,7 +154,5 @@ export class Transaction extends Model {
 
         return { default: def, base64 }
     }
-
-
 }
 

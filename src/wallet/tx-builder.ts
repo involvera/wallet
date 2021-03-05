@@ -1,5 +1,6 @@
+import { createNoSubstitutionTemplateLiteral } from "typescript";
 import { BILLED_SIGNATURE_LENGTH, TByte } from "../constant";
-import { LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
+import { CANT_SEND_0_VALUE, LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
 import { EMPTY_CODE } from "../script/constant";
 import { InputList, Output, OutputList, Transaction, UTXO, UTXOList } from "../transaction"
 import { PubKeyHashFromAddress } from "../util";
@@ -35,6 +36,9 @@ export default class TxBuild {
         if (length != this.amount_required.length && length != this.kinds.length && this.ta.length){
             throw WRONG_TX_BUILDER_STRUCTURE_ERROR
         }
+        if (this.totalAmount() <= 0){
+            throw CANT_SEND_0_VALUE
+        }
     }
 
     totalAmount = () => this.amount_required.reduce((accumulator: number, currentValue: number) => accumulator + currentValue)
@@ -59,12 +63,12 @@ export default class TxBuild {
         this._addTXFeesToBuild(fees)
         const { utxos, outputs } = this._generateMeltingPuts()
         const inputs = utxos.toInputs()
-
         const shouldRecall = inputs.count() != tx.get().inputs().count() || outputs.count() != tx.get().outputs().count()
         tx.setState({ 
             inputs: new InputList(inputs.to().plain(), tx.kids()),
             outputs: new OutputList(outputs.to().plain(), tx.kids()),
         })
+
         if (shouldRecall){
             this._removeLastUTXO()
             return this._makeTxWithFees(tx)
@@ -86,14 +90,14 @@ export default class TxBuild {
         const lastCCH = this.wallet.cch().get().last()
         if (!lastCCH)
             throw LAST_CCH_NOT_FOUND_ERROR
-
+        
         let tx = new Transaction({
             t: Math.floor((new Date().getTime() / 1000)),
             inputs: utxos.toInputs().to().plain(), 
             outputs: outputs.to().plain(),
             lh: this.wallet.cch().get().lastHeight()
         }, {})
-        
+
         if (await tx.sign(this._makeTxWithFees(tx), this.wallet)){
             return tx
         }
@@ -131,13 +135,13 @@ export default class TxBuild {
         const pushOutput = (toIndex: number, fromIdx: number, toIdx: number) => {
             const inputIdxLength = toIdx - fromIdx + 1
             const target = this.ta[toIndex]
-            outputs.push(Output.NewOutput(this.to[toIndex], currentRealAmountToSend, newIntArrayFilled(inputIdxLength, fromIdx), this.kinds[toIndex] as TByte, target))
+            outputs.push(Output.NewOutput(this.to[toIndex], currentRealAmountToSend, newIntArrayFilled(inputIdxLength, fromIdx), this.kinds[toIndex] as TByte, target).to().plain())
         }
 
         const pushSurplusOutput = (lastUTXOIdx: number) => {
             const totalUsed = outputs.get().totalValue()
             const emptyTa: Buffer[] = []
-            outputs.push(Output.NewOutput(this.wallet.keys().get().pubHashHex(), Number(utxos.get().totalValue()-totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), EMPTY_CODE, emptyTa))
+            outputs.push(Output.NewOutput(this.wallet.keys().get().pubHashHex(), Number(utxos.get().totalValue()-totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), EMPTY_CODE, emptyTa).to().plain())
         }
 
         const totalInEscrow = utxos.get().totalMeltedValue(CCHList)

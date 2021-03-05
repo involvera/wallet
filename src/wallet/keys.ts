@@ -33,10 +33,15 @@ export default class Keys extends Model {
         const pubHashHex = () => pubHash().toString('hex')
         const address = () => GetAddressFromPubKeyHash(pubHash())
 
+        const derivedPubHash = (index: number): Buffer => {
+            const m = master().derive(index)
+            return ToPubKeyHash(m.publicKey)
+        }
+
         return { 
             seed, master, priv, pub, 
             pubHex, pubHash, pubHashHex,
-            address
+            address, derivedPubHash
         }
     }
 }

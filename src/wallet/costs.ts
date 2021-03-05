@@ -20,17 +20,17 @@ export default class Costs extends Model {
     isSet = (): boolean => this.get().thread() > 0
 
     get = () => {
-        const thread = (): number => this.state.costs.thread
-        const proposal = (): number => this.state.costs.proposal
-        const upvote = (): number => this.state.costs.upvote
-        const reaction0 = (): number => this.state.costs.reaction_0
-        const reaction1 = (): number => this.state.costs.reaction_1
-        const reaction2 = (): number => this.state.costs.reaction_2
+        const thread = (): number => this.state.thread
+        const proposal = (): number => this.state.proposal
+        const upvote = (): number => this.state.upvote
+        const reaction0 = (): number => this.state.reaction_0
+        const reaction1 = (): number => this.state.reaction_1
+        const reaction2 = (): number => this.state.reaction_2
 
-        return { 
+        return {
             proposal, upvote, thread,
             reaction0, reaction1, reaction2
-       }
+        }
     }
 
     fetch = async () => {
