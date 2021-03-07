@@ -1,8 +1,10 @@
 import { Model, Collection } from 'acey'
 import { MAX_IS_2_POW_53 } from '../constant/errors'
 import { TByte } from '../constant/type'
+import { PROPOSAL_CODE, THREAD_CODE, VOTE_CODE } from '../script/constant'
+import ScriptEngine from '../script/script-engine'
 import { ByteArrayToB64, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeInt64 } from '../util'
-import { ToArrayBuffer } from '../util/bytes'
+import { ToArrayBufferFromB64 } from '../util/bytes'
 
 export interface IOutput {
 	input_indexes: number[]
@@ -39,6 +41,7 @@ export class Output extends Model {
     constructor(output: IOutput, options: any) {
 		super(output, options)
 		output && !output.input_indexes && this.setState({ input_indexes: [] })
+		output && !output.ta && this.setState({ ta: [] })
 	}
 
 	toRaw = () => {
@@ -48,7 +51,7 @@ export class Output extends Model {
 				value: EncodeInt64(this.get().value()),
 				pub_key_hash: Buffer.from(this.get().pubKH(), 'hex'),
 				k: this.get().K(),
-				ta: ToArrayBuffer(this.get().target())
+				ta: ToArrayBufferFromB64(this.get().target())
 			}
 		}
 
@@ -71,12 +74,27 @@ export class Output extends Model {
 		const inputIndexes = (): number[] => this.state.input_indexes
 		const pubKH = (): string => this.state.pub_key_hash
 		const K = (): TByte => this.state.k
-		const target = (): Buffer[] => this.state.ta
+		const target = (): string[] => this.state.ta
 
 		return {
 			value, inputIndexes, pubKH, K, target
 		}
 	}
+
+	is2 = () => {
+		const script = new ScriptEngine(this.get().K()).setTargetScript(this.toRaw().default().ta)
+		return {
+			proposal: () => script.is().proposal(),
+			applicationProposal: () => script.is().applicationProposal(),
+			constitutionProposal: () => script.is().constitutionProposal(),
+			costProposal: () => script.is().costProposal(),
+			reward: () => script.is().reward(),
+			thread: () => script.is().thread(),
+			rethread: () => script.is().rethread(),
+			vote: () => script.is().vote(),
+		}
+	}
+
 
 	isValueAbove = (val: BigInt) => val < this.get().value()
 }

@@ -14,8 +14,9 @@ import Costs from './costs'
 import Keys from './keys'
 import { EMPTY_CODE } from '../script/constant'
 import Info from './info'
-import { NewApplicationProposalScript, NewCostProposalScript } from '../script/scripts'
+import { NewApplicationProposalScript, NewConstitutionProposalScript, NewCostProposalScript, NewThreadScript } from '../script/scripts'
 import { PUBKEY_H_BURNER } from '../constant'
+import { TConstitution } from '../script/constitution'
 
 const ec = new EC('secp256k1');
 
@@ -67,46 +68,71 @@ export default class Wallet extends Model {
     public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
 
     buildTX = () => {
-        const applicationProposal = async () => {
-            await this.refreshWalletData()
-            const childIdx = this.info().get().countTotalContent() + 1
-            const script = NewApplicationProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx)) 
 
-            const to: string[] = []
-            const ta: Buffer[][] = []
-            to.push(PUBKEY_H_BURNER)
-            ta.push(script.targetScript())
+        const proposal = () => {
 
-            const builder = new TxBuild({ 
-                wallet: this,
-                to,
-                amount_required: [this.costs().get().proposal()],
-                ta,
-                kinds: Buffer.from([script.kind()])
-            })
-            return await builder.newTx()
+            const application = async () => {
+                await this.refreshWalletData()
+                const childIdx = this.info().get().countTotalContent() + 1
+                const script = NewApplicationProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx)) 
+    
+                const to: string[] = []
+                const ta: Buffer[][] = []
+                to.push(PUBKEY_H_BURNER)
+                ta.push(script.targetScript())
+    
+                const builder = new TxBuild({ 
+                    wallet: this,
+                    to,
+                    amount_required: [this.costs().get().proposal()],
+                    ta,
+                    kinds: Buffer.from([script.kind()])
+                })
+                return await builder.newTx()
+            }
+
+            const cost = async (threadCost: number, proposalCost: number) => {
+                await this.refreshWalletData()
+                const childIdx = this.info().get().countTotalContent() + 1
+                const script = NewCostProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx), threadCost, proposalCost) 
+
+                const to: string[] = []
+                const ta: Buffer[][] = []
+                to.push(PUBKEY_H_BURNER)
+                ta.push(script.targetScript())
+
+                const builder = new TxBuild({ 
+                    wallet: this,
+                    to,
+                    amount_required: [this.costs().get().proposal()],
+                    ta,
+                    kinds: Buffer.from([script.kind()])
+                })
+                return await builder.newTx()
+            }
+
+            const constitution = async (constitution: TConstitution) => {
+                await this.refreshWalletData()
+                const childIdx = this.info().get().countTotalContent() + 1
+                const script = NewConstitutionProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx), constitution) 
+                
+                const to: string[] = []
+                const ta: Buffer[][] = []
+                to.push(PUBKEY_H_BURNER)
+                ta.push(script.targetScript())
+
+                const builder = new TxBuild({ 
+                    wallet: this,
+                    to,
+                    amount_required: [this.costs().get().proposal()],
+                    ta,
+                    kinds: Buffer.from([script.kind()])
+                })
+                return await builder.newTx()
+            }
+
+            return { constitution, application, cost }
         }
-
-        const costProposal = async (threadCost: number, proposalCost: number) => {
-            await this.refreshWalletData()
-            const childIdx = this.info().get().countTotalContent() + 1
-            const script = NewCostProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx), threadCost, proposalCost) 
-
-            const to: string[] = []
-            const ta: Buffer[][] = []
-            to.push(PUBKEY_H_BURNER)
-            ta.push(script.targetScript())
-
-            const builder = new TxBuild({ 
-                wallet: this,
-                to,
-                amount_required: [this.costs().get().proposal()],
-                ta,
-                kinds: Buffer.from([script.kind()])
-            })
-            return await builder.newTx()
-        }
-
 
         const toPKH = async (pubKH: string, amount: number): Promise<Transaction | null> => {
             await this.refreshWalletData()
@@ -128,7 +154,29 @@ export default class Wallet extends Model {
             return await builder.newTx()
         }
 
-        return { toPKH, applicationProposal, costProposal}
+        const thread = async () => {
+            await this.refreshWalletData()
+            const childIdx = this.info().get().countTotalContent() + 1
+            const script = NewThreadScript(childIdx, this.keys().get().derivedPubHash(childIdx)) 
+            
+            const to: string[] = []
+            const ta: Buffer[][] = []
+            to.push(PUBKEY_H_BURNER)
+            ta.push(script.targetScript())
+
+            const builder = new TxBuild({ 
+                wallet: this,
+                to,
+                amount_required: [this.costs().get().thread()],
+                ta,
+                kinds: Buffer.from([script.kind()])
+            })
+
+            return await builder.newTx()
+        }
+
+
+        return { toPKH, proposal, thread }
     }
 
 

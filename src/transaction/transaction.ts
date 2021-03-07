@@ -12,7 +12,6 @@ import { UTXO, UTXOList } from './utxo'
 
 import fetch from 'node-fetch'
 import { BILLED_SIGNATURE_LENGTH, ROOT_API_URL } from '../constant'
-import TxBuild from '../wallet/tx-builder'
 
 export interface ITransaction {
     lh:      number
@@ -29,12 +28,20 @@ export interface ITransactionRaw {
 }
 
 export class Transaction extends Model {
+    static FetchTX = async (hash: string) => {
+        const response = await fetch(ROOT_API_URL + '/transaction/' + hash)
+        if (response.status == 200){
+            const json = await response.json()
+            return new Transaction(json, {})
+        }
+        throw new Error(await response.text())
+    }
 
     constructor(tx: ITransaction, options: any) {
         super(tx, options)
         this.setState({
             inputs: new InputList(this.state.inputs, this.kids()),
-            outputs: new InputList(this.state.outputs, this.kids()),
+            outputs: new OutputList(this.state.outputs, this.kids()),
         })
     }
 
@@ -116,7 +123,6 @@ export class Transaction extends Model {
     }
 
     toRaw = () => {
-
         const def = (): ITransactionRaw => {
             let inputs: IInputRaw[] = []
             let outputs: IOutputRaw[] = []

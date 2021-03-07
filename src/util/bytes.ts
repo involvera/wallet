@@ -8,10 +8,10 @@ const ONE = BigInt(1)
 const ZERO = BigInt(0)
 const MINUS = BigInt(-1)
 
-export const ToArrayBuffer = (arr: any[]): Buffer[] => {
+export const ToArrayBufferFromB64 = (arr: string[]): Buffer[] => {
     let ret: Buffer[] = []
     for (let i = 0; i < arr.length; i++){
-        ret.push(Buffer.from(arr[i]))
+        ret.push(Buffer.from(arr[i], 'base64'))
     }
     return ret
 }
