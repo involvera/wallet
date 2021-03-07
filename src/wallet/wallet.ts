@@ -14,7 +14,7 @@ import Costs from './costs'
 import Keys from './keys'
 import { EMPTY_CODE } from '../script/constant'
 import Info from './info'
-import { NewApplicationProposalScript } from '../script/scripts'
+import { NewApplicationProposalScript, NewCostProposalScript } from '../script/scripts'
 import { PUBKEY_H_BURNER } from '../constant'
 
 const ec = new EC('secp256k1');
@@ -43,7 +43,9 @@ export default class Wallet extends Model {
         await this.auth().refresh()
         const response = await fetch(ROOT_API_URL + '/wallet', {
             method: 'GET',
-            headers: this.sign().header() as any
+            headers: Object.assign(this.sign().header() as any, {
+                last_cch: this.cch().get().last() 
+            })
         })
         if (response.status == 200){
             const json = await response.json()
@@ -65,28 +67,6 @@ export default class Wallet extends Model {
     public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
 
     buildTX = () => {
-        const fetchFees = async () => {
-            try {
-                const status = await this.fees().fetch()
-                if (status != 200)
-                    throw new Error("Can't fetch transaction fees.")
-                
-            } catch (e){
-                throw new Error(e)
-            }
-        }
-
-        const fetchCosts = async () => {
-            try {
-                const status = await this.costs().fetch()
-                if (status != 200)
-                    throw new Error("Can't fetch costs.")
-                
-            } catch (e){
-                throw new Error(e)
-            }
-        }
-
         const applicationProposal = async () => {
             await this.refreshWalletData()
             const childIdx = this.info().get().countTotalContent() + 1
@@ -106,6 +86,27 @@ export default class Wallet extends Model {
             })
             return await builder.newTx()
         }
+
+        const costProposal = async (threadCost: number, proposalCost: number) => {
+            await this.refreshWalletData()
+            const childIdx = this.info().get().countTotalContent() + 1
+            const script = NewCostProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx), threadCost, proposalCost) 
+
+            const to: string[] = []
+            const ta: Buffer[][] = []
+            to.push(PUBKEY_H_BURNER)
+            ta.push(script.targetScript())
+
+            const builder = new TxBuild({ 
+                wallet: this,
+                to,
+                amount_required: [this.costs().get().proposal()],
+                ta,
+                kinds: Buffer.from([script.kind()])
+            })
+            return await builder.newTx()
+        }
+
 
         const toPKH = async (pubKH: string, amount: number): Promise<Transaction | null> => {
             await this.refreshWalletData()
@@ -127,7 +128,7 @@ export default class Wallet extends Model {
             return await builder.newTx()
         }
 
-        return { toPKH, applicationProposal }
+        return { toPKH, applicationProposal, costProposal}
     }
 
 
@@ -143,7 +144,7 @@ export default class Wallet extends Model {
         const _assignJSONResponse = (json: any) => {
             let { list, last_height} = json
             list = list || []
-            this.setState({ cch: { list: get().list().concat(list.filter((elem: any) => elem != null)), last_height } } ).store()
+            this.setState({ cch: { list: get().list().concat(list.filter((elem: any) => !!elem)), last_height } } ).store()
         }
 
         const Fetch = async () => {
