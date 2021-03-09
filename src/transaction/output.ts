@@ -73,16 +73,23 @@ export class Output extends Model {
 		const value = (): BigInt => this.state.value 
 		const inputIndexes = (): number[] => this.state.input_indexes
 		const pubKH = (): string => this.state.pub_key_hash
+		const script = () => new ScriptEngine(this.get().K()).setTargetScript(this.toRaw().default().ta)
+ 		const pubKHContent = (): string => {
+			const is = this.is2()
+			if (is.thread() || is.rethread() || is.proposal())
+				return script().pull().pubkh().toString('hex')
+			return ''
+		}
 		const K = (): TByte => this.state.k
 		const target = (): string[] => this.state.ta
 
 		return {
-			value, inputIndexes, pubKH, K, target
+			value, inputIndexes, pubKH, K, target, script, pubKHContent
 		}
 	}
 
 	is2 = () => {
-		const script = new ScriptEngine(this.get().K()).setTargetScript(this.toRaw().default().ta)
+		const script = this.get().script()
 		return {
 			proposal: () => script.is().proposal(),
 			applicationProposal: () => script.is().applicationProposal(),

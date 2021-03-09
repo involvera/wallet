@@ -1,5 +1,5 @@
 import { Collection, Model } from 'acey'
-import { ByteArrayToB64, EncodeInt } from '../util'
+import { ByteArrayToB64, DecodeInt, EncodeInt } from '../util'
 
 export interface IInput {
     prev_transaction_hash: string
@@ -21,7 +21,11 @@ export class Input extends Model {
 
     get = () => {
         const prevTxHash = (): string => this.state.prev_transaction_hash || ''
-        const vout = (): number => this.state.vout || -1
+        const vout = (): number => {
+            if (typeof this.state.vout === 'number')
+                return this.state.vout
+            return -1
+        }
         const signature = (): string => this.state.sign || ''
 
         return { vout, prevTxHash, signature }

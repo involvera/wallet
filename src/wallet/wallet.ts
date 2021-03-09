@@ -14,9 +14,10 @@ import Costs from './costs'
 import Keys from './keys'
 import { EMPTY_CODE } from '../script/constant'
 import Info from './info'
-import { NewApplicationProposalScript, NewConstitutionProposalScript, NewCostProposalScript, NewThreadScript } from '../script/scripts'
-import { PUBKEY_H_BURNER } from '../constant'
+import { NewApplicationProposalScript, NewConstitutionProposalScript, NewCostProposalScript, NewReThreadScript, NewRewardScript, NewThreadScript } from '../script/scripts'
+import { BURNING_RATIO, PUBKEY_H_BURNER } from '../constant'
 import { TConstitution } from '../script/constitution'
+import { ContentLink } from '../transaction/content-link'
 
 const ec = new EC('secp256k1');
 
@@ -175,8 +176,51 @@ export default class Wallet extends Model {
             return await builder.newTx()
         }
 
+        const rethread = async (content: ContentLink) => {
+            await this.refreshWalletData()
+            const childIdx = this.info().get().countTotalContent() + 1
+            const contentRaw = content.toRaw()
 
-        return { toPKH, proposal, thread }
+            const script = NewReThreadScript(contentRaw.link.tx_id, contentRaw.link.vout, childIdx, this.keys().get().derivedPubHash(childIdx))
+
+            const to: string[] = []
+            const ta: Buffer[][] = []
+            to.push(PUBKEY_H_BURNER)
+            ta.push(script.targetScript())
+
+            const builder = new TxBuild({ 
+                wallet: this,
+                to,
+                amount_required: [this.costs().get().thread()],
+                ta,
+                kinds: Buffer.from([script.kind()])
+            })
+
+            return await builder.newTx()
+        }
+
+        const reward = async (content: ContentLink, rewardType: 'upvote' | 'reaction0' | 'reaction1' | 'reaction2') => {
+            await this.refreshWalletData()
+            const contentRaw = content.toRaw()
+            const script = NewRewardScript(contentRaw.link.tx_id, contentRaw.link.vout, 1)
+
+            const cost = this.costs().get()[rewardType]()
+            const burned = Math.floor(BURNING_RATIO * cost)
+            const distributed = cost - burned
+
+
+            const builder = new TxBuild({ 
+                wallet: this,
+                to: [PUBKEY_H_BURNER, content.get().pubKHOrigin()],
+                amount_required: [burned, distributed],
+                kinds: Buffer.from([script.kind(),EMPTY_CODE]),
+                ta: [script.targetScript(), []]
+            })
+
+            return await builder.newTx()
+        }
+
+        return { toPKH, proposal, thread, rethread, reward }
     }
 
 
