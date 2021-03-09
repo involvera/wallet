@@ -14,7 +14,7 @@ import Costs from './costs'
 import Keys from './keys'
 import { EMPTY_CODE } from '../script/constant'
 import Info from './info'
-import { NewApplicationProposalScript, NewConstitutionProposalScript, NewCostProposalScript, NewReThreadScript, NewRewardScript, NewThreadScript } from '../script/scripts'
+import { NewApplicationProposalScript, NewConstitutionProposalScript, NewCostProposalScript, NewProposalVoteScript, NewReThreadScript, NewRewardScript, NewThreadScript } from '../script/scripts'
 import { BURNING_RATIO, PUBKEY_H_BURNER } from '../constant'
 import { TConstitution } from '../script/constitution'
 import { ContentLink } from '../transaction/content-link'
@@ -213,14 +213,33 @@ export default class Wallet extends Model {
                 wallet: this,
                 to: [PUBKEY_H_BURNER, content.get().pubKHOrigin()],
                 amount_required: [burned, distributed],
-                kinds: Buffer.from([script.kind(),EMPTY_CODE]),
+                kinds: Buffer.from([script.kind(), EMPTY_CODE]),
                 ta: [script.targetScript(), []]
             })
 
             return await builder.newTx()
         }
 
-        return { toPKH, proposal, thread, rethread, reward }
+        const vote = async (proposal: ContentLink, accept: boolean) => {
+            await this.refreshWalletData()
+            const proposalRaw = proposal.toRaw()
+            const script = NewProposalVoteScript(proposalRaw.link.tx_id, proposalRaw.link.vout, accept)
+
+            const builder = new TxBuild({ 
+                wallet: this,
+                to: [PUBKEY_H_BURNER],
+                amount_required: [1],
+                kinds: Buffer.from([script.kind()]),
+                ta: [script.targetScript(), []]
+            })
+        
+            return await builder.newTx()
+        }
+        
+        return { 
+            toPKH, proposal, vote,
+            thread, rethread, reward 
+        }
     }
 
 
