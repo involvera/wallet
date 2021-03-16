@@ -1,0 +1,1 @@
+export { IConstitutionRule, TConstitution, NewConstitution } from './constitution'

@@ -15,7 +15,7 @@
     "@types/mocha": "^8.2.1",
     "@types/node-fetch": "^2.5.8",
     "@types/tiny-secp256k1": "^1.0.0",
-    "acey": "^1.4.5",
+    "acey": "^1.4.6",
     "acey-node-store": "^1.0.5",
     "base-x": "^3.0.8",
     "bip32": "^2.0.6",

@@ -1,6 +1,6 @@
 import { Model } from 'acey'
 
-import { B64ToByteArray, Sha256 } from '../util'
+import { B64ToByteArray, PubKeyHashFromAddress, Sha256 } from '../util'
 import { ec as EC } from 'elliptic'
 import TxBuild from './tx-builder' 
 
@@ -135,13 +135,14 @@ export default class Wallet extends Model {
             return { constitution, application, cost }
         }
 
-        const toPKH = async (pubKH: string, amount: number): Promise<Transaction | null> => {
+        const toAddress = async (address: string, amount: number): Promise<Transaction | null> => {
             await this.refreshWalletData()
 
             const to: string[] = []
             const ta: Buffer[][] = []
             const emptyTa: Buffer[] = []
-            to.push(pubKH)
+
+            to.push(PubKeyHashFromAddress(address).toString('hex'))
             ta.push(emptyTa)
 
             const builder = new TxBuild({ 
@@ -237,7 +238,7 @@ export default class Wallet extends Model {
         }
         
         return { 
-            toPKH, proposal, vote,
+            toAddress, proposal, vote,
             thread, rethread, reward 
         }
     }

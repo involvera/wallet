@@ -60,5 +60,4 @@ export default (s: ScriptEngine) => {
     return {
         childIdx, pubkh, serializedConstitution, costs, txID, vout, distributionVout, isVoteAccepted 
     }
-
 }
