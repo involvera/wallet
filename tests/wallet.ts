@@ -3,10 +3,12 @@ import 'mocha';
 import {config  } from 'acey'
 import LocalStorage from 'acey-node-store'
 
-import { MAX_SUPPLY_AMOUNT } from '../src/constant';
+import { COIN_UNIT, MAX_SUPPLY_AMOUNT } from '../src/constant';
 import { IsAddressValid, PubKeyHashFromAddress } from '../src/util';
 
 import Wallet from '../src/wallet/wallet'
+import { NewConstitution } from '../src/script/constitution';
+import { ContentLink, Output } from '../src/transaction';
 
 const wallet = new Wallet({}, { key: 'wallet', connected: true })
 const wallet2 = new Wallet({}, {key: 'wallet2', connected: true })
@@ -57,12 +59,96 @@ const main = () => {
         }
     })
 
+    it('Wallet1 -> create a proposal : application', async () => {
+        const tx = await wallet.buildTX().proposal().application()
+        if (tx){
+            const response = await tx.broadcast(wallet)
+            expect(response.status).to.eq(201)
+        }
+    })
+
+    it('Wallet1 -> create a proposal : constitution', async () => {
+        const c = NewConstitution()
+        c[0].title = "Title #0"
+        c[0].content = "Content #0"
+
+        const tx = await wallet.buildTX().proposal().constitution(c)
+        if (tx){
+            const response = await tx.broadcast(wallet)
+            expect(response.status).to.eq(201)
+        }
+    })
+
+    it('Wallet1 -> create a proposal : costs', async () => {
+        const tx = await wallet.buildTX().proposal().cost(-1, COIN_UNIT * 2000)
+        if (tx){
+            const response = await tx.broadcast(wallet)
+            expect(response.status).to.eq(201)
+        }
+    })
+
+    let pkhContent = ""
+    it('Wallet1 -> create a proposal', async () => {
+        const tx = await wallet.buildTX().proposal().cost(-1, COIN_UNIT * 2000)
+        if (tx){
+            const response = await tx.broadcast(wallet)
+            const out = tx.get().outputs().nodeAt(0) as Output
+            pkhContent = out.get().pubKHContent()
+            expect(response.status).to.eq(201)
+        }
+    })
+
+    it('Wallet1 -> create a vote', async () => {
+        const proposal = await ContentLink.FetchProposal(pkhContent)
+        const tx = await wallet.buildTX().vote(proposal, true)
+        if (tx){
+            const response = await tx.broadcast(wallet)
+            expect(response.status).to.eq(201)
+        }
+    })
+
+    it('Wallet1 -> create a thread', async () => {
+        const tx = await wallet.buildTX().thread()
+        if (tx){
+            const response = await tx.broadcast(wallet)
+            const out = tx.get().outputs().nodeAt(0) as Output
+            pkhContent = out.get().pubKHContent()
+            expect(response.status).to.eq(201)
+        }
+    })
+
+    let pkhContent2 = ""
+    it('Wallet1 -> create a rethread', async () => {
+        const thread = await ContentLink.FetchThread(pkhContent)
+        const tx = await wallet.buildTX().rethread(thread)
+        if (tx){
+            const response = await tx.broadcast(wallet)
+            const out = tx.get().outputs().nodeAt(0) as Output
+            pkhContent2 = out.get().pubKHContent()
+            expect(response.status).to.eq(201)
+        }
+    })
+
+    it('Wallet2 -> create a reward : upvote', async () => {
+        const thread = await ContentLink.FetchThread(pkhContent)
+        const tx = await wallet2.buildTX().reward(thread, 'upvote')
+        if (tx){
+            const response = await tx.broadcast(wallet2)
+            expect(response.status).to.eq(201)
+        }
+    })
+
+    it('Wallet2 -> create a reward : upvote', async () => {
+        const thread = await ContentLink.FetchThread(pkhContent2)
+        const tx = await wallet2.buildTX().reward(thread, 'reaction0')
+        if (tx){
+            const response = await tx.broadcast(wallet2)
+            expect(response.status).to.eq(201)
+        }
+    })
 
 
-
-
-
-
+    
 }
 
 main()
