@@ -1,11 +1,10 @@
 import { expect } from 'chai';
 import 'mocha';
-import {config  } from 'acey'
+import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
 
 import { COIN_UNIT, MAX_SUPPLY_AMOUNT } from '../src/constant';
-import { IsAddressValid, PubKeyHashFromAddress } from '../src/util';
-
+import { IsAddressValid, PubKeyHashFromAddress, Sha256 } from '../src/util';
 import Wallet from '../src/wallet/wallet'
 import { NewConstitution } from '../src/script/constitution';
 import { ContentLink, Output } from '../src/transaction';
@@ -46,6 +45,12 @@ const main = () => {
         expect(wallet.keys().get().address()).to.eq("1M4qfoZesnD8N7gTeYy7R2mfAdRJJxQJrM")
         expect(Buffer.compare(PubKeyHashFromAddress(wallet.keys().get().address()), wallet.keys().get().pubHash())).to.eq(0)
         expect(IsAddressValid(wallet.keys().get().address())).to.eq(true)
+        expect(wallet.keys().get().mnemonic("coucou")).to.eq("film dirt damage apart carry horse enroll carry power prison flush bulb")
+
+    })
+
+    it('Wallet1 -> Puts: ', () => {
+        expect(wallet.puts().count()).to.eq(10)
     })
 
     it('Wallet1 sends some coins to Wallet2 ', async () => {
@@ -147,34 +152,6 @@ const main = () => {
         }
     })
 
-
-    
 }
 
 main()
-
-/*
-describe('Testing wallets methods', () => {
-
-    it('UTXOS: ', () => {
-        const CCHList = wallet.cch().get().list()
-        const utxos = wallet.utxos().get().get()
-
-        expect(utxos.totalMeltedValue(CCHList)).to.equal(11442131552328)
-        expect(utxos.totalValue()).to.equal(BigInt(11463370988354))
-        const list = utxos.requiredList(Number(MAX_SUPPLY_AMOUNT), CCHList)
-        expect(list.count()).to.equal(7)
-        expect(utxos.listUnFetchedTxHash().length).to.eq(7)
-    });
-
-
-    it('Address: ', () => {
-        const w = new Wallet({}, {})
-        w.keys().set("solution benefit width ankle joy diamond kitchen account portion deer eye acid", "coucou")
-        expect(w.keys().get().address()).to.eq("1G7EDQGMMuRaSsXysJTNTJd6N6i24Mm1cT")
-        expect(Buffer.compare(PubKeyHashFromAddress(w.keys().get().address()), w.keys().get().pubHash())).to.eq(0)
-        expect(IsAddressValid(w.keys().get().address())).to.eq(true)
-    }) 
-})
-
-*/

@@ -12,6 +12,8 @@ import AuthContract from './auth-contract'
 import Fees from './fees'
 import Costs from './costs'
 import Keys from './keys'
+import { UnserializedPutList } from './puts'
+
 import { EMPTY_CODE } from '../script/constant'
 import Info from './info'
 import { NewApplicationProposalScript, NewConstitutionProposalScript, NewCostProposalScript, NewProposalVoteScript, NewReThreadScript, NewRewardScript, NewThreadScript } from '../script/scripts'
@@ -30,14 +32,17 @@ export default class Wallet extends Model {
 
     constructor(initialState: any, options: any){
         super(initialState, options)
-        this.setState({ 
-            seed: new Keys(initialState.seed || {seed: ''}, this.kids()),
+        
+        this.setState({
+            seed: new Keys(initialState.seed, this.kids()),
             utxos: new UTXOList(initialState.utxos || [], this.kids()),
+            puts: new UnserializedPutList(initialState.puts || [], this.kids()), 
             cch: initialState.cch || {list: [], last_height: 0},
             contract: new AuthContract(initialState.contract, this.kids()),
             fees: new Fees(initialState.fees, this.kids()),
             info: new Info(initialState.info, this.kids()),
-            costs: new Costs(initialState.costs, this.kids())
+            costs: new Costs(initialState.costs, this.kids()),
+            memory: initialState.memory || {last_put_fetch_height: 0, is_recovered_wallet: false}
         })
     }
 
@@ -51,13 +56,31 @@ export default class Wallet extends Model {
         })
         if (response.status == 200){
             const json = await response.json()
-            this.info().setState(json.info).store()
+            this.info().setState(json.info)
             this.cch()._assignJSONResponse(json.cch)
-            this.auth().setState(json.contract).store()
-            this.fees().setState(json.fees).store()
-            this.utxos().get().setState(json.utxos || []).store()
-            this.costs().setState(json.costs).store()
+            this.auth().setState(json.contract)
+            this.fees().setState(json.fees)
+            this.utxos().get().setState(json.utxos || [])
+            this.costs().setState(json.costs)
+            this.action().store()
+            await this.refreshPutList()
         }
+    }
+
+    refreshPutList = async () => {
+        const CONFIG_LUGH_INTERVAL = 6
+        const lastPutFetchHeight = this.memory().get().lastPutFetchHeight()
+        const currentHeight = this.cch().get().lastHeight()
+
+        if (currentHeight > lastPutFetchHeight){
+            const status = await this.puts().fetch(lastPutFetchHeight + CONFIG_LUGH_INTERVAL, this.sign().header())
+            if (status == 200){
+                this.memory().setLastPutFetchHeight(Math.min(currentHeight, lastPutFetchHeight + CONFIG_LUGH_INTERVAL)).store()
+                if (this.memory().get().lastPutFetchHeight() < currentHeight){
+                    await this.refreshPutList()
+                }
+            }
+        }   
     }
 
     public keys = (): Keys => this.state.seed
@@ -65,8 +88,10 @@ export default class Wallet extends Model {
     public fees = (): Fees => this.state.fees
     public costs = (): Costs => this.state.costs
     public info = (): Info => this.state.info
+    public puts = (): UnserializedPutList => this.state.puts
 
     public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
+
 
     buildTX = () => {
 
@@ -244,19 +269,34 @@ export default class Wallet extends Model {
     }
 
 
+    memory = () => {
+        const get = () => {
+            return {
+                memory: () => this.state.memory,
+                lastPutFetchHeight: () => this.state.memory.last_put_fetch_height
+            }
+        }
+
+        const set = (o: any) => this.setState({ memory: Object.assign({}, get().memory(), o) })
+        const setRecovered = () => set({ is_recovered_wallet: true }).store()
+
+        const setLastPutFetchHeight = (last_put_fetch_height: number) => set({ last_put_fetch_height })
+
+        return { get, set, setLastPutFetchHeight, setRecovered }
+    }
+
     cch = () => {
         const get = () => {
             const list = (): string[] => this.state.cch.list 
             const last = () => list().length == 0 ? '' : list()[0]
             const lastHeight = (): number => this.state.cch.last_height
-            
             return { list, last, lastHeight }
         }
 
         const _assignJSONResponse = (json: any) => {
             let { list, last_height} = json
             list = list || []
-            this.setState({ cch: { list: get().list().concat(list.filter((elem: any) => !!elem)), last_height } } ).store()
+            return this.setState({ cch: { list: get().list().concat(list.filter((elem: any) => !!elem)), last_height } } )
         }
 
         const Fetch = async () => {
@@ -267,7 +307,7 @@ export default class Wallet extends Model {
                         method: 'GET',
                         headers: Object.assign({}, this.sign().header() as any, {last_cch: get().last() })
                     })
-                    res.status == 200 && _assignJSONResponse(await res.json())
+                    res.status == 200 && _assignJSONResponse(await res.json()).store()
                     return res.status
                 } catch (e){
                     throw new Error(e)
