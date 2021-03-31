@@ -46,7 +46,7 @@ export default class Wallet extends Model {
         })
     }
 
-    refreshWalletData = async () => {
+    synchronize = async () => {
         await this.auth().refresh()
         const response = await fetch(ROOT_API_URL + '/wallet', {
             method: 'GET',
@@ -96,7 +96,7 @@ export default class Wallet extends Model {
         const proposal = () => {
 
             const application = async () => {
-                await this.refreshWalletData()
+                await this.synchronize()
                 const childIdx = this.info().get().countTotalContent() + 1
                 const script = NewApplicationProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx)) 
     
@@ -116,7 +116,7 @@ export default class Wallet extends Model {
             }
 
             const cost = async (threadCost: number, proposalCost: number) => {
-                await this.refreshWalletData()
+                await this.synchronize()
                 const childIdx = this.info().get().countTotalContent() + 1
                 const script = NewCostProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx), threadCost, proposalCost) 
 
@@ -136,7 +136,7 @@ export default class Wallet extends Model {
             }
 
             const constitution = async (constitution: TConstitution) => {
-                await this.refreshWalletData()
+                await this.synchronize()
                 const childIdx = this.info().get().countTotalContent() + 1
                 const script = NewConstitutionProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx), constitution) 
                 
@@ -159,7 +159,7 @@ export default class Wallet extends Model {
         }
 
         const toAddress = async (address: string, amount: number): Promise<Transaction | null> => {
-            await this.refreshWalletData()
+            await this.synchronize()
 
             const to: string[] = []
             const ta: Buffer[][] = []
@@ -180,7 +180,7 @@ export default class Wallet extends Model {
         }
 
         const thread = async () => {
-            await this.refreshWalletData()
+            await this.synchronize()
             const childIdx = this.info().get().countTotalContent() + 1
             const script = NewThreadScript(childIdx, this.keys().get().derivedPubHash(childIdx)) 
             
@@ -201,7 +201,7 @@ export default class Wallet extends Model {
         }
 
         const rethread = async (content: ContentLink) => {
-            await this.refreshWalletData()
+            await this.synchronize()
             const childIdx = this.info().get().countTotalContent() + 1
             const contentRaw = content.toRaw()
 
@@ -224,7 +224,7 @@ export default class Wallet extends Model {
         }
 
         const reward = async (content: ContentLink, rewardType: 'upvote' | 'reaction0' | 'reaction1' | 'reaction2') => {
-            await this.refreshWalletData()
+            await this.synchronize()
             const contentRaw = content.toRaw()
             const script = NewRewardScript(contentRaw.link.tx_id, contentRaw.link.vout, 1)
 
@@ -245,7 +245,7 @@ export default class Wallet extends Model {
         }
 
         const vote = async (proposal: ContentLink, accept: boolean) => {
-            await this.refreshWalletData()
+            await this.synchronize()
             const proposalRaw = proposal.toRaw()
             const script = NewProposalVoteScript(proposalRaw.link.tx_id, proposalRaw.link.vout, accept)
 
