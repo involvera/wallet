@@ -72,15 +72,13 @@ export default class Wallet extends Model {
         const lastPutFetchHeight = this.memory().get().lastPutFetchHeight()
         const currentHeight = this.cch().get().lastHeight()
 
-        if (currentHeight > lastPutFetchHeight){
-            const status = await this.puts().fetch(lastPutFetchHeight + CONFIG_LUGH_INTERVAL, this.sign().header())
-            if (status == 200){
-                this.memory().setLastPutFetchHeight(Math.min(currentHeight, lastPutFetchHeight + CONFIG_LUGH_INTERVAL)).store()
-                if (this.memory().get().lastPutFetchHeight() < currentHeight){
-                    await this.refreshPutList()
-                }
+        const status = await this.puts().fetch(lastPutFetchHeight + CONFIG_LUGH_INTERVAL, this.sign().header())
+        if (status == 200){
+            this.memory().setLastPutFetchHeight(Math.min(currentHeight, lastPutFetchHeight + CONFIG_LUGH_INTERVAL)).store()
+            if (this.memory().get().lastPutFetchHeight() < currentHeight){
+                await this.refreshPutList()
             }
-        }   
+        }
     }
 
     public keys = (): Keys => this.state.seed

@@ -81,7 +81,7 @@ export class UTXOList extends Collection {
                 return utxo.get().txID() == i.get().prevTxHash() && utxo.get().idx() == i.get().vout()
             })
         })
-        this.action().store()
+        return this.action()
     }
 
     fetchPrevTxList = async (headerSignature: IHeaderSignature) => {

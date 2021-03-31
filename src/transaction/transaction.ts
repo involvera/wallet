@@ -65,11 +65,11 @@ export class Transaction extends Model {
                 body: JSON.stringify(this.toRaw().base64())
             })
             if (response.status === 201){
-                /* TO IMPROVE */
+                const { transaction: {lh, t}, puts, utxos } = await response.json()
                 wallet.utxos().get().removeUTXOsFromInputs(this.get().inputs())
-                if (this.get().outputs().containsToPubKH(wallet.keys().get().pubHashHex())){
-                    await wallet.utxos().fetch()
-                }
+                wallet.utxos().get().append(utxos || []).store()
+                wallet.puts()._handleJSONResponse(puts)
+                this.setState({ lh, t })
             }
             return response
         } catch (e){
@@ -86,7 +86,7 @@ export class Transaction extends Model {
 
             for (let i = 0; i < inputs.count(); i++){
                 const prevTx = (utxos.nodeAt(i) as UTXO).get().tx() as Transaction
-                const signature = wallet.sign().value(prevTx.get().hashSig())
+                const signature = wallet.sign().value(prevTx.get().hash())
                 const input = this.get().inputs().nodeAt(i) as Input
                 input.setState({ sign: Buffer.from(signature).toString('hex') })
             }
@@ -101,9 +101,9 @@ export class Transaction extends Model {
         const time = (): number => this.state.t
         const lughHeight = (): number => this.state.lh
         const hash = () => Sha256(this.to().string())
+        const hashHex = () => hash().toString('hex')
         const inputs = (): InputList => this.state.inputs
         const outputs = (): OutputList => this.state.outputs
-        const hashSig = () => Sha256(this.to().string())
 
         const billedSize = (): number => {
             const totalSignatureSizeInputs = inputs().reduce((total: number, input: Input) => {
@@ -117,8 +117,8 @@ export class Transaction extends Model {
         return {
             time, lughHeight,
             hash, inputs, outputs,
+            hashHex, 
             billedSize,
-            hashSig
         }
     }
 
