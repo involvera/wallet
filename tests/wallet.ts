@@ -4,7 +4,7 @@ import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
 
 import { COIN_UNIT, MAX_SUPPLY_AMOUNT } from '../src/constant';
-import { IsAddressValid, PubKeyHashFromAddress, Sha256 } from '../src/util';
+import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress, Sha256 } from '../src/util';
 import Wallet from '../src/wallet/wallet'
 import { NewConstitution } from '../src/script/constitution';
 import { ContentLink, Output, UTXO } from '../src/transaction';
@@ -48,6 +48,8 @@ const main = () => {
         expect(Buffer.compare(PubKeyHashFromAddress(wallet.keys().get().address()), wallet.keys().get().pubHash())).to.eq(0)
         expect(IsAddressValid(wallet.keys().get().address())).to.eq(true)
         expect(wallet.keys().get().mnemonic("coucou")).to.eq("film dirt damage apart carry horse enroll carry power prison flush bulb")
+        const uuid = EncodeBaseUUID(wallet.keys().get().pubHash())
+        expect(DecodeBaseUUID(uuid).toString('hex')).to.eq(wallet.keys().get().pubHashHex())
     })
 
     it('Wallet1 -> Puts: ', () => {
@@ -122,7 +124,7 @@ const main = () => {
         }
     })
 
-    let pkhContent = ""
+    let uuidContent = ""
     it('Wallet1 -> create a proposal : costs', async () => {
         const tx = await wallet.buildTX().proposal().cost(-1, COIN_UNIT * 2000)
         const balance = wallet.balance()
@@ -130,7 +132,7 @@ const main = () => {
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
             const out = tx.get().outputs().nodeAt(0) as Output
-            pkhContent = out.get().pubKHContent()
+            uuidContent = out.get().contentUUID()
             expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte())-1)
             expect(wallet.puts().count()).to.eq(14)
             const lastPut = wallet.puts().sortByTime().first() as UnserializedPut
@@ -143,7 +145,7 @@ const main = () => {
     })
 
     it('Wallet1 -> create a vote', async () => {
-        const proposal = await ContentLink.FetchProposal(pkhContent)
+        const proposal = await ContentLink.FetchProposal(uuidContent)
         const tx = await wallet.buildTX().vote(proposal, true)
         const balance = wallet.balance()
         if (tx){
@@ -157,7 +159,7 @@ const main = () => {
             expect(lastPut.isVote()).to.eq(true)
             expect(lastPut.isAcceptedVote()).to.eq(true)
             expect(lastPut.get().contentPKH()).to.eq("")
-            expect(lastPut.get().contentPKHTargeted()).to.eq(proposal.get().output().get().pubKHContent())
+            expect(lastPut.get().contentPKHTargeted()).to.eq(proposal.get().output().get().pubKHHexContent())
         }
     })
 
@@ -168,7 +170,7 @@ const main = () => {
         if (tx){
             const response = await tx.broadcast(wallet)
             const out = tx.get().outputs().nodeAt(0) as Output
-            pkhContent = out.get().pubKHContent()
+            uuidContent = out.get().contentUUID()
             expect(response.status).to.eq(201)
             expect(wallet.puts().count()).to.eq(16)
             expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte())-2)
@@ -177,21 +179,21 @@ const main = () => {
             expect(lastPut.get().senderPKH()).to.eq(wallet.keys().get().pubHashHex())
             expect(lastPut.isThread()).to.eq(true)
             expect(lastPut.isRethread()).to.eq(false)
-            expect(lastPut.get().contentPKH()).to.eq(pkhContent)
+            expect(lastPut.get().contentUUID()).to.eq(uuidContent)
             expect(lastPut.get().contentPKHTargeted()).to.eq("")
         }
     })
 
     let pkhContent2 = ""
     it('Wallet1 -> create a rethread', async () => {
-        const thread = await ContentLink.FetchThread(pkhContent)
+        const thread = await ContentLink.FetchThread(uuidContent)
         const tx = await wallet.buildTX().rethread(thread)
         const balance = wallet.balance()
 
         if (tx){
             const response = await tx.broadcast(wallet)
             const out = tx.get().outputs().nodeAt(0) as Output
-            pkhContent2 = out.get().pubKHContent()
+            pkhContent2 = out.get().pubKHHexContent()
             expect(response.status).to.eq(201)
             expect(wallet.puts().count()).to.eq(17)
             expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte())-1)
@@ -201,12 +203,12 @@ const main = () => {
             expect(lastPut.isThread()).to.eq(true)
             expect(lastPut.isRethread()).to.eq(true)
             expect(lastPut.get().contentPKH()).to.eq(pkhContent2)
-            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHContent())
+            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHHexContent())
         }
     })
 
     it('Wallet2 -> create a reward : upvote', async () => {
-        const thread = await ContentLink.FetchThread(pkhContent)
+        const thread = await ContentLink.FetchThread(uuidContent)
         const tx = await wallet2.buildTX().reward(thread, 'upvote')        
         const balance = wallet2.balance()
         const balance2 = wallet.balance()
@@ -223,7 +225,7 @@ const main = () => {
             expect(lastPut.isReward()).to.eq(true)
             expect(lastPut.isUpvote()).to.eq(true)
             expect(lastPut.get().contentPKH()).to.eq("")
-            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHContent())
+            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHHexContent())
 
 
             expect(balance2).to.eq(wallet.balance()-(wallet.costs().get().upvote() * 0.3)-1)
@@ -235,7 +237,7 @@ const main = () => {
             expect(lastPut2.isReward()).to.eq(true)
             expect(lastPut2.isUpvote()).to.eq(true)
             expect(lastPut.get().contentPKH()).to.eq("")
-            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHContent())
+            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHHexContent())
         }
     })
 
@@ -258,8 +260,7 @@ const main = () => {
             expect(lastPut.isReward()).to.eq(true)
             expect(lastPut.isReaction0()).to.eq(true)
             expect(lastPut.get().contentPKH()).to.eq("")
-            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHContent())
-
+            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHHexContent())
 
             expect(balance2).to.eq(wallet.balance()-(wallet.costs().get().reaction0() * 0.3)-1)
             expect(wallet.puts().count()).to.eq(19)
@@ -270,10 +271,7 @@ const main = () => {
             expect(lastPut2.isReward()).to.eq(true)
             expect(lastPut2.isReaction0()).to.eq(true)
             expect(lastPut.get().contentPKH()).to.eq("")
-            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHContent())
-
-
-
+            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHHexContent())
         }
     })
 }

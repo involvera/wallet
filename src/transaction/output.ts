@@ -3,8 +3,9 @@ import { MAX_IS_2_POW_53 } from '../constant/errors'
 import { TByte } from '../constant/type'
 import { PROPOSAL_CODE, THREAD_CODE, VOTE_CODE } from '../script/constant'
 import ScriptEngine from '../script/script-engine'
-import { ByteArrayToB64, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeInt64 } from '../util'
+import { ByteArrayToB64, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeBaseUUID, EncodeInt64 } from '../util'
 import { ToArrayBufferFromB64 } from '../util/bytes'
+import { PubKeyHashHexToUUID } from '../util/hash'
 
 export interface IOutput {
 	input_indexes: number[]
@@ -74,17 +75,20 @@ export class Output extends Model {
 		const inputIndexes = (): number[] => this.state.input_indexes
 		const pubKH = (): string => this.state.pub_key_hash
 		const script = () => new ScriptEngine(this.get().K()).setTargetScript(this.toRaw().default().ta)
- 		const pubKHContent = (): string => {
+ 		const pubKHHexContent = (): string => {
 			const is = this.is2()
 			if (is.thread() || is.rethread() || is.proposal())
 				return script().pull().pubkh().toString('hex')
 			return ''
 		}
+		const contentUUID = (): string => PubKeyHashHexToUUID(pubKHHexContent())
+
 		const K = (): TByte => this.state.k
 		const target = (): string[] => this.state.ta
 
 		return {
-			value, inputIndexes, pubKH, K, target, script, pubKHContent
+			value, inputIndexes, pubKH, K, 
+			target, script, pubKHHexContent, contentUUID
 		}
 	}
 

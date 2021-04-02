@@ -4,7 +4,7 @@ import {
     IInput, Input, InputList,
 } from '.'
 
-import { ByteArrayToB64, EncodeInt, EncodeInt64, Sha256 } from '../util'
+import { ByteArrayToB64, DecodeBaseUUID, EncodeInt, EncodeInt64, IsUUID, Sha256 } from '../util'
 import Wallet, { IHeaderSignature } from '../wallet/wallet'
 import { IInputRaw } from './input'
 import { IOutputRaw, Output } from './output'
@@ -12,6 +12,8 @@ import { UTXO, UTXOList } from './utxo'
 
 import fetch from 'node-fetch'
 import { BILLED_SIGNATURE_LENGTH, ROOT_API_URL } from '../constant'
+import base from 'base-x'
+import { UUIDToPubKeyHashHex } from '../util/hash'
 
 export interface ITransaction {
     lh:      number
@@ -28,7 +30,12 @@ export interface ITransactionRaw {
 }
 
 export class Transaction extends Model {
-    static FetchTX = async (hash: string) => {
+    static FetchTX = async (hashOrUUID: string) => {
+
+        let hash = hashOrUUID
+        if (IsUUID(hashOrUUID)){
+            hash = UUIDToPubKeyHashHex(hashOrUUID)
+        }
         const response = await fetch(ROOT_API_URL + '/transaction/' + hash)
         if (response.status == 200){
             const json = await response.json()
@@ -117,7 +124,7 @@ export class Transaction extends Model {
         const fees = (feePerByte: number): number => {
             return billedSize() * feePerByte
         }
-        
+
         return {
             time, lughHeight,
             hash, inputs, outputs,

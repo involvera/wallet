@@ -7,3 +7,7 @@ export const IsPubKHRightFormat = (pubkh: Buffer) => {
 export const IsTxHashRightFormat = (hash: Buffer) => {
     return hash.length === TXID_LENGTH
 }
+
+export const IsUUID = (uuid: string) => { 
+    return uuid.length > 32
+}

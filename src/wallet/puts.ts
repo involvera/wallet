@@ -1,9 +1,10 @@
 import { Collection, Model } from 'acey'
 import { COIN_UNIT, CYCLE_IN_LUGH, ROOT_API_URL, TByte } from '../constant';
-import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, ShortenAddress } from '../util';
+import { CalculateOutputMeltedValue, EncodeBaseUUID, GetAddressFromPubKeyHash, ShortenAddress } from '../util';
 import fetch from 'node-fetch'
 import { IHeaderSignature } from './wallet';
 import moment from 'moment'
+import { PubKeyHashHexToUUID } from '../util/hash';
 
 interface ILink {
     from: string
@@ -74,8 +75,6 @@ export class UnserializedPut extends Model {
     isLughTx = () => this.isRegularTx() && this.get().senderPKH() == ""
 
     print = (pkh: string) => {
-        GetAddressFromPubKeyHash
-        
         const time = moment(this.get().createdAt()).fromNow()
         let line = ''
         if (this.isRegularTx()){
@@ -131,6 +130,8 @@ export class UnserializedPut extends Model {
         }
 
         const currentValue = (CCHList: string[]) => CalculateOutputMeltedValue(valueAtCreationTime(), meltedValueRatio(CCHList))
+        const contentPKH = (): string => this.state.link.from
+        const contentPKHTargeted = (): string => this.state.link.to
      
         return {
             senderPKH: (): string => this.state.pubkh.sender,
@@ -138,8 +139,10 @@ export class UnserializedPut extends Model {
             txID: (): string => this.state.tx_id,
             createdAt: () => new Date(this.state.time),
             height: (): number => this.state.lh,
-            contentPKH: (): string => this.state.link.from,
-            contentPKHTargeted: (): string => this.state.link.to,
+            contentUUID: (): string => PubKeyHashHexToUUID(contentPKH()),
+            contentTargetedUUID: (): string => PubKeyHashHexToUUID(contentPKHTargeted()),
+            contentPKH,
+            contentPKHTargeted,
             extraData: (): string => this.state.extra_data,
             currentValue,
             valueAtCreationTime

@@ -12,8 +12,10 @@ export {
 
  export {
     EncodeBase58,
-    DecodeBase58
- } from './base58'
+    DecodeBase58,
+    DecodeBaseUUID,
+    EncodeBaseUUID
+ } from './base'
 
  export { Sha256, Ripemd160 } from './hash'
  export * from './array'

@@ -1,6 +1,8 @@
 import { Collection, Model } from 'acey'
 import fetch from 'node-fetch';
 import { ROOT_API_URL } from '../constant';
+import { DecodeBaseUUID, IsUUID } from '../util';
+import { UUIDToPubKeyHashHex } from '../util/hash';
 import { IOutput, IOutputRaw, Output } from './output';
 
 export interface ITarget {
@@ -64,8 +66,13 @@ export class Target extends Model {
 
 export class ContentLink extends Model {
 
-    static FetchThread = async (pubkhID: string) => {
-        const response = await fetch(ROOT_API_URL + '/thread/' + pubkhID)
+    static FetchThread = async (hashOrUUID: string) => {
+        let hash = hashOrUUID
+        if (IsUUID(hashOrUUID)){
+            hash = UUIDToPubKeyHashHex(hashOrUUID)
+        }
+
+        const response = await fetch(ROOT_API_URL + '/thread/' + hash)
         if (response.status === 200){
             const json = await response.json()
             return new ContentLink(json, {})
@@ -73,8 +80,13 @@ export class ContentLink extends Model {
         throw new Error(await response.text())
     }
 
-    static FetchProposal = async (pubkhID: string) => {
-        const response = await fetch(ROOT_API_URL + '/proposal/' + pubkhID)
+    static FetchProposal = async (hashOrUUID: string) => {
+        let hash = hashOrUUID
+        if (IsUUID(hashOrUUID)){
+            hash = UUIDToPubKeyHashHex(hashOrUUID)
+        }
+
+        const response = await fetch(ROOT_API_URL + '/proposal/' + hash)
         if (response.status === 200){
             const json = await response.json()
             return new ContentLink(json, {})
