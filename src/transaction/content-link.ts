@@ -99,7 +99,7 @@ export class ContentLink extends Model {
             lh: (): number => this.state.link.lh,
             output: (): Output => this.state.link.output,
             target: (): Target => this.state.link.target,
-            pubKHOrigin: (): string => this.state.pubkh_origin
+            pubKHAuthor: (): string => this.state.pubkh_origin
         }
     }
 
@@ -112,7 +112,7 @@ export class ContentLink extends Model {
                 output: this.get().output().toRaw().default(),
                 target: this.get().target().toRaw()
             },
-            pubkh_origin: Buffer.from(this.get().pubKHOrigin(), 'hex')
+            pubkh_origin: Buffer.from(this.get().pubKHAuthor(), 'hex')
         }
     }
 }

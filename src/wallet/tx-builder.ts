@@ -92,10 +92,10 @@ export default class TxBuild {
             throw LAST_CCH_NOT_FOUND_ERROR
         
         let tx = new Transaction({
+            lh: this.wallet.cch().get().lastHeight(),
             t: Math.floor((new Date().getTime() / 1000)),
             inputs: utxos.toInputs().to().plain(), 
             outputs: outputs.to().plain(),
-            lh: this.wallet.cch().get().lastHeight()
         }, {})
 
         if (await tx.sign(this._makeTxWithFees(tx), this.wallet)){

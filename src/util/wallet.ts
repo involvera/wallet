@@ -34,6 +34,10 @@ export const PubKeyHashFromAddress = (address: string) => {
     return pubKeyHash.slice(0, pubKeyHash.length - ADDR_CHECKSUM_LENGTH)
 }
 
+export const ShortenAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(address.length - 6, address.length)}` 
+}
+
 const checksum = (payload: Buffer): Buffer => {
     const doubleSha = Sha256(Sha256(payload))
     return doubleSha.slice(0, ADDR_CHECKSUM_LENGTH)

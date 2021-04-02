@@ -66,10 +66,10 @@ export class Transaction extends Model {
             })
             if (response.status === 201){
                 const { transaction: {lh, t}, puts, utxos } = await response.json()
+                this.setState({lh, t})
                 wallet.utxos().get().removeUTXOsFromInputs(this.get().inputs())
                 wallet.utxos().get().append(utxos || []).store()
                 wallet.puts()._handleJSONResponse(puts)
-                this.setState({ lh, t })
             }
             return response
         } catch (e){
@@ -114,11 +114,16 @@ export class Transaction extends Model {
             return (Buffer.from(JSON.stringify(this.toRaw().base64())).length + (this.get().inputs().count() * BILLED_SIGNATURE_LENGTH)) - totalSignatureSizeInputs
         }
 
+        const fees = (feePerByte: number): number => {
+            return billedSize() * feePerByte
+        }
+        
         return {
             time, lughHeight,
             hash, inputs, outputs,
             hashHex, 
             billedSize,
+            fees,
         }
     }
 

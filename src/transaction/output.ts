@@ -29,9 +29,9 @@ export class Output extends Model {
 			throw MAX_IS_2_POW_53
 		
 		const out: IOutput = {
+			input_indexes: inputIDX,
 			value,
 			pub_key_hash,
-			input_indexes: inputIDX,
 			k: kind,
 			ta
 		}

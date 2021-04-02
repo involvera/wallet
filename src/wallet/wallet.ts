@@ -72,7 +72,7 @@ export default class Wallet extends Model {
         const lastPutFetchHeight = this.memory().get().lastPutFetchHeight()
         const currentHeight = this.cch().get().lastHeight()
 
-        const status = await this.puts().fetch(lastPutFetchHeight + CONFIG_LUGH_INTERVAL, this.sign().header())
+        const status = await this.puts().fetch().all(lastPutFetchHeight + CONFIG_LUGH_INTERVAL, this.sign().header())
         if (status == 200){
             this.memory().setLastPutFetchHeight(Math.min(currentHeight, lastPutFetchHeight + CONFIG_LUGH_INTERVAL)).store()
             if (this.memory().get().lastPutFetchHeight() < currentHeight){
@@ -235,7 +235,7 @@ export default class Wallet extends Model {
 
             const builder = new TxBuild({ 
                 wallet: this,
-                to: [PUBKEY_H_BURNER, content.get().pubKHOrigin()],
+                to: [PUBKEY_H_BURNER, content.get().pubKHAuthor()],
                 amount_required: [burned, distributed],
                 kinds: Buffer.from([script.kind(), EMPTY_CODE]),
                 ta: [script.targetScript(), []]

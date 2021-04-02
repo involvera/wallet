@@ -1,9 +1,9 @@
 import { Collection, Model } from 'acey'
-import { CYCLE_IN_LUGH, ROOT_API_URL, TByte } from '../constant';
-import { CalculateOutputMeltedValue } from '../util';
+import { COIN_UNIT, CYCLE_IN_LUGH, ROOT_API_URL, TByte } from '../constant';
+import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, ShortenAddress } from '../util';
 import fetch from 'node-fetch'
 import { IHeaderSignature } from './wallet';
-import { CONSTITUTION_PROPOSAL_SCRIPT_LENGTH } from '../script/constant';
+import moment from 'moment'
 
 interface ILink {
     from: string
@@ -52,9 +52,6 @@ export class UnserializedPut extends Model {
         super(initialState, options)
     }
 
-    isThread = () => this.get().extraData() === "" && this.get().contentPKH() != ""
-    isRethread = () => this.get().extraData() === "" && this.get().contentPKH() != "" && this.get().contentPKHTargeted() != ""
-
     isAcceptedVote = () => this.get().extraData() === "accepted"
     isDeclinedVote = () => this.get().extraData() === "declined"
 
@@ -70,7 +67,45 @@ export class UnserializedPut extends Model {
     isReward = () => this.isUpvote() || this.isReaction0() || this.isReaction1() || this.isReaction2()
     isProposal = () => this.isConstitutionProposal() || this.isCostProposal() || this.isApplicationProposal()
     isVote = () => this.isAcceptedVote() || this.isDeclinedVote()
- 
+    isThread = () => this.get().extraData() === "" && this.get().contentPKH() != ""
+    isRethread = () => this.get().extraData() === "" && this.get().contentPKH() != "" && this.get().contentPKHTargeted() != ""
+    
+    isRegularTx = () => this.get().extraData() == "" && this.get().contentPKH() == "" && this.get().contentPKHTargeted() == ""
+    isLughTx = () => this.isRegularTx() && this.get().senderPKH() == ""
+
+    print = (pkh: string) => {
+        GetAddressFromPubKeyHash
+        
+        const time = moment(this.get().createdAt()).fromNow()
+        let line = ''
+        if (this.isRegularTx()){
+            if (this.isLughTx()){
+                line = `Involvera : Lugh                                                        +${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+
+            } else {
+                line = `${this.get().senderPKH() === pkh ? GetAddressFromPubKeyHash(Buffer.from(this.get().recipientPKH(), 'hex')) : GetAddressFromPubKeyHash(Buffer.from(this.get().senderPKH(), 'hex'))}                                     ${this.get().senderPKH() === pkh ? '-' : '+'}${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+            }
+        } else {
+            if (this.isVote()){
+                line = `Involvera : Voted to ${GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))}                 -${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+            } else if (this.isThread()){
+                line = `Involvera : New thread ${GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKH(), 'hex'))}              -${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+            } else if (this.isRethread()){
+                line = `Involvera : Replied to ${GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))}           -${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+            } else if (this.isReward()){
+                const emoji: any = {upvote: '👍', reaction_0: '⭐', reaction_1: '💫', reaction_2: '✨'}
+                if (this.get().senderPKH() == pkh){
+                    line =  `${this.get().extraData() === 'upvote' ? 'Upvoted' : `Reacted ${emoji[this.get().extraData()]}` } to ${GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))}                       -${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+                } else {
+                    line =  `${ShortenAddress(GetAddressFromPubKeyHash(Buffer.from(this.get().senderPKH(), 'hex')))} ${this.get().extraData() === 'upvote' ? 'upvoted' : `reacted ${emoji[this.get().extraData()]}` } to ${ShortenAddress(GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex')))}                               +${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+                }
+            } else if (this.isProposal()){
+                line =  `Involvera : New ${this.get().extraData()} proposal ${GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKH(), 'hex'))}           -${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+            }
+        }
+        console.log(time + '\n', line)
+    }
+    
     get = () => {
         const valueAtCreationTime = (): BigInt => this.state.value.at_time
         const valueNow = (): number => this.state.value.now
@@ -101,7 +136,7 @@ export class UnserializedPut extends Model {
             senderPKH: (): string => this.state.pubkh.sender,
             recipientPKH: (): string => this.state.pubkh.recipient,
             txID: (): string => this.state.tx_id,
-            createdAt: () => new Date(this.state.time / 1000),
+            createdAt: () => new Date(this.state.time),
             height: (): number => this.state.lh,
             contentPKH: (): string => this.state.link.from,
             contentPKHTargeted: (): string => this.state.link.to,
@@ -117,6 +152,15 @@ export class UnserializedPutList extends Collection {
     constructor(list: IUnserializedPut[] = [], options: any){
         super(list, [UnserializedPut, UnserializedPutList], options)
     }
+
+    print = (pkhHex: string) => {
+        this.forEach((p: UnserializedPut) => {
+            p.print(pkhHex)
+            console.log('\n\n')
+        })
+    }
+
+    sortByTime = () => this.orderBy('time', 'desc') as UnserializedPutList
 
     get = () => {
         const inputs = (pkhHex: string): UnserializedPutList => this.filter((p: UnserializedPut) => p.get().senderPKH() == pkhHex) as UnserializedPutList
@@ -150,35 +194,40 @@ export class UnserializedPutList extends Collection {
         countAdded > 0 && this.action().store()
     }
 
-    fetchFromTX = async (txHashHex: string, headerSignature: IHeaderSignature) => {
-        try { 
-            const response = await fetch(ROOT_API_URL + '/puts/' + txHashHex, {
-                method: 'GET',
-                headers: headerSignature as any
-            })
-            if (response.status == 200){
-                const json = await response.json()
-                this._handleJSONResponse(json)
-            }
-            return response.status
-        } catch (e){
-            throw new Error(e)
-        }
-    }
+    fetch = () => {
 
-    fetch = async (lastHeight: number, headerSignature: IHeaderSignature) => {
-        try { 
-            const response = await fetch(ROOT_API_URL + '/puts/list', {
-                method: 'GET',
-                headers: Object.assign({}, headerSignature as any, {last_lh: lastHeight})
-            })
-            if (response.status == 200){
-                const json = await response.json()
-                this._handleJSONResponse(json)
+        const fromTX = async (txHashHex: string, headerSignature: IHeaderSignature) => {
+            try { 
+                const response = await fetch(ROOT_API_URL + '/puts/' + txHashHex, {
+                    method: 'GET',
+                    headers: headerSignature as any
+                })
+                if (response.status == 200){
+                    const json = await response.json()
+                    this._handleJSONResponse(json)
+                }
+                return response.status
+            } catch (e){
+                throw new Error(e)
             }
-            return response.status
-        } catch (e){
-            throw new Error(e)
         }
+
+        const all = async (lastHeight: number, headerSignature: IHeaderSignature) => {
+            try { 
+                const response = await fetch(ROOT_API_URL + '/puts/list', {
+                    method: 'GET',
+                    headers: Object.assign({}, headerSignature as any, {last_lh: lastHeight})
+                })
+                if (response.status == 200){
+                    const json = await response.json()
+                    this._handleJSONResponse(json)
+                }
+                return response.status
+            } catch (e){
+                throw new Error(e)
+            }
+        }
+
+        return { fromTX, all }
     }
 }
