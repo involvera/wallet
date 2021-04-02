@@ -209,9 +209,11 @@ const main = () => {
         const thread = await ContentLink.FetchThread(pkhContent)
         const tx = await wallet2.buildTX().reward(thread, 'upvote')        
         const balance = wallet2.balance()
+        const balance2 = wallet.balance()
         if (tx){
             const response = await tx.broadcast(wallet2)
             expect(response.status).to.eq(201)
+            await wallet.synchronize()
             expect(wallet2.puts().count()).to.eq(2)
             expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().upvote()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
             const lastPut = wallet2.puts().sortByTime().first() as UnserializedPut
@@ -222,18 +224,58 @@ const main = () => {
             expect(lastPut.isUpvote()).to.eq(true)
             expect(lastPut.get().contentPKH()).to.eq("")
             expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHContent())
+
+
+            expect(balance2).to.eq(wallet.balance()-(wallet.costs().get().upvote() * 0.3)-1)
+            expect(wallet.puts().count()).to.eq(18)
+            const lastPut2 = wallet.puts().sortByTime().first() as UnserializedPut
+            expect(lastPut2.get().valueAtCreationTime()).to.eq((wallet2.costs().get().upvote() * 0.3)+1)
+            expect(lastPut2.get().senderPKH()).to.eq(wallet2.keys().get().pubHashHex())
+            expect(lastPut2.get().recipientPKH()).to.eq(wallet.keys().get().pubHashHex())
+            expect(lastPut2.isReward()).to.eq(true)
+            expect(lastPut2.isUpvote()).to.eq(true)
+            expect(lastPut.get().contentPKH()).to.eq("")
+            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHContent())
         }
     })
 
-    // it('Wallet2 -> create a reward : upvote', async () => {
-    //     const thread = await ContentLink.FetchThread(pkhContent2)
-    //     const tx = await wallet2.buildTX().reward(thread, 'reaction0')
-    //     if (tx){
-    //         const response = await tx.broadcast(wallet2)
-    //         expect(response.status).to.eq(201)
-    //     }
-    // })
+    it('Wallet2 -> create a reward : reaction0', async () => {
+        const thread = await ContentLink.FetchThread(pkhContent2)
+        const tx = await wallet2.buildTX().reward(thread, 'reaction0')
+        const balance = wallet2.balance()
+        const balance2 = wallet.balance()
 
+        if (tx){
+            const response = await tx.broadcast(wallet2)
+            expect(response.status).to.eq(201)
+            await wallet.synchronize()
+            expect(wallet2.puts().count()).to.eq(3)
+            expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().reaction0()-tx.get().fees(wallet2.fees().get().feePerByte())-2)
+            const lastPut = wallet2.puts().sortByTime().first() as UnserializedPut
+            expect(lastPut.get().valueAtCreationTime()).to.eq((wallet2.costs().get().reaction0() * 0.3)+1)
+            expect(lastPut.get().senderPKH()).to.eq(wallet2.keys().get().pubHashHex())
+            expect(lastPut.get().recipientPKH()).to.eq(thread.get().pubKHAuthor())
+            expect(lastPut.isReward()).to.eq(true)
+            expect(lastPut.isReaction0()).to.eq(true)
+            expect(lastPut.get().contentPKH()).to.eq("")
+            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHContent())
+
+
+            expect(balance2).to.eq(wallet.balance()-(wallet.costs().get().reaction0() * 0.3)-1)
+            expect(wallet.puts().count()).to.eq(19)
+            const lastPut2 = wallet.puts().sortByTime().first() as UnserializedPut
+            expect(lastPut2.get().valueAtCreationTime()).to.eq((wallet2.costs().get().reaction0() * 0.3)+1)
+            expect(lastPut2.get().senderPKH()).to.eq(wallet2.keys().get().pubHashHex())
+            expect(lastPut2.get().recipientPKH()).to.eq(wallet.keys().get().pubHashHex())
+            expect(lastPut2.isReward()).to.eq(true)
+            expect(lastPut2.isReaction0()).to.eq(true)
+            expect(lastPut.get().contentPKH()).to.eq("")
+            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHContent())
+
+
+
+        }
+    })
 }
 
 main()
