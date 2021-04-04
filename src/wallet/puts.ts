@@ -1,10 +1,11 @@
-import { Collection, Model } from 'acey'
-import { COIN_UNIT, CYCLE_IN_LUGH, ROOT_API_URL, TByte } from '../constant';
+import { Collection, config, Model } from 'acey'
+import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT, ROOT_API_URL, TByte } from '../constant';
 import { CalculateOutputMeltedValue, EncodeBaseUUID, GetAddressFromPubKeyHash, ShortenAddress } from '../util';
 import fetch from 'node-fetch'
 import { IHeaderSignature } from './wallet';
 import moment from 'moment'
 import { PubKeyHashHexToUUID } from '../util/hash';
+import { CONSTITUTION_PROPOSAL_SCRIPT_LENGTH } from '../script/constant';
 
 interface ILink {
     from: string
@@ -170,18 +171,104 @@ export class UnserializedPutList extends Collection {
         const outputs = (pkhHex: string): UnserializedPutList => this.filter((p: UnserializedPut) => p.get().recipientPKH() == pkhHex) as UnserializedPutList
         const rewards = () => this.filter((p: UnserializedPut) => p.isReward()) as UnserializedPutList
         const betweenDates = (from: Date, to: Date) => this.filter((p: UnserializedPut) => from <= p.get().createdAt() && to >= p.get().createdAt()) as UnserializedPutList
+       
+        const atDay = (dayDate: Date): UnserializedPutList => {
+            const from = new Date(dayDate)
+            const to = new Date(dayDate)
 
-        const totalReceivedDonationSince = (since: Date, CCHList: string[]) => {
+            from.setSeconds(0)
+            from.setMilliseconds(0)
+            from.setMinutes(0)
+            from.setHours(0)
+
+            to.setMilliseconds(999)
+            to.setSeconds(59)
+            to.setMinutes(59)
+            to.setHours(23)
+
+            return betweenDates(from, to)
+        }
+        
+        const totalVotePower = (): BigInt => {
+            let total = BigInt(0)
+
+            this.forEach((p: UnserializedPut) => {
+                if (p.isLughTx()){
+                    total = BigInt(total) + BigInt(p.get().valueAtCreationTime())
+                }
+            })
+
+            return total
+        }
+
+        const votePowerPercent = (lh: number): number => {
+            const total = Number(BigInt(totalVotePower()) / BigInt(10))
+
+            if (lh >= CYCLE_IN_LUGH){
+                const max = CYCLE_IN_LUGH * (LUGH_AMOUNT / 10)
+                return total / max
+            }
+            const max = lh * (LUGH_AMOUNT/ 10)
+            return total / max
+        }
+
+        const totalReceivedDonationSince = (since: Date, pkhHex: string) => {
             const now = new Date()
-            return BigInt(this.get().betweenDates(since, now).reduce((total: BigInt, p: UnserializedPut) => {
-                total = BigInt(total) + BigInt(p.get().currentValue(CCHList))
-            }, 0))
+            let total = BigInt(0)
+
+            betweenDates(since, now).forEach((p: UnserializedPut) => {
+                if (p.isReward() && p.get().senderPKH() != pkhHex){
+                    total = BigInt(total) + BigInt(p.get().valueAtCreationTime())
+                }
+            })
+            return total
+        }
+
+
+        const activity = (pkhHex: string) => {
+
+            const atDayActivity = (d: Date) => {
+                let total = BigInt(0)
+                atDay(d).forEach((p: UnserializedPut) => {
+                    if (p.isVote() || p.isThread() || p.isRethread() || p.isProposal() || (p.isReward() && p.get().senderPKH() != pkhHex)){
+                        total = BigInt(total) + BigInt(p.get().valueAtCreationTime())
+                    }
+                })
+                return total
+            }
+
+            const onLastNDays = (n: Number) => {
+                if (n > (CYCLE_IN_LUGH-1) / 3)
+                    n = (CYCLE_IN_LUGH-1) / 3
+                
+                let i = 0;
+                const ret: BigInt[] = []
+                while (i <= n){
+                    const d = new Date()
+                    d.setTime(d.getTime() - ((24 * 3_600 * 1_000) * i))
+                    const score = atDayActivity(d)
+                    ret.push(score)
+                    i++
+                }
+                return ret
+            }
+
+            return {
+                onLastNDays, 
+                atDayActivity
+            }
+
+
         }
 
         return {
             inputs, outputs,
             rewards, betweenDates,
-            totalReceivedDonationSince
+            totalReceivedDonationSince,
+            totalVotePower,
+            atDay,
+            votePowerPercent,
+            activity
         }
     }
 

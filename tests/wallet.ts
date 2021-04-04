@@ -7,9 +7,8 @@ import { COIN_UNIT, MAX_SUPPLY_AMOUNT } from '../src/constant';
 import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress, Sha256 } from '../src/util';
 import Wallet from '../src/wallet/wallet'
 import { NewConstitution } from '../src/script/constitution';
-import { ContentLink, Output, UTXO } from '../src/transaction';
+import { ContentLink, Output } from '../src/transaction';
 import { UnserializedPut } from '../src/wallet/puts';
-import { HTML5_FMT } from 'moment';
 
 const wallet = new Wallet({}, { key: 'wallet', connected: true })
 const wallet2 = new Wallet({}, {key: 'wallet2', connected: true })
@@ -54,6 +53,11 @@ const main = () => {
 
     it('Wallet1 -> Puts: ', () => {
         expect(wallet.puts().count()).to.eq(10)
+        expect(wallet.puts().get().totalVotePower()).to.eq(BigInt(11611604044790))
+        expect(wallet.puts().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('0.145')
+        const now = new Date()
+        now.setTime(now.getTime() - (1000 * 86400 * 90))
+        expect(wallet.puts().get().totalReceivedDonationSince(now, wallet.keys().get().pubHashHex())).to.eq(BigInt(1800000004))
     })
 
     it('Wallet1 sends some coins to Wallet2 ', async () => {
@@ -274,6 +278,17 @@ const main = () => {
             expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().pubKHHexContent())
         }
     })
+
+    it('Wallet1 -> Puts: ', () => {
+        expect(wallet.puts().count()).to.eq(19)
+        expect(wallet.puts().get().totalVotePower()).to.eq(BigInt(11611604044790))
+        expect(wallet.puts().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('0.145')
+        const now = new Date()
+        now.setTime(now.getTime() - (1000 * 86400 * 90))
+        expect(wallet.puts().get().totalReceivedDonationSince(now, wallet.keys().get().pubHashHex())).to.eq(BigInt(4050000006))
+    })
+
+
 }
 
 main()
