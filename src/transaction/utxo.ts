@@ -98,8 +98,13 @@ export class UTXOList extends Collection {
                 let list = await response.json()
                 list = list || []
                 for (let i = 0; i < listUnFetchedTxHash.length; i++){
-                    const UTXO = this.get().UTXOByTxHash(listUnFetchedTxHash[i])
-                    UTXO?.setState({ tx: new Transaction(list[i], this.kids())}).store()
+                    const UTXOs = this.get().UTXOByTxHash(listUnFetchedTxHash[i])
+                    if (UTXOs){
+                        UTXOs.forEach((u: UTXO) => {
+                            u?.setState({ tx: new Transaction(list[i], this.kids())}).store()
+                        })
+
+                    }
                 }
             }
             return response.status
@@ -118,8 +123,13 @@ export class UTXOList extends Collection {
             return ret
         }
 
-        const UTXOByTxHash = (txHashHex: string): UTXO | undefined => {
-            const u = this.find((utxo: UTXO) => utxo.get().txID() === txHashHex)
+        const UTXOByTxHash = (txHashHex: string): UTXOList | undefined => {
+            const u = this.filter((utxo: UTXO) => utxo.get().txID() === txHashHex)
+            return u ? u as UTXOList : undefined
+        }
+
+        const UTXOByTxHashAndVout = (txHashHex: string, vout: number): UTXO | undefined => {
+            const u = UTXOByTxHash(txHashHex)?.find((utxo: UTXO) => utxo.get().idx() === vout)
             return u ? u as UTXO : undefined
         }
 
@@ -155,7 +165,8 @@ export class UTXOList extends Collection {
         return { 
             totalMeltedValue, requiredList, 
             totalValue, UTXOByTxHash,
-            listUnFetchedTxHash
+            listUnFetchedTxHash,
+            UTXOByTxHashAndVout
         }
     }
 }

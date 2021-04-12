@@ -4,18 +4,23 @@ import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
 
 import { COIN_UNIT, MAX_SUPPLY_AMOUNT } from '../src/constant';
-import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress, Sha256 } from '../src/util';
+import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, NewMnemonic, PubKeyHashFromAddress, Sha256 } from '../src/util';
 import Wallet from '../src/wallet/wallet'
 import { NewConstitution } from '../src/script/constitution';
 import { ContentLink, Output } from '../src/transaction';
 import { UnserializedPut } from '../src/wallet/puts';
+import TxBuild from '../src/wallet/tx-builder'
+import { EMPTY_CODE } from '../src/script/constant';
 
 const wallet = new Wallet({}, { key: 'wallet', connected: true })
 const wallet2 = new Wallet({}, {key: 'wallet2', connected: true })
+const wallet3 =  new Wallet({}, {key: 'wallet3', connected: true })
+
 
 const initWallets = () => {
-    wallet2.keys().set("social brief stool panel scene whale pledge tribe domain proof essence clog", "coucou").store()
     wallet.keys().set("film dirt damage apart carry horse enroll carry power prison flush bulb", "coucou").store()
+    wallet2.keys().set("social brief stool panel scene whale pledge tribe domain proof essence clog", "coucou").store()
+    wallet3.keys().set("horse flush dirt carry scene whale pledge tribe domain proof essence mail", "coucou").store()
 }
 
 const main = () => {
@@ -64,6 +69,7 @@ const main = () => {
         const total = Math.floor(wallet.balance() / 10)
         const balanceBefore = wallet.balance()
         const tx = await wallet.buildTX().toAddress(wallet2.keys().get().address(), total)
+        expect(tx).not.eq(null)
         if (tx){
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
@@ -92,7 +98,7 @@ const main = () => {
     it('Wallet1 -> create a proposal : application', async () => {
         const balance = wallet.balance()
         const tx = await wallet.buildTX().proposal().application()
-        
+        expect(tx).not.eq(null)
         if (tx){
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
@@ -114,6 +120,7 @@ const main = () => {
         c[0].content = "Content #0"
 
         const tx = await wallet.buildTX().proposal().constitution(c)
+        expect(tx).not.eq(null)
         if (tx){
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
@@ -132,6 +139,7 @@ const main = () => {
     it('Wallet1 -> create a proposal : costs', async () => {
         const tx = await wallet.buildTX().proposal().cost(-1, COIN_UNIT * 2000)
         const balance = wallet.balance()
+        expect(tx).not.eq(null)
         if (tx){
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
@@ -152,6 +160,7 @@ const main = () => {
         const proposal = await ContentLink.FetchProposal(uuidContent)
         const tx = await wallet.buildTX().vote(proposal, true)
         const balance = wallet.balance()
+        expect(tx).not.eq(null)
         if (tx){
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
@@ -170,7 +179,7 @@ const main = () => {
     it('Wallet1 -> create a thread', async () => {
         const tx = await wallet.buildTX().thread()
         const balance = wallet.balance()
-
+        expect(tx).not.eq(null)
         if (tx){
             const response = await tx.broadcast(wallet)
             const out = tx.get().outputs().nodeAt(0) as Output
@@ -193,7 +202,7 @@ const main = () => {
         const thread = await ContentLink.FetchThread(uuidContent)
         const tx = await wallet.buildTX().rethread(thread)
         const balance = wallet.balance()
-
+        expect(tx).not.eq(null)
         if (tx){
             const response = await tx.broadcast(wallet)
             const out = tx.get().outputs().nodeAt(0) as Output
@@ -216,6 +225,7 @@ const main = () => {
         const tx = await wallet2.buildTX().reward(thread, 'upvote')        
         const balance = wallet2.balance()
         const balance2 = wallet.balance()
+        expect(tx).not.eq(null)
         if (tx){
             const response = await tx.broadcast(wallet2)
             expect(response.status).to.eq(201)
@@ -250,6 +260,7 @@ const main = () => {
         const tx = await wallet2.buildTX().reward(thread, 'reaction0')
         const balance = wallet2.balance()
         const balance2 = wallet.balance()
+        expect(tx).not.eq(null)
 
         if (tx){
             const response = await tx.broadcast(wallet2)
@@ -287,8 +298,6 @@ const main = () => {
         now.setTime(now.getTime() - (1000 * 86400 * 90))
         expect(wallet.puts().get().totalReceivedDonationSince(now, wallet.keys().get().pubHashHex())).to.eq(BigInt(4050000006))
     })
-
-
 }
 
 main()

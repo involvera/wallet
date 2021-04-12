@@ -86,18 +86,36 @@ export class Transaction extends Model {
 
     isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as Input).get().prevTxHash().length == 0
 
-    sign = async (utxos: UTXOList, wallet: Wallet) => {
+    sign = async (utxos: UTXOList, wallets: Wallet[]) => {
         try {
-            await utxos.fetchPrevTxList(wallet.sign().header())
+
+            const utxos2 = new UTXOList([], undefined)
+            for (let i = 0; i < wallets.length; i++){
+                const w = wallets[i]
+                const wUTXOs = new UTXOList([], undefined)
+                utxos.map((u: UTXO) => {          
+                    const exist = w.utxos().get().get().UTXOByTxHashAndVout(u.get().txID(), u.get().idx())
+                    exist && wUTXOs.push(exist)
+                })
+                await wUTXOs.fetchPrevTxList(w.sign().header())
+                utxos2.concat(wUTXOs.state)
+            }
+
             const inputs = this.get().inputs()
 
             for (let i = 0; i < inputs.count(); i++){
                 const prevTx = (utxos.nodeAt(i) as UTXO).get().tx() as Transaction
-                const signature = wallet.sign().value(prevTx.get().hash())
                 const input = this.get().inputs().nodeAt(i) as Input
+                let signature = ''
+                for (let i = 0; i < wallets.length; i++){
+                    const w = wallets[i]
+                    const exist = w.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash(), input.get().vout())
+                    if (exist){
+                        signature = w.sign().value(prevTx.get().hash())                
+                    }
+                }
                 input.setState({ sign: Buffer.from(signature).toString('hex') })
             }
-
             return true
         } catch (e) {
             throw new Error(e);            

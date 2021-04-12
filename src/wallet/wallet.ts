@@ -106,7 +106,7 @@ export default class Wallet extends Model {
                 ta.push(script.targetScript())
     
                 const builder = new TxBuild({ 
-                    wallet: this,
+                    wallet: [this],
                     to,
                     amount_required: [this.costs().get().proposal()],
                     ta,
@@ -126,7 +126,7 @@ export default class Wallet extends Model {
                 ta.push(script.targetScript())
 
                 const builder = new TxBuild({ 
-                    wallet: this,
+                    wallet: [this],
                     to,
                     amount_required: [this.costs().get().proposal()],
                     ta,
@@ -146,7 +146,7 @@ export default class Wallet extends Model {
                 ta.push(script.targetScript())
 
                 const builder = new TxBuild({ 
-                    wallet: this,
+                    wallet: [this],
                     to,
                     amount_required: [this.costs().get().proposal()],
                     ta,
@@ -169,7 +169,7 @@ export default class Wallet extends Model {
             ta.push(emptyTa)
 
             const builder = new TxBuild({ 
-                wallet: this,
+                wallet: [this],
                 to,
                 amount_required: [amount],
                 ta,
@@ -190,7 +190,7 @@ export default class Wallet extends Model {
             ta.push(script.targetScript())
 
             const builder = new TxBuild({ 
-                wallet: this,
+                wallet: [this],
                 to,
                 amount_required: [this.costs().get().thread()],
                 ta,
@@ -213,7 +213,7 @@ export default class Wallet extends Model {
             ta.push(script.targetScript())
 
             const builder = new TxBuild({ 
-                wallet: this,
+                wallet: [this],
                 to,
                 amount_required: [this.costs().get().thread()],
                 ta,
@@ -234,7 +234,7 @@ export default class Wallet extends Model {
 
 
             const builder = new TxBuild({ 
-                wallet: this,
+                wallet: [this],
                 to: [PUBKEY_H_BURNER, content.get().pubKHAuthor()],
                 amount_required: [burned, distributed],
                 kinds: Buffer.from([script.kind(), EMPTY_CODE]),
@@ -250,7 +250,7 @@ export default class Wallet extends Model {
             const script = NewProposalVoteScript(proposalRaw.link.tx_id, proposalRaw.link.vout, accept)
 
             const builder = new TxBuild({ 
-                wallet: this,
+                wallet: [this],
                 to: [PUBKEY_H_BURNER],
                 amount_required: [1],
                 kinds: Buffer.from([script.kind()]),
