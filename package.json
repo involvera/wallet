@@ -1,13 +1,15 @@
 {
   "name": "wallet-js",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "target.js",
   "license": "MIT",
   "scripts": {
+    "build": "tsc && browserify dist/index.js > target.js --standalone 'omdb'",
     "start": "tsc && node ./dist/index.js",
-    "test": "mocha -r ts-node/register tests/index.ts"
+    "test": "rm -rf db && mkdir db && mocha -r ts-node/register tests/index.ts"
   },
   "dependencies": {
+    "@types/axios": "^0.14.0",
     "@types/base-x": "^3.0.6",
     "@types/chai": "^4.2.15",
     "@types/create-hash": "^1.2.2",
@@ -17,6 +19,7 @@
     "@types/tiny-secp256k1": "^1.0.0",
     "acey": "^1.4.6",
     "acey-node-store": "^1.0.5",
+    "axios": "^0.21.1",
     "base-x": "^3.0.8",
     "bip32": "^2.0.6",
     "bip39": "^3.0.3",

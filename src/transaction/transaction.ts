@@ -4,15 +4,15 @@ import {
     IInput, Input, InputList,
 } from '.'
 
-import { ByteArrayToB64, DecodeBaseUUID, EncodeInt, EncodeInt64, IsUUID, Sha256 } from '../util'
-import Wallet, { IHeaderSignature } from '../wallet/wallet'
+import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256 } from '../util'
+import { Wallet, IHeaderSignature } from '../wallet/wallet'
 import { IInputRaw } from './input'
 import { IOutputRaw, Output } from './output'
 import { UTXO, UTXOList } from './utxo'
 
-import fetch from 'node-fetch'
+import { Fetch } from '../constant'
+
 import { BILLED_SIGNATURE_LENGTH, ROOT_API_URL } from '../constant'
-import base from 'base-x'
 import { UUIDToPubKeyHashHex } from '../util/hash'
 
 export interface ITransaction {
@@ -36,7 +36,7 @@ export class Transaction extends Model {
         if (IsUUID(hashOrUUID)){
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
-        const response = await fetch(ROOT_API_URL + '/transaction/' + hash)
+        const response = await Fetch(ROOT_API_URL + '/transaction/' + hash)
         if (response.status == 200){
             const json = await response.json()
             return new Transaction(json, {})
@@ -53,7 +53,7 @@ export class Transaction extends Model {
     }
 
     verify = async (headerSig: IHeaderSignature) => {
-        const response = await fetch(ROOT_API_URL + '/transaction/verify', {
+        const response = await Fetch(ROOT_API_URL + '/transaction/verify', {
             method: 'POST',
             headers: Object.assign(headerSig as any, {'content-type': 'application/json'}),
             body: JSON.stringify(this.toRaw().base64())
@@ -66,7 +66,7 @@ export class Transaction extends Model {
 
     broadcast = async (wallet: Wallet) => {
         try {
-            const response = await fetch(ROOT_API_URL + '/transaction', {
+            const response = await Fetch(ROOT_API_URL + '/transaction', {
                 method: 'POST',
                 headers: Object.assign(wallet.sign().header() as any, {'content-type': 'application/json'}),
                 body: JSON.stringify(this.toRaw().base64())

@@ -1,5 +1,5 @@
 import { Model } from 'acey'
-import fetch from 'node-fetch'
+import { Fetch } from '../constant'
 import { ROOT_API_URL } from '../constant'
 import { IHeaderSignature } from './wallet'
 
@@ -18,7 +18,7 @@ export default class Info extends Model {
 
     fetch = async (headerSig: IHeaderSignature) => {
        try {
-            const res = await fetch(ROOT_API_URL + '/wallet/info', {
+            const res = await Fetch(ROOT_API_URL + '/wallet/info', {
                 method: 'GET',
                 headers: headerSig as any
             })

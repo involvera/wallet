@@ -4,18 +4,15 @@ import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
 
 import { COIN_UNIT, MAX_SUPPLY_AMOUNT } from '../src/constant';
-import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, NewMnemonic, PubKeyHashFromAddress, Sha256 } from '../src/util';
-import Wallet from '../src/wallet/wallet'
+import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from '../src/util';
+import { Wallet } from '../src/wallet'
 import { NewConstitution } from '../src/script/constitution';
 import { ContentLink, Output } from '../src/transaction';
 import { UnserializedPut } from '../src/wallet/puts';
-import TxBuild from '../src/wallet/tx-builder'
-import { EMPTY_CODE } from '../src/script/constant';
 
 const wallet = new Wallet({}, { key: 'wallet', connected: true })
 const wallet2 = new Wallet({}, {key: 'wallet2', connected: true })
 const wallet3 =  new Wallet({}, {key: 'wallet3', connected: true })
-
 
 const initWallets = () => {
     wallet.keys().set("film dirt damage apart carry horse enroll carry power prison flush bulb", "coucou").store()
@@ -290,13 +287,17 @@ const main = () => {
         }
     })
 
-    it('Wallet1 -> Puts: ', () => {
+    it('Wallet1 -> Puts:', () => {
         expect(wallet.puts().count()).to.eq(19)
         expect(wallet.puts().get().totalVotePower()).to.eq(BigInt(11611604044790))
         expect(wallet.puts().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('0.145')
         const now = new Date()
         now.setTime(now.getTime() - (1000 * 86400 * 90))
         expect(wallet.puts().get().totalReceivedDonationSince(now, wallet.keys().get().pubHashHex())).to.eq(BigInt(4050000006))
+    })
+
+    it('Wallet1 -> Puts: Vote power distribution', () => {
+        expect(wallet.puts().get().votePowerDistribution().count()).to.eq(3)
     })
 }
 

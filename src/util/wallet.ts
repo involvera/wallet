@@ -1,8 +1,12 @@
 import { Ripemd160, Sha256 } from "./hash"
 import { EncodeBase58, DecodeBase58 } from '../util'
+import * as bip39 from 'bip39'
 
 const VERSION = 0x00
 const ADDR_CHECKSUM_LENGTH = 4
+
+
+export const NewMnemonic = (): string => bip39.generateMnemonic()
 
 export const IsAddressValid = (addr: string): boolean => {
     let pubKeyHash = DecodeBase58(addr.slice(1, addr.length))

@@ -4,7 +4,7 @@ import { B64ToByteArray, PubKeyHashFromAddress, Sha256 } from '../util'
 import { ec as EC } from 'elliptic'
 import TxBuild from './tx-builder' 
 
-import fetch from 'node-fetch'
+import { Fetch } from '../constant'
 import { ROOT_API_URL } from '../constant/api'
 import { Transaction, UTXOList } from '../transaction'
 
@@ -21,6 +21,7 @@ import { BURNING_RATIO, PUBKEY_H_BURNER } from '../constant'
 import { TConstitution } from '../script/constitution'
 import { ContentLink } from '../transaction/content-link'
 
+import { config } from 'acey'
 const ec = new EC('secp256k1');
 
 export interface IHeaderSignature {
@@ -28,7 +29,11 @@ export interface IHeaderSignature {
     signature: string
 }
 
-export default class Wallet extends Model {
+export class Wallet extends Model {
+
+    static InitLocalStore = async () => {
+        await config.done()
+    }
 
     constructor(initialState: any, options: any){
         super(initialState, options)
@@ -48,7 +53,7 @@ export default class Wallet extends Model {
 
     synchronize = async () => {
         await this.auth().refresh()
-        const response = await fetch(ROOT_API_URL + '/wallet', {
+        const response = await Fetch(ROOT_API_URL + '/wallet', {
             method: 'GET',
             headers: Object.assign(this.sign().header() as any, {
                 last_cch: this.cch().get().last() 
@@ -297,11 +302,11 @@ export default class Wallet extends Model {
             return this.setState({ cch: { list: get().list().concat(list.filter((elem: any) => !!elem)), last_height } } )
         }
 
-        const Fetch = async () => {
+        const f = async () => {
             if (this.utxos().get().count() > 0){
                 await this.auth().refresh()
                 try {
-                    const res = await fetch(ROOT_API_URL + '/cch', {
+                    const res = await Fetch(ROOT_API_URL + '/cch', {
                         method: 'GET',
                         headers: Object.assign({}, this.sign().header() as any, {last_cch: get().last() })
                     })
@@ -312,15 +317,15 @@ export default class Wallet extends Model {
                 }
             }
         }
-        return { get, fetch: Fetch, _assignJSONResponse }
+        return { get, fetch: f, _assignJSONResponse }
     }
 
     utxos = () => {
         const get = (): UTXOList => this.state.utxos
-        const Fetch = async () => {
+        const f = async () => {
             await this.auth().refresh()
             try {
-                const res = await fetch(ROOT_API_URL + '/utxos', {
+                const res = await Fetch(ROOT_API_URL + '/utxos', {
                     method: 'GET',
                     headers: this.sign().header() as any
                 })
@@ -333,7 +338,7 @@ export default class Wallet extends Model {
                 throw new Error(e)
             }
         }
-        return { get, fetch: Fetch }
+        return { get, fetch: f }
     }
 
     sign = () => {

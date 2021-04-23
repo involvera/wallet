@@ -1,28 +1,28 @@
 import { Collection, config, Model } from 'acey'
 import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT, ROOT_API_URL, TByte } from '../constant';
 import { CalculateOutputMeltedValue, EncodeBaseUUID, GetAddressFromPubKeyHash, ShortenAddress } from '../util';
-import fetch from 'node-fetch'
+import { Fetch } from '../constant'
 import { IHeaderSignature } from './wallet';
 import moment from 'moment'
 import { PubKeyHashHexToUUID } from '../util/hash';
 import { CONSTITUTION_PROPOSAL_SCRIPT_LENGTH } from '../script/constant';
 
-interface ILink {
+export interface ILink {
     from: string
     to: string
 }
 
-interface IPubKH {
+export interface IPubKH {
     sender: string
     recipient: string
 }
 
-interface IValue {
+export interface IValue {
     at_time: number
     now: number
 }
 
-interface IUnserializedPut {
+export interface IUnserializedPut {
     time: number
     kind: TByte
     lh: number
@@ -172,6 +172,8 @@ export class UnserializedPutList extends Collection {
         const rewards = () => this.filter((p: UnserializedPut) => p.isReward()) as UnserializedPutList
         const betweenDates = (from: Date, to: Date) => this.filter((p: UnserializedPut) => from <= p.get().createdAt() && to >= p.get().createdAt()) as UnserializedPutList
        
+        const votePowerDistribution = (): UnserializedPutList => this.filter((p: UnserializedPut) => p.isLughTx()) as UnserializedPutList
+
         const atDay = (dayDate: Date): UnserializedPutList => {
             const from = new Date(dayDate)
             const to = new Date(dayDate)
@@ -268,7 +270,7 @@ export class UnserializedPutList extends Collection {
             totalVotePower,
             atDay,
             votePowerPercent,
-            activity
+            activity, votePowerDistribution
         }
     }
 
@@ -288,7 +290,7 @@ export class UnserializedPutList extends Collection {
 
         const fromTX = async (txHashHex: string, headerSignature: IHeaderSignature) => {
             try { 
-                const response = await fetch(ROOT_API_URL + '/puts/' + txHashHex, {
+                const response = await Fetch(ROOT_API_URL + '/puts/' + txHashHex, {
                     method: 'GET',
                     headers: headerSignature as any
                 })
@@ -304,7 +306,7 @@ export class UnserializedPutList extends Collection {
 
         const all = async (lastHeight: number, headerSignature: IHeaderSignature) => {
             try { 
-                const response = await fetch(ROOT_API_URL + '/puts/list', {
+                const response = await Fetch(ROOT_API_URL + '/puts/list', {
                     method: 'GET',
                     headers: Object.assign({}, headerSignature as any, {last_lh: lastHeight})
                 })

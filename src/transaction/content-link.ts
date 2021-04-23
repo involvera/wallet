@@ -1,5 +1,5 @@
 import { Collection, Model } from 'acey'
-import fetch from 'node-fetch';
+import { Fetch } from '../constant'
 import { ROOT_API_URL } from '../constant';
 import { DecodeBaseUUID, IsUUID } from '../util';
 import { UUIDToPubKeyHashHex } from '../util/hash';
@@ -72,7 +72,7 @@ export class ContentLink extends Model {
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
 
-        const response = await fetch(ROOT_API_URL + '/thread/' + hash)
+        const response = await Fetch(ROOT_API_URL + '/thread/' + hash)
         if (response.status === 200){
             const json = await response.json()
             return new ContentLink(json, {})
@@ -86,7 +86,7 @@ export class ContentLink extends Model {
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
 
-        const response = await fetch(ROOT_API_URL + '/proposal/' + hash)
+        const response = await Fetch(ROOT_API_URL + '/proposal/' + hash)
         if (response.status === 200){
             const json = await response.json()
             return new ContentLink(json, {})

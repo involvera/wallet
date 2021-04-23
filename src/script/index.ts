@@ -1,1 +1,2 @@
-export { IConstitutionRule, TConstitution, NewConstitution } from './constitution'
+export type { IConstitutionRule, TConstitution } from './constitution'
+export { NewConstitution } from './constitution'

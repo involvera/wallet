@@ -23,12 +23,10 @@ export default (s: ScriptEngine) => {
         for (let i = 0; i < s.length(); i += 2){
             const bytecode = s.targetScript()[i][0]
             const price = Number(DecodeInt(s.targetScript()[i+1], false))
-            switch (bytecode){
-                case THREAD_CODE:
-                   thread = price 
-                case PROPOSAL_CODE:
-                    proposal = price
-            }
+            if (bytecode == THREAD_CODE)
+                thread = price                 
+            else if (bytecode == PROPOSAL_CODE)
+                proposal = price
         }
 
         return { thread, proposal }

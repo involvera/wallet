@@ -2,7 +2,7 @@ import { Collection, Model } from 'acey'
 import { Output, InputList } from '.'
 import { CYCLE_IN_LUGH, ROOT_API_URL } from '../constant'
 import { CalculateOutputMeltedValue } from '../util/output'
-import fetch from 'node-fetch'
+import { Fetch } from '../constant'
 import { ITransaction, Transaction } from './transaction'
 import { IHeaderSignature } from '../wallet/wallet'
 import { Input } from './input'
@@ -90,7 +90,7 @@ export class UTXOList extends Collection {
             return 
 
         try { 
-            const response = await fetch(ROOT_API_URL + '/transactions/list', {
+            const response = await Fetch(ROOT_API_URL + '/transactions/list', {
                 method: 'GET',
                 headers: Object.assign({}, headerSignature as any, {list: listUnFetchedTxHash})
             })

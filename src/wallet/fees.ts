@@ -1,5 +1,5 @@
 import { Model } from 'acey'
-import fetch from 'node-fetch'
+import { Fetch } from '../constant'
 import { ROOT_API_URL } from '../constant'
 
 export default class Fees extends Model {
@@ -19,7 +19,7 @@ export default class Fees extends Model {
 
     fetch = async () => {
        try {
-            const res = await fetch(ROOT_API_URL + '/fees', {
+            const res = await Fetch(ROOT_API_URL + '/fees', {
                 method: 'GET',
             })
             res.status == 200 && this.setState(await res.json()).store()

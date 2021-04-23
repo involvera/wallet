@@ -1,7 +1,6 @@
 import { Model, Collection } from 'acey'
 import { MAX_IS_2_POW_53 } from '../constant/errors'
 import { TByte } from '../constant/type'
-import { PROPOSAL_CODE, THREAD_CODE, VOTE_CODE } from '../script/constant'
 import ScriptEngine from '../script/script-engine'
 import { ByteArrayToB64, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeBaseUUID, EncodeInt64 } from '../util'
 import { ToArrayBufferFromB64 } from '../util/bytes'

@@ -1,11 +1,10 @@
-import { createNoSubstitutionTemplateLiteral } from "typescript";
-import { BILLED_SIGNATURE_LENGTH, TByte } from "../constant";
+import { TByte } from "../constant";
 import { CANT_SEND_0_VALUE, LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
 import { EMPTY_CODE } from "../script/constant";
 import { InputList, Output, OutputList, Transaction, UTXO, UTXOList } from "../transaction"
 import { PubKeyHashFromAddress } from "../util";
 import { CalculateOutputValueFromMelted } from "../util/output";
-import Wallet from './wallet'
+import { Wallet } from './'
 
 export interface ITXBuild {
     wallet:         Wallet[]

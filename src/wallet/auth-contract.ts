@@ -1,5 +1,5 @@
 import { Model } from 'acey'
-import fetch from 'node-fetch'
+import { Fetch } from '../constant'
 import { ROOT_API_URL } from '../constant'
 
 export default class AuthContract extends Model {
@@ -18,7 +18,7 @@ export default class AuthContract extends Model {
     
     fetch = async () => {
         try {
-            const res = await fetch(ROOT_API_URL + '/contract', { method: 'GET' })
+            const res = await Fetch(ROOT_API_URL + '/contract', { method: 'GET' })
             res.status == 200 && this.setState( await res.json() ).store()
             return res.status
         } catch(e){
