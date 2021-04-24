@@ -2,7 +2,7 @@ import { Collection, Model } from 'acey'
 import { Output, InputList } from '.'
 import { CYCLE_IN_LUGH, ROOT_API_URL } from '../constant'
 import { CalculateOutputMeltedValue } from '../util/output'
-import { Fetch } from '../constant'
+import axios from 'axios'
 import { ITransaction, Transaction } from './transaction'
 import { IHeaderSignature } from '../wallet/wallet'
 import { Input } from './input'
@@ -90,12 +90,11 @@ export class UTXOList extends Collection {
             return 
 
         try { 
-            const response = await Fetch(ROOT_API_URL + '/transactions/list', {
-                method: 'GET',
-                headers: Object.assign({}, headerSignature as any, {list: listUnFetchedTxHash})
+            const response = await axios(ROOT_API_URL + '/transactions/list', {
+                headers: Object.assign({}, headerSignature as any, {list: listUnFetchedTxHash.join(','), 'Access-Control-Allow-Origin': '*', })
             })
             if (response.status == 200){
-                let list = await response.json()
+                let list = response.data
                 list = list || []
                 for (let i = 0; i < listUnFetchedTxHash.length; i++){
                     const UTXOs = this.get().UTXOByTxHash(listUnFetchedTxHash[i])

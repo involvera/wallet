@@ -1,5 +1,5 @@
 import { Model } from 'acey'
-import { Fetch } from '../constant'
+import axios from 'axios'
 import { ROOT_API_URL } from '../constant'
 
 export default class Fees extends Model {
@@ -19,10 +19,12 @@ export default class Fees extends Model {
 
     fetch = async () => {
        try {
-            const res = await Fetch(ROOT_API_URL + '/fees', {
-                method: 'GET',
+            const res = await axios(ROOT_API_URL + '/fees', {
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                }
             })
-            res.status == 200 && this.setState(await res.json()).store()
+            res.status == 200 && this.setState(res.data).store()
             return res.status
        } catch (e){
             throw new Error(e)

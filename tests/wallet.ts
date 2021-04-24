@@ -6,9 +6,9 @@ import LocalStorage from 'acey-node-store'
 import { COIN_UNIT, MAX_SUPPLY_AMOUNT } from '../src/constant';
 import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from '../src/util';
 import { Wallet } from '../src/wallet'
+import { UnserializedPut } from '../src/wallet/puts';
 import { NewConstitution } from '../src/script/constitution';
 import { ContentLink, Output } from '../src/transaction';
-import { UnserializedPut } from '../src/wallet/puts';
 
 const wallet = new Wallet({}, { key: 'wallet', connected: true })
 const wallet2 = new Wallet({}, {key: 'wallet2', connected: true })

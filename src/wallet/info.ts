@@ -1,5 +1,5 @@
 import { Model } from 'acey'
-import { Fetch } from '../constant'
+import axios from 'axios'
 import { ROOT_API_URL } from '../constant'
 import { IHeaderSignature } from './wallet'
 
@@ -18,11 +18,12 @@ export default class Info extends Model {
 
     fetch = async (headerSig: IHeaderSignature) => {
        try {
-            const res = await Fetch(ROOT_API_URL + '/wallet/info', {
-                method: 'GET',
-                headers: headerSig as any
+            const res = await axios(ROOT_API_URL + '/wallet/info', {
+                headers: Object.assign(
+                    headerSig as any,
+                    { 'Access-Control-Allow-Origin': '*' }),
             })
-            res.status == 200 && this.setState(await res.json()).store()
+            res.status == 200 && this.setState(res.data).store()
             return res.status
        } catch (e){
             throw new Error(e)

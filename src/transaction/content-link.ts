@@ -1,9 +1,10 @@
 import { Collection, Model } from 'acey'
-import { Fetch } from '../constant'
 import { ROOT_API_URL } from '../constant';
-import { DecodeBaseUUID, IsUUID } from '../util';
+import { IsUUID } from '../util';
 import { UUIDToPubKeyHashHex } from '../util/hash';
 import { IOutput, IOutputRaw, Output } from './output';
+
+import axios from 'axios'
 
 export interface ITarget {
     tx_id: string
@@ -72,12 +73,16 @@ export class ContentLink extends Model {
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
 
-        const response = await Fetch(ROOT_API_URL + '/thread/' + hash)
+        const response = await axios(ROOT_API_URL + '/thread/' + hash, {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            }
+        })
         if (response.status === 200){
-            const json = await response.json()
+            const json = response.data
             return new ContentLink(json, {})
         }
-        throw new Error(await response.text())
+        throw new Error(response.data)
     }
 
     static FetchProposal = async (hashOrUUID: string) => {
@@ -86,12 +91,16 @@ export class ContentLink extends Model {
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
 
-        const response = await Fetch(ROOT_API_URL + '/proposal/' + hash)
+        const response = await axios(ROOT_API_URL + '/proposal/' + hash, {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            }
+        })
         if (response.status === 200){
-            const json = await response.json()
+            const json = response.data
             return new ContentLink(json, {})
         }
-        throw new Error(await response.text())
+        throw new Error(response.data)
     }
 
     constructor(initialState: IContentLink, options: any){

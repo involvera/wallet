@@ -10,7 +10,7 @@ import { IInputRaw } from './input'
 import { IOutputRaw, Output } from './output'
 import { UTXO, UTXOList } from './utxo'
 
-import { Fetch } from '../constant'
+import axios from 'axios'
 
 import { BILLED_SIGNATURE_LENGTH, ROOT_API_URL } from '../constant'
 import { UUIDToPubKeyHashHex } from '../util/hash'
@@ -36,12 +36,16 @@ export class Transaction extends Model {
         if (IsUUID(hashOrUUID)){
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
-        const response = await Fetch(ROOT_API_URL + '/transaction/' + hash)
+        const response = await axios(ROOT_API_URL + '/transaction/' + hash, {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            }
+        })
         if (response.status == 200){
-            const json = await response.json()
+            const json = response.data
             return new Transaction(json, {})
         }
-        throw new Error(await response.text())
+        throw new Error(response.data)
     }
 
     constructor(tx: ITransaction, options: any) {
@@ -52,27 +56,15 @@ export class Transaction extends Model {
         })
     }
 
-    verify = async (headerSig: IHeaderSignature) => {
-        const response = await Fetch(ROOT_API_URL + '/transaction/verify', {
-            method: 'POST',
-            headers: Object.assign(headerSig as any, {'content-type': 'application/json'}),
-            body: JSON.stringify(this.toRaw().base64())
-        })
-        if (response.status == 200){
-            return "OK"
-        }
-        return await response.text()
-    }
-
     broadcast = async (wallet: Wallet) => {
         try {
-            const response = await Fetch(ROOT_API_URL + '/transaction', {
+            const response = await axios(ROOT_API_URL + '/transaction', {
                 method: 'POST',
-                headers: Object.assign(wallet.sign().header() as any, {'content-type': 'application/json'}),
-                body: JSON.stringify(this.toRaw().base64())
+                headers: Object.assign(wallet.sign().header() as any, {'content-type': 'application/json', 'Access-Control-Allow-Origin': '*' }),
+                data: this.toRaw().base64()
             })
             if (response.status === 201){
-                const { transaction: {lh, t}, puts, utxos } = await response.json()
+                const { transaction: {lh, t}, puts, utxos } = response.data
                 this.setState({lh, t})
                 wallet.utxos().get().removeUTXOsFromInputs(this.get().inputs())
                 wallet.utxos().get().append(utxos || []).store()

@@ -1,11 +1,10 @@
-import { Collection, config, Model } from 'acey'
+import { Collection, Model } from 'acey'
 import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT, ROOT_API_URL, TByte } from '../constant';
-import { CalculateOutputMeltedValue, EncodeBaseUUID, GetAddressFromPubKeyHash, ShortenAddress } from '../util';
-import { Fetch } from '../constant'
+import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, ShortenAddress } from '../util';
+import axios from 'axios'
 import { IHeaderSignature } from './wallet';
 import moment from 'moment'
 import { PubKeyHashHexToUUID } from '../util/hash';
-import { CONSTITUTION_PROPOSAL_SCRIPT_LENGTH } from '../script/constant';
 
 export interface ILink {
     from: string
@@ -290,12 +289,16 @@ export class UnserializedPutList extends Collection {
 
         const fromTX = async (txHashHex: string, headerSignature: IHeaderSignature) => {
             try { 
-                const response = await Fetch(ROOT_API_URL + '/puts/' + txHashHex, {
-                    method: 'GET',
-                    headers: headerSignature as any
+                const response = await axios(ROOT_API_URL + '/puts/' + txHashHex, {
+                    headers: Object.assign(
+                        headerSignature as any,
+                        { 
+                            'Access-Control-Allow-Origin': '*' 
+                        }
+                    ),
                 })
                 if (response.status == 200){
-                    const json = await response.json()
+                    const json = response.data
                     this._handleJSONResponse(json)
                 }
                 return response.status
@@ -306,12 +309,12 @@ export class UnserializedPutList extends Collection {
 
         const all = async (lastHeight: number, headerSignature: IHeaderSignature) => {
             try { 
-                const response = await Fetch(ROOT_API_URL + '/puts/list', {
+                const response = await axios(ROOT_API_URL + '/puts/list', {
                     method: 'GET',
-                    headers: Object.assign({}, headerSignature as any, {last_lh: lastHeight})
+                    headers: Object.assign({}, headerSignature as any, {last_lh: lastHeight, 'Access-Control-Allow-Origin': '*' })
                 })
                 if (response.status == 200){
-                    const json = await response.json()
+                    const json = response.data
                     this._handleJSONResponse(json)
                 }
                 return response.status

@@ -4,7 +4,7 @@ import { B64ToByteArray, PubKeyHashFromAddress, Sha256 } from '../util'
 import { ec as EC } from 'elliptic'
 import TxBuild from './tx-builder' 
 
-import { Fetch } from '../constant'
+import axios from 'axios'
 import { ROOT_API_URL } from '../constant/api'
 import { Transaction, UTXOList } from '../transaction'
 
@@ -53,14 +53,14 @@ export class Wallet extends Model {
 
     synchronize = async () => {
         await this.auth().refresh()
-        const response = await Fetch(ROOT_API_URL + '/wallet', {
-            method: 'GET',
+        const response = await axios(ROOT_API_URL + '/wallet', {
             headers: Object.assign(this.sign().header() as any, {
-                last_cch: this.cch().get().last() 
+                last_cch: this.cch().get().last(),
+                'Access-Control-Allow-Origin': '*'
             })
         })
         if (response.status == 200){
-            const json = await response.json()
+            const json = response.data
             this.info().setState(json.info)
             this.cch()._assignJSONResponse(json.cch)
             this.auth().setState(json.contract)
@@ -302,35 +302,34 @@ export class Wallet extends Model {
             return this.setState({ cch: { list: get().list().concat(list.filter((elem: any) => !!elem)), last_height } } )
         }
 
-        const f = async () => {
+        const fetch = async () => {
             if (this.utxos().get().count() > 0){
                 await this.auth().refresh()
                 try {
-                    const res = await Fetch(ROOT_API_URL + '/cch', {
-                        method: 'GET',
-                        headers: Object.assign({}, this.sign().header() as any, {last_cch: get().last() })
+                    const res = await axios(ROOT_API_URL + '/cch', {
+                        headers: Object.assign({}, this.sign().header() as any, {last_cch: get().last(), 'Access-Control-Allow-Origin': '*' })
                     })
-                    res.status == 200 && _assignJSONResponse(await res.json()).store()
+                    res.status == 200 && _assignJSONResponse(res.data).store()
                     return res.status
                 } catch (e){
                     throw new Error(e)
                 }
             }
         }
-        return { get, fetch: f, _assignJSONResponse }
+        return { get, fetch, _assignJSONResponse }
     }
 
     utxos = () => {
         const get = (): UTXOList => this.state.utxos
-        const f = async () => {
+        const fetch = async () => {
             await this.auth().refresh()
             try {
-                const res = await Fetch(ROOT_API_URL + '/utxos', {
+                const res = await axios(ROOT_API_URL + '/utxos', {
                     method: 'GET',
-                    headers: this.sign().header() as any
+                    headers: Object.assign(this.sign().header() as any, { 'Access-Control-Allow-Origin': '*' })
                 })
                 if (res.status == 200){
-                    const json = await res.json()
+                    const json = res.data
                     get().setState(json.utxos || []).store()
                 }
                 return res.status
@@ -338,7 +337,7 @@ export class Wallet extends Model {
                 throw new Error(e)
             }
         }
-        return { get, fetch: f }
+        return { get, fetch }
     }
 
     sign = () => {
