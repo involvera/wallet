@@ -76,7 +76,8 @@ export class ContentLink extends Model {
         const response = await axios(ROOT_API_URL + '/thread/' + hash, {
             headers: {
                 'Access-Control-Allow-Origin': '*',
-            }
+            },
+            timeout: 10000
         })
         if (response.status === 200){
             const json = response.data
@@ -92,9 +93,7 @@ export class ContentLink extends Model {
         }
 
         const response = await axios(ROOT_API_URL + '/proposal/' + hash, {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-            }
+            timeout: 10000,
         })
         if (response.status === 200){
             const json = response.data

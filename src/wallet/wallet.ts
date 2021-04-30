@@ -56,8 +56,8 @@ export class Wallet extends Model {
         const response = await axios(ROOT_API_URL + '/wallet', {
             headers: Object.assign(this.sign().header() as any, {
                 last_cch: this.cch().get().last(),
-                'Access-Control-Allow-Origin': '*'
-            })
+            }),
+            timeout: 10000,
         })
         if (response.status == 200){
             const json = response.data
@@ -307,7 +307,8 @@ export class Wallet extends Model {
                 await this.auth().refresh()
                 try {
                     const res = await axios(ROOT_API_URL + '/cch', {
-                        headers: Object.assign({}, this.sign().header() as any, {last_cch: get().last(), 'Access-Control-Allow-Origin': '*' })
+                        headers: Object.assign({}, this.sign().header() as any, {last_cch: get().last() }),
+                        timeout: 10000,
                     })
                     res.status == 200 && _assignJSONResponse(res.data).store()
                     return res.status
@@ -326,7 +327,8 @@ export class Wallet extends Model {
             try {
                 const res = await axios(ROOT_API_URL + '/utxos', {
                     method: 'GET',
-                    headers: Object.assign(this.sign().header() as any, { 'Access-Control-Allow-Origin': '*' })
+                    headers: this.sign().header(),
+                    timeout: 10000,
                 })
                 if (res.status == 200){
                     const json = res.data

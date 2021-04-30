@@ -19,11 +19,7 @@ export default class Fees extends Model {
 
     fetch = async () => {
        try {
-            const res = await axios(ROOT_API_URL + '/fees', {
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                }
-            })
+            const res = await axios(ROOT_API_URL + '/fees')
             res.status == 200 && this.setState(res.data).store()
             return res.status
        } catch (e){

@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc && browserify dist/index.js > target.js --standalone 'omdb'",
     "start": "tsc && node ./dist/index.js",
-    "test": "rm -rf db && mkdir db && mocha -r ts-node/register tests/index.ts"
+    "test": "rm -rf db && mkdir db && mocha --timeout 10000 -r ts-node/register tests/index.ts"
   },
   "dependencies": {
     "@types/axios": "^0.14.0",

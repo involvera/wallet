@@ -37,9 +37,7 @@ export default class Costs extends Model {
         try {
              const res = await axios(ROOT_API_URL + '/costs', { 
                 method: 'GET',
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                } 
+                timeout: 10000,
             })
              res.status == 200 && this.setState(res.data).store()
              return res.status

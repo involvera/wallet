@@ -5,7 +5,7 @@ import {
 } from '.'
 
 import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256 } from '../util'
-import { Wallet, IHeaderSignature } from '../wallet/wallet'
+import { Wallet } from '../wallet/wallet'
 import { IInputRaw } from './input'
 import { IOutputRaw, Output } from './output'
 import { UTXO, UTXOList } from './utxo'
@@ -37,9 +37,7 @@ export class Transaction extends Model {
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
         const response = await axios(ROOT_API_URL + '/transaction/' + hash, {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-            }
+            timeout: 10000,
         })
         if (response.status == 200){
             const json = response.data
@@ -60,8 +58,9 @@ export class Transaction extends Model {
         try {
             const response = await axios(ROOT_API_URL + '/transaction', {
                 method: 'POST',
-                headers: Object.assign(wallet.sign().header() as any, {'content-type': 'application/json', 'Access-Control-Allow-Origin': '*' }),
-                data: this.toRaw().base64()
+                headers: Object.assign(wallet.sign().header() as any, {'content-type': 'application/json' }),
+                data: this.toRaw().base64(),
+                timeout: 15000,
             })
             if (response.status === 201){
                 const { transaction: {lh, t}, puts, utxos } = response.data

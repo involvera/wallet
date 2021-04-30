@@ -290,12 +290,8 @@ export class UnserializedPutList extends Collection {
         const fromTX = async (txHashHex: string, headerSignature: IHeaderSignature) => {
             try { 
                 const response = await axios(ROOT_API_URL + '/puts/' + txHashHex, {
-                    headers: Object.assign(
-                        headerSignature as any,
-                        { 
-                            'Access-Control-Allow-Origin': '*' 
-                        }
-                    ),
+                    headers: headerSignature as any,
+                    timeout: 10000,
                 })
                 if (response.status == 200){
                     const json = response.data
@@ -311,7 +307,8 @@ export class UnserializedPutList extends Collection {
             try { 
                 const response = await axios(ROOT_API_URL + '/puts/list', {
                     method: 'GET',
-                    headers: Object.assign({}, headerSignature as any, {last_lh: lastHeight, 'Access-Control-Allow-Origin': '*' })
+                    headers: Object.assign({}, headerSignature as any, {last_lh: lastHeight }),
+                    timeout: 10000,
                 })
                 if (response.status == 200){
                     const json = response.data

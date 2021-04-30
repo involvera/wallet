@@ -19,9 +19,8 @@ export default class Info extends Model {
     fetch = async (headerSig: IHeaderSignature) => {
        try {
             const res = await axios(ROOT_API_URL + '/wallet/info', {
-                headers: Object.assign(
-                    headerSig as any,
-                    { 'Access-Control-Allow-Origin': '*' }),
+                headers: headerSig as any,
+                timeout: 10000,
             })
             res.status == 200 && this.setState(res.data).store()
             return res.status
