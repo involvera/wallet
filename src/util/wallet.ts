@@ -1,5 +1,5 @@
 import { Ripemd160, Sha256 } from "./hash"
-import { EncodeBase58, DecodeBase58 } from '../util'
+import { EncodeBase58, DecodeBase58 } from './base'
 import * as bip39 from 'bip39'
 
 const VERSION = 0x00

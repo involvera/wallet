@@ -5,7 +5,7 @@ import { ec as EC } from 'elliptic'
 import TxBuild from './tx-builder' 
 
 import axios from 'axios'
-import { ROOT_API_URL } from '../constant/api'
+import config from '../config'
 import { Transaction, UTXOList } from '../transaction'
 
 import AuthContract from './auth-contract'
@@ -48,7 +48,7 @@ export class Wallet extends Model {
 
     synchronize = async () => {
         await this.auth().refresh()
-        const response = await axios(ROOT_API_URL + '/wallet', {
+        const response = await axios(config.getRootAPIUrl() + '/wallet', {
             headers: Object.assign(this.sign().header() as any, {
                 last_cch: this.cch().get().last(),
             }),
@@ -301,7 +301,7 @@ export class Wallet extends Model {
             if (this.utxos().get().count() > 0){
                 await this.auth().refresh()
                 try {
-                    const res = await axios(ROOT_API_URL + '/cch', {
+                    const res = await axios(config.getRootAPIUrl() + '/cch', {
                         headers: Object.assign({}, this.sign().header() as any, {last_cch: get().last() }),
                         timeout: 10000,
                     })
@@ -320,7 +320,7 @@ export class Wallet extends Model {
         const fetch = async () => {
             await this.auth().refresh()
             try {
-                const res = await axios(ROOT_API_URL + '/utxos', {
+                const res = await axios(config.getRootAPIUrl() + '/utxos', {
                     method: 'GET',
                     headers: this.sign().header(),
                     timeout: 10000,

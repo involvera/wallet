@@ -3,8 +3,9 @@ import external from 'rollup-plugin-peer-deps-external'
 import url from '@rollup/plugin-url'
 import { uglify } from 'rollup-plugin-uglify';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
-
 import pkg from './package.json'
+
+const overrideTS = { compilerOptions: { module: 'es2015' } };
 
 const config = {
     input: './index.ts',
@@ -12,6 +13,7 @@ const config = {
     output: [
         {
             globals: {
+                'acey': 'acey',
                 'axios': 'axios',
                 'create-hash': 'create-hash',
                 'tweetnacl': 'tweetnacl',
@@ -31,6 +33,7 @@ const config = {
         url(),
         typescript({
             tsconfig: 'tsconfig.json',
+            tsconfigOverride: overrideTS,
             clean: true
         }),
         nodeResolve()

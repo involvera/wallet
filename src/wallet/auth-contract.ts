@@ -1,6 +1,6 @@
 import { Model } from 'acey'
 import axios from 'axios'
-import { ROOT_API_URL } from '../constant'
+import config from '../config'
 
 export default class AuthContract extends Model {
 
@@ -18,7 +18,7 @@ export default class AuthContract extends Model {
     
     fetch = async () => {
         try {
-            const res = await axios(ROOT_API_URL + '/contract', { 
+            const res = await axios(config.getRootAPIUrl() + '/contract', { 
                 method: 'GET',
                 timeout: 10000,
              })

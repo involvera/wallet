@@ -1,5 +1,5 @@
 import { Collection, Model } from 'acey'
-import { ROOT_API_URL } from '../constant';
+import config from '../config';
 import { IsUUID } from '../util';
 import { UUIDToPubKeyHashHex } from '../util/hash';
 import { IOutput, IOutputRaw, Output } from './output';
@@ -73,7 +73,7 @@ export class ContentLink extends Model {
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
 
-        const response = await axios(ROOT_API_URL + '/thread/' + hash, {
+        const response = await axios(config.getRootAPIUrl() + '/thread/' + hash, {
             headers: {
                 'Access-Control-Allow-Origin': '*',
             },
@@ -92,7 +92,7 @@ export class ContentLink extends Model {
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
 
-        const response = await axios(ROOT_API_URL + '/proposal/' + hash, {
+        const response = await axios(config.getRootAPIUrl() + '/proposal/' + hash, {
             timeout: 10000,
         })
         if (response.status === 200){

@@ -1,6 +1,6 @@
 import { Model } from 'acey'
 import axios from 'axios'
-import { ROOT_API_URL } from '../constant'
+import config from '../config'
 import { IHeaderSignature } from './wallet'
 
 export default class Info extends Model {
@@ -18,7 +18,7 @@ export default class Info extends Model {
 
     fetch = async (headerSig: IHeaderSignature) => {
        try {
-            const res = await axios(ROOT_API_URL + '/wallet/info', {
+            const res = await axios(config.getRootAPIUrl() + '/wallet/info', {
                 headers: headerSig as any,
                 timeout: 10000,
             })

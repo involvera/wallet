@@ -1,9 +1,6 @@
 import { Model } from 'acey'
-import { 
-    IOutput, OutputList,
-    IInput, Input, InputList,
-} from '.'
-
+import { IOutput, OutputList } from './output'
+import { IInput, Input, InputList } from './input'
 import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256 } from '../util'
 import { Wallet } from '../wallet/wallet'
 import { IInputRaw } from './input'
@@ -12,7 +9,8 @@ import { UTXO, UTXOList } from './utxo'
 
 import axios from 'axios'
 
-import { BILLED_SIGNATURE_LENGTH, ROOT_API_URL } from '../constant'
+import { BILLED_SIGNATURE_LENGTH } from '../constant'
+import config from '../config'
 import { UUIDToPubKeyHashHex } from '../util/hash'
 
 export interface ITransaction {
@@ -36,7 +34,7 @@ export class Transaction extends Model {
         if (IsUUID(hashOrUUID)){
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
-        const response = await axios(ROOT_API_URL + '/transaction/' + hash, {
+        const response = await axios(config.getRootAPIUrl() + '/transaction/' + hash, {
             timeout: 10000,
         })
         if (response.status == 200){
@@ -56,7 +54,7 @@ export class Transaction extends Model {
 
     broadcast = async (wallet: Wallet) => {
         try {
-            const response = await axios(ROOT_API_URL + '/transaction', {
+            const response = await axios(config.getRootAPIUrl() + '/transaction', {
                 method: 'POST',
                 headers: Object.assign(wallet.sign().header() as any, {'content-type': 'application/json' }),
                 data: this.toRaw().base64(),

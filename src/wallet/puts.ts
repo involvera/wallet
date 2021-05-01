@@ -1,7 +1,8 @@
 import { Collection, Model } from 'acey'
-import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT, ROOT_API_URL, TByte } from '../constant';
+import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT, TByte } from '../constant';
 import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, ShortenAddress } from '../util';
 import axios from 'axios'
+import config from '../config'
 import { IHeaderSignature } from './wallet';
 import { PubKeyHashHexToUUID } from '../util/hash';
 
@@ -101,7 +102,7 @@ export class UnserializedPut extends Model {
                 line =  `Involvera : New ${this.get().extraData()} proposal ${GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKH(), 'hex'))}           -${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
             }
         }
-        console.log(time + '\n', line)
+        return time + '\n' + ' ' + line
     }
     
     get = () => {
@@ -157,7 +158,7 @@ export class UnserializedPutList extends Collection {
 
     print = (pkhHex: string) => {
         this.forEach((p: UnserializedPut) => {
-            p.print(pkhHex)
+            console.log(p.print(pkhHex))
             console.log('\n\n')
         })
     }
@@ -288,7 +289,7 @@ export class UnserializedPutList extends Collection {
 
         const fromTX = async (txHashHex: string, headerSignature: IHeaderSignature) => {
             try { 
-                const response = await axios(ROOT_API_URL + '/puts/' + txHashHex, {
+                const response = await axios(config.getRootAPIUrl() + '/puts/' + txHashHex, {
                     headers: headerSignature as any,
                     timeout: 10000,
                 })
@@ -304,7 +305,7 @@ export class UnserializedPutList extends Collection {
 
         const all = async (lastHeight: number, headerSignature: IHeaderSignature) => {
             try { 
-                const response = await axios(ROOT_API_URL + '/puts/list', {
+                const response = await axios(config.getRootAPIUrl() + '/puts/list', {
                     method: 'GET',
                     headers: Object.assign({}, headerSignature as any, {last_lh: lastHeight }),
                     timeout: 10000,

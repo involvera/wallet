@@ -1,6 +1,6 @@
 import { Model } from 'acey'
 import axios from 'axios'
-import { ROOT_API_URL } from '../constant'
+import config from '../config'
 
 const DEFAULT_STATE = {
     thread: 0, 
@@ -35,7 +35,7 @@ export default class Costs extends Model {
 
     fetch = async () => {
         try {
-             const res = await axios(ROOT_API_URL + '/costs', { 
+             const res = await axios(config.getRootAPIUrl() + '/costs', { 
                 method: 'GET',
                 timeout: 10000,
             })

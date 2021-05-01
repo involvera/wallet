@@ -1,11 +1,13 @@
-import { Collection, Model } from 'acey'
-import { Output, InputList } from '.'
-import { CYCLE_IN_LUGH, ROOT_API_URL } from '../constant'
-import { CalculateOutputMeltedValue } from '../util/output'
 import axios from 'axios'
+import { Collection, Model } from 'acey'
+import { Output } from './output'
+
+import { CYCLE_IN_LUGH } from '../constant'
+import { CalculateOutputMeltedValue } from '../util/output'
 import { ITransaction, Transaction } from './transaction'
 import { IHeaderSignature } from '../wallet/wallet'
-import { Input } from './input'
+import { Input, InputList } from './input'
+import config from '../config'
  
 export interface IUTXO {
     tx_id: string
@@ -90,7 +92,7 @@ export class UTXOList extends Collection {
             return 
 
         try { 
-            const response = await axios(ROOT_API_URL + '/transactions/list', {
+            const response = await axios(config.getRootAPIUrl() + '/transactions/list', {
                 headers: Object.assign({}, headerSignature as any, {list: listUnFetchedTxHash.join(',') }),
                 timeout: 10000,
             })

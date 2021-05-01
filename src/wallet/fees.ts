@@ -1,6 +1,6 @@
 import { Model } from 'acey'
 import axios from 'axios'
-import { ROOT_API_URL } from '../constant'
+import config from '../config'
 
 export default class Fees extends Model {
 
@@ -19,7 +19,7 @@ export default class Fees extends Model {
 
     fetch = async () => {
        try {
-            const res = await axios(ROOT_API_URL + '/fees')
+            const res = await axios(config.getRootAPIUrl() + '/fees')
             res.status == 200 && this.setState(res.data).store()
             return res.status
        } catch (e){
