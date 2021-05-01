@@ -21,7 +21,6 @@ import { BURNING_RATIO, PUBKEY_H_BURNER } from '../constant'
 import { TConstitution } from '../script/constitution'
 import { ContentLink } from '../transaction/content-link'
 
-import { config } from 'acey'
 const ec = new EC('secp256k1');
 
 export interface IHeaderSignature {
@@ -30,10 +29,6 @@ export interface IHeaderSignature {
 }
 
 export class Wallet extends Model {
-
-    static InitLocalStore = async () => {
-        await config.done()
-    }
 
     constructor(initialState: any, options: any){
         super(initialState, options)

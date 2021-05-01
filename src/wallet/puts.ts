@@ -3,7 +3,6 @@ import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT, ROOT_API_URL, TByte } from '../c
 import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, ShortenAddress } from '../util';
 import axios from 'axios'
 import { IHeaderSignature } from './wallet';
-import moment from 'moment'
 import { PubKeyHashHexToUUID } from '../util/hash';
 
 export interface ILink {
@@ -75,7 +74,7 @@ export class UnserializedPut extends Model {
     isLughTx = () => this.isRegularTx() && this.get().senderPKH() == ""
 
     print = (pkh: string) => {
-        const time = moment(this.get().createdAt()).fromNow()
+        const time = new Date().toString()
         let line = ''
         if (this.isRegularTx()){
             if (this.isLughTx()){

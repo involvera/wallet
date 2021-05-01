@@ -1,5 +1,3 @@
-import base from "base-x"
-
 const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 const BASEUUID = '1234567890abcdefghijkmnopqrstuvwxyz'
 const bs58 = require('base-x')(BASE58)
