@@ -5,8 +5,6 @@ import { uglify } from 'rollup-plugin-uglify';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import pkg from './package.json'
 
-const overrideTS = { compilerOptions: { module: 'es2015' } };
-
 const config = {
     input: './index.ts',
     external: [ 'acey', 'axios', 'create-hash', 'tweetnacl', 'tweetnacl-util', 'elliptic', 'bip39', 'bip32'],
@@ -33,7 +31,7 @@ const config = {
         url(),
         typescript({
             tsconfig: 'tsconfig.json',
-            tsconfigOverride: overrideTS,
+            tsconfigOverride: { compilerOptions: { module: 'es2015' } },
             clean: true
         }),
         nodeResolve()

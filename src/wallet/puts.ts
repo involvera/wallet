@@ -74,37 +74,55 @@ export class UnserializedPut extends Model {
     isRegularTx = () => this.get().extraData() == "" && this.get().contentPKH() == "" && this.get().contentPKHTargeted() == ""
     isLughTx = () => this.isRegularTx() && this.get().senderPKH() == ""
 
-    print = (pkh: string) => {
-        const time = new Date().toString()
-        let line = ''
+    pretty = (pkh: string) => {
+        let action = ''
+        let from = ''
+        let to = ''
+        const amount = `${this.get().senderPKH() == pkh ? '-' : '+'}${parseFloat((Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)).toLocaleString('en')}`
+
         if (this.isRegularTx()){
             if (this.isLughTx()){
-                line = `Involvera : Lugh                                                        +${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
-
+                from = 'Involvera : Lugh'
             } else {
-                line = `${this.get().senderPKH() === pkh ? GetAddressFromPubKeyHash(Buffer.from(this.get().recipientPKH(), 'hex')) : GetAddressFromPubKeyHash(Buffer.from(this.get().senderPKH(), 'hex'))}                                     ${this.get().senderPKH() === pkh ? '-' : '+'}${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+                from = this.get().senderPKH() === pkh ? 'You' : GetAddressFromPubKeyHash(Buffer.from(this.get().senderPKH(), 'hex'))
+                to = this.get().recipientPKH() === pkh ? 'you' : GetAddressFromPubKeyHash(Buffer.from(this.get().recipientPKH(), 'hex'))
+                action = 'sent to'
             }
         } else {
             if (this.isVote()){
-                line = `Involvera : Voted to ${GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))}                 -${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+                from = 'You'
+                action = 'voted to'
+                to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))
             } else if (this.isThread()){
-                line = `Involvera : New thread ${GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKH(), 'hex'))}              -${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+                from = ''
+                action = 'New thread created : '
+                to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKH(), 'hex'))
             } else if (this.isRethread()){
-                line = `Involvera : Replied to ${GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))}           -${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+                from = 'You'
+                action = 'replied to'
+                to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))
             } else if (this.isReward()){
                 const emoji: any = {upvote: '👍', reaction_0: '⭐', reaction_1: '💫', reaction_2: '✨'}
-                if (this.get().senderPKH() == pkh){
-                    line =  `${this.get().extraData() === 'upvote' ? 'Upvoted' : `Reacted ${emoji[this.get().extraData()]}` } to ${GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))}                       -${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
-                } else {
-                    line =  `${ShortenAddress(GetAddressFromPubKeyHash(Buffer.from(this.get().senderPKH(), 'hex')))} ${this.get().extraData() === 'upvote' ? 'upvoted' : `reacted ${emoji[this.get().extraData()]}` } to ${ShortenAddress(GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex')))}                               +${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
-                }
+                action = `${this.get().extraData() === 'upvote' ? 'upvoted' : `reacted ${emoji[this.get().extraData()]}` } to`
+                to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))
+                if (this.get().senderPKH() === pkh)
+                    from = 'You'
+                else 
+                    from = GetAddressFromPubKeyHash(Buffer.from(this.get().senderPKH(), 'hex'))
             } else if (this.isProposal()){
-                line =  `Involvera : New ${this.get().extraData()} proposal ${GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKH(), 'hex'))}           -${(Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)}`
+                action = `New ${this.get().extraData()} proposal`
+                to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKH(), 'hex'))
             }
         }
-        return time + '\n' + ' ' + line
+
+        return {
+            action,
+            from,
+            to,
+            amount
+        }
     }
-    
+
     get = () => {
         const valueAtCreationTime = (): BigInt => this.state.value.at_time
         const valueNow = (): number => this.state.value.now
@@ -154,13 +172,6 @@ export class UnserializedPutList extends Collection {
 
     constructor(list: IUnserializedPut[] = [], options: any){
         super(list, [UnserializedPut, UnserializedPutList], options)
-    }
-
-    print = (pkhHex: string) => {
-        this.forEach((p: UnserializedPut) => {
-            console.log(p.print(pkhHex))
-            console.log('\n\n')
-        })
     }
 
     sortByTime = () => this.orderBy('time', 'desc') as UnserializedPutList
@@ -258,8 +269,6 @@ export class UnserializedPutList extends Collection {
                 onLastNDays, 
                 atDayActivity
             }
-
-
         }
 
         return {
