@@ -2,22 +2,22 @@ import { PROPOSAL_CODE, REWARD_CODE, THREAD_CODE, VOTE_CODE } from './constant'
 import { TConstitution } from './constitution'
 import ScriptEngine from './script-engine'
 
-export const NewApplicationProposalScript = (childIdx: number, pubkh: Buffer): ScriptEngine => {
+export const NewApplicationProposalScript = (contentNonce: number, pubkh: Buffer): ScriptEngine => {
     const script = new ScriptEngine(PROPOSAL_CODE)
-    script.initWithPKH(childIdx, pubkh)
+    script.initWithPKH(contentNonce, pubkh)
     return script
 }
 
-export const NewConstitutionProposalScript = (childIdx: number, pubkh: Buffer, c: TConstitution): ScriptEngine => {
+export const NewConstitutionProposalScript = (contentNonce: number, pubkh: Buffer, c: TConstitution): ScriptEngine => {
     const script = new ScriptEngine(PROPOSAL_CODE)
-    script.initWithPKH(childIdx, pubkh)
+    script.initWithPKH(contentNonce, pubkh)
     script.addConstitution(c)
     return script
 }
 
-export const NewCostProposalScript = (childIdx: number, pubkh: Buffer, threadCost: number, proposalCost: number): ScriptEngine => {
+export const NewCostProposalScript = (contentNonce: number, pubkh: Buffer, threadCost: number, proposalCost: number): ScriptEngine => {
     const script = new ScriptEngine(PROPOSAL_CODE)
-    script.initWithPKH(childIdx, pubkh)
+    script.initWithPKH(contentNonce, pubkh)
     if (threadCost > 0){
         script.addThreadCost(threadCost)
     }
@@ -35,15 +35,15 @@ export const NewRewardScript = (txID: Buffer, vout: number, distributionVout: nu
     return script
 }
 
-export const NewThreadScript = (childIdx: number, pubkh: Buffer): ScriptEngine => {
+export const NewThreadScript = (contentNonce: number, pubkh: Buffer): ScriptEngine => {
     const script = new ScriptEngine(THREAD_CODE)
-    script.initWithPKH(childIdx, pubkh)
+    script.initWithPKH(contentNonce, pubkh)
     return script
 }
 
-export const NewReThreadScript = (txID: Buffer, vout: number, childIdx: number, pubkh: Buffer): ScriptEngine => {
+export const NewReThreadScript = (txID: Buffer, vout: number, contentNonce: number, pubkh: Buffer): ScriptEngine => {
     const script = new ScriptEngine(THREAD_CODE)
-    script.initWithPKH(childIdx, pubkh)
+    script.initWithPKH(contentNonce, pubkh)
     script.addTxID(txID)
     script.addVout(vout)
     return script

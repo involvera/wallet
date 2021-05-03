@@ -102,6 +102,7 @@ export class Output extends Model {
 			thread: () => script.is().thread(),
 			rethread: () => script.is().rethread(),
 			vote: () => script.is().vote(),
+			content: () => script.is().rethread() || script.is().thread() || script.is().proposal()
 		}
 	}
 
@@ -121,6 +122,16 @@ export class OutputList extends Collection {
 				return true
 		}
 		return false
+	}
+
+	countContent = (): number => {
+		let count = 0;
+		this.forEach((out: Output) => {
+			if (out.is2().content()){
+				count++
+			}
+		})
+		return count
 	}
 
 	get = () => {

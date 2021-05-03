@@ -7,6 +7,5 @@ export const N_LUGH_VOTE_DURATION = 20
 export const MAX_TX_OUTPUT = 1000
 export const MAX_TX_INPUT = 1000
 export const MAX_CONSTITUTION_RULE = 10
-export const CONTENT_CHILD_IDX_FROM = 10_000_000
 export const BURNING_RATIO = 0.7
 export const BILLED_SIGNATURE_LENGTH = 72

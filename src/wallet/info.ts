@@ -9,6 +9,8 @@ export default class Info extends Model {
         super(initialState, options)
     }
     
+    iterateTotalContent = (n: number) => this.setState({total_content: this.get().countTotalContent() + n})
+
     get = () => {
         const countTotalContent = (): number => this.state.total_content 
         const balance = (): number => this.state.balance

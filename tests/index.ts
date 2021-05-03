@@ -4,5 +4,5 @@ config.setStoreEngine(new LocalStorage('./db'))
 
 config.done()
 
-// require('./utils')
+require('./utils')
 require('./wallet')

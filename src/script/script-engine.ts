@@ -45,9 +45,9 @@ export default class ScriptEngine {
         return this
     }
 
-    initWithPKH = (childIDX: number, pubKH: Buffer) => {
+    initWithPKH = (contentNonce: number, pubKH: Buffer) => {
         this.setTargetScript([])
-        this.addPubKH(childIDX, pubKH)
+        this.addPubKH(contentNonce, pubKH)
         return this
     }
 
@@ -63,13 +63,13 @@ export default class ScriptEngine {
         return this
     }
 
-    addPubKH = (childIDX: number, pubKH: Buffer) => {
+    addPubKH = (contentNonce: number, pubKH: Buffer) => {
         if (!IsPubKHRightFormat(pubKH)){
             throw WRONG_PUBKH_FORMAT
         }
 
         if (CodesWithPubKHBytesArray().indexOf(this.kind()) != -1){
-            childIDX >= 0 && this.TA.push(EncodeInt64(BigInt(childIDX)))
+            contentNonce >= 0 && this.TA.push(EncodeInt64(BigInt(contentNonce)))
             this.TA.push(pubKH)
             return
         }

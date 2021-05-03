@@ -4,7 +4,7 @@ import ScriptEngine from "./script-engine"
 
 export default (s: ScriptEngine) => {
 
-    const childIdx = (): number => {
+    const contentNonce = (): number => {
         return Number(DecodeInt(s.targetScript()[0], false))
     }
 
@@ -56,6 +56,6 @@ export default (s: ScriptEngine) => {
     }
 
     return {
-        childIdx, pubkh, serializedConstitution, costs, txID, vout, distributionVout, isVoteAccepted 
+        contentNonce, pubkh, serializedConstitution, costs, txID, vout, distributionVout, isVoteAccepted 
     }
 }

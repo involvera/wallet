@@ -45,7 +45,7 @@ const main = () => {
     });
 
     it('Wallet1 -> Address: ', () => {
-        expect(wallet.keys().get().address()).to.eq("1M4qfoZesnD8N7gTeYy7R2mfAdRJJxQJrM")
+        expect(wallet.keys().get().address()).to.eq("1GHQu3CDZpPZGb6PmaBPP4sZNuT13sja1")
         expect(Buffer.compare(PubKeyHashFromAddress(wallet.keys().get().address()), wallet.keys().get().pubHash())).to.eq(0)
         expect(IsAddressValid(wallet.keys().get().address())).to.eq(true)
         expect(wallet.keys().get().mnemonic("coucou")).to.eq("film dirt damage apart carry horse enroll carry power prison flush bulb")

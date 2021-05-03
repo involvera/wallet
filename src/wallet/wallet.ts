@@ -97,8 +97,8 @@ export class Wallet extends Model {
 
             const application = async () => {
                 await this.synchronize()
-                const childIdx = this.info().get().countTotalContent() + 1
-                const script = NewApplicationProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx)) 
+                const contentNonce = this.info().get().countTotalContent() + 1
+                const script = NewApplicationProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce)) 
     
                 const to: string[] = []
                 const ta: Buffer[][] = []
@@ -117,8 +117,8 @@ export class Wallet extends Model {
 
             const cost = async (threadCost: number, proposalCost: number) => {
                 await this.synchronize()
-                const childIdx = this.info().get().countTotalContent() + 1
-                const script = NewCostProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx), threadCost, proposalCost) 
+                const contentNonce = this.info().get().countTotalContent() + 1
+                const script = NewCostProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), threadCost, proposalCost) 
 
                 const to: string[] = []
                 const ta: Buffer[][] = []
@@ -137,8 +137,8 @@ export class Wallet extends Model {
 
             const constitution = async (constitution: TConstitution) => {
                 await this.synchronize()
-                const childIdx = this.info().get().countTotalContent() + 1
-                const script = NewConstitutionProposalScript(childIdx, this.keys().get().derivedPubHash(childIdx), constitution) 
+                const contentNonce = this.info().get().countTotalContent() + 1
+                const script = NewConstitutionProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), constitution) 
                 
                 const to: string[] = []
                 const ta: Buffer[][] = []
@@ -181,8 +181,8 @@ export class Wallet extends Model {
 
         const thread = async () => {
             await this.synchronize()
-            const childIdx = this.info().get().countTotalContent() + 1
-            const script = NewThreadScript(childIdx, this.keys().get().derivedPubHash(childIdx)) 
+            const contentNonce = this.info().get().countTotalContent() + 1
+            const script = NewThreadScript(contentNonce, this.keys().get().derivedPubHash(contentNonce)) 
             
             const to: string[] = []
             const ta: Buffer[][] = []
@@ -202,10 +202,10 @@ export class Wallet extends Model {
 
         const rethread = async (content: ContentLink) => {
             await this.synchronize()
-            const childIdx = this.info().get().countTotalContent() + 1
+            const contentNonce = this.info().get().countTotalContent() + 1
             const contentRaw = content.toRaw()
 
-            const script = NewReThreadScript(contentRaw.link.tx_id, contentRaw.link.vout, childIdx, this.keys().get().derivedPubHash(childIdx))
+            const script = NewReThreadScript(contentRaw.link.tx_id, contentRaw.link.vout, contentNonce, this.keys().get().derivedPubHash(contentNonce))
 
             const to: string[] = []
             const ta: Buffer[][] = []

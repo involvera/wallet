@@ -3,7 +3,6 @@ import { Model } from 'acey'
 import * as bip39 from 'bip39'
 import * as bip32 from 'bip32'
 import { GetAddressFromPubKeyHash, ToPubKeyHash } from '../util/wallet'
-import { CONTENT_CHILD_IDX_FROM } from '../constant'
 import nacl from 'tweetnacl'
 import naclUtil from 'tweetnacl-util'
 import { Sha256 } from '../util'
@@ -30,8 +29,8 @@ export default class Keys extends Model {
     get = () => {
         const seed = () => Buffer.from(this.state.seed, 'hex')
         const master = () => bip32.fromSeed(seed())
-        const priv = () => master()?.privateKey as Buffer
-        const pub = () => master().publicKey as Buffer
+        const priv = () => master()?.derivePath('m/0/0').privateKey as Buffer
+        const pub = () =>  master()?.derivePath('m/0/0').publicKey as Buffer
         const pubHex = () => pub().toString('hex')
         const pubHash = () => ToPubKeyHash(pub())
         const pubHashHex = () => pubHash().toString('hex')
@@ -47,7 +46,7 @@ export default class Keys extends Model {
         } 
 
         const derivedPubHash = (index: number): Buffer => {
-            const m = master().derive(index + CONTENT_CHILD_IDX_FROM)
+            const m = master().derivePath('m/1/' + index.toString())
             return ToPubKeyHash(m.publicKey)
         }
 
