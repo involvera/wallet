@@ -1,15 +1,14 @@
 import { Model } from 'acey'
 import { IOutput, OutputList } from './output'
 import { IInput, Input, InputList } from './input'
-import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256 } from '../util'
+import { ByteArrayToB64, CalcTotalLengthDoubleByteArray, EncodeInt, EncodeInt64, IsUUID, Sha256 } from '../util'
 import { Wallet } from '../wallet/wallet'
 import { IInputRaw } from './input'
 import { IOutputRaw, Output } from './output'
 import { UTXO, UTXOList } from './utxo'
-
 import axios from 'axios'
 
-import { BILLED_SIGNATURE_LENGTH } from '../constant'
+import { BILLED_SIGNATURE_LENGTH, PUBK_LENGTH } from '../constant'
 import config from '../config'
 import { UUIDToPubKeyHashHex } from '../util/hash'
 
@@ -50,6 +49,15 @@ export class Transaction extends Model {
             inputs: new InputList(this.state.inputs, this.kids()),
             outputs: new OutputList(this.state.outputs, this.kids()),
         })
+    }
+
+    size = () => {
+        const raw = this.toRaw().default()
+        let size = raw.lh.length
+        size += raw.t.length
+        size += this.get().inputs().size()
+        size += this.get().outputs().size()
+        return size
     }
 
     broadcast = async (wallet: Wallet) => {
@@ -121,12 +129,15 @@ export class Transaction extends Model {
         const outputs = (): OutputList => this.state.outputs
 
         const billedSize = (): number => {
-            const totalSignatureSizeInputs = inputs().reduce((total: number, input: Input) => {
-                total += input.toRaw().base64().sign.length
-                return total
-            }, 0) as any
+            let size = this.size()
 
-            return (Buffer.from(JSON.stringify(this.toRaw().base64())).length + (this.get().inputs().count() * BILLED_SIGNATURE_LENGTH)) - totalSignatureSizeInputs
+            this.get().inputs().forEach((m: Input) => {
+                size -= CalcTotalLengthDoubleByteArray(m.toRaw().default().script_sig)
+                size += m.get().script().length()
+            })
+            
+            size += this.get().inputs().count() * (BILLED_SIGNATURE_LENGTH + PUBK_LENGTH)
+            return size
         }
 
         const fees = (feePerByte: number): number => {

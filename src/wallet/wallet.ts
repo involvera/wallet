@@ -14,11 +14,10 @@ import Costs from './costs'
 import Keys from './keys'
 import { UnserializedPutList } from './puts'
 
-import { EMPTY_CODE } from '../script/constant'
 import Info from './info'
 import { NewApplicationProposalScript, NewConstitutionProposalScript, NewCostProposalScript, NewProposalVoteScript, NewReThreadScript, NewRewardScript, NewThreadScript } from '../script/scripts'
 import { BURNING_RATIO, PUBKEY_H_BURNER } from '../constant'
-import { TConstitution } from '../script/constitution'
+import { TConstitution } from '../scriptV2/constitution'
 import { ContentLink } from '../transaction/content-link'
 
 const ec = new EC('secp256k1');

@@ -1,6 +1,6 @@
 import { TByte } from "../constant";
 import { CANT_SEND_0_VALUE, LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
-import { EMPTY_CODE } from "../script/constant";
+import { ScriptEngineV2 } from "../scriptV2";
 import { InputList, Output, OutputList, Transaction, UTXO, UTXOList } from "../transaction"
 import { PubKeyHashFromAddress } from "../util";
 import { CalculateOutputValueFromMelted } from "../util/output";
@@ -8,31 +8,24 @@ import { Wallet } from './'
 
 export interface ITXBuild {
     wallet:         Wallet[]
-	to:             string[]
 	amount_required: number[]
-	kinds:          Buffer
-	ta:             Buffer[][]
+	scripts:             Buffer[][]
 }
 
 export default class TxBuild {
 
-	private to:             string[]
     private amount_required: number[]
-	private kinds:          Buffer
-    private ta:             Buffer[][]
+    private scripts:             Buffer[][]
     private wallets: Wallet[]
 
     constructor(txb: ITXBuild){
-        this.to = txb.to
         this.amount_required = txb.amount_required
-        this.kinds = txb.kinds
-        this.ta = txb.ta
+        this.scripts = txb.scripts
         this.wallets = txb.wallet
     }
 
     private _checkStructureBuild = () => {
-        const length = this.to.length
-        if (length != this.amount_required.length && length != this.kinds.length && this.ta.length){
+        if (this.amount_required.length != this.scripts.length){
             throw WRONG_TX_BUILDER_STRUCTURE_ERROR
         }
         if (this.totalAmount() <= 0){
@@ -43,18 +36,15 @@ export default class TxBuild {
     totalAmount = () => this.amount_required.reduce((accumulator: number, currentValue: number) => accumulator + currentValue)
 
     private _addTXFeesToBuild = (fees: number) => {
-        this.to.push(PubKeyHashFromAddress(this.wallets[0].fees().get().addressToSend()).toString('hex'))
+        const lockScript = new ScriptEngineV2([])
+        lockScript.append().lockScript(PubKeyHashFromAddress(this.wallets[0].fees().get().addressToSend()))
         this.amount_required.push(fees)
-        this.kinds = Buffer.concat([this.kinds, Buffer.from([0])])
-        const ab: Buffer[] = []
-        this.ta.push(ab)
+        this.scripts.push(lockScript.get())       
     }
 
     private _removeLastUTXO = () => {
-        this.to.pop()
+        this.scripts.pop()
         this.amount_required.pop()
-        this.kinds = this.kinds.slice(0, this.kinds.length - 1)
-        this.ta.pop()
     }
 
     private _makeTxWithFees = (tx: Transaction): UTXOList => {
@@ -144,14 +134,16 @@ export default class TxBuild {
 
         const pushOutput = (toIndex: number, fromIdx: number, toIdx: number) => {
             const inputIdxLength = toIdx - fromIdx + 1
-            const target = this.ta[toIndex]
-            outputs.push(Output.NewOutput(this.to[toIndex], currentRealAmountToSend, newIntArrayFilled(inputIdxLength, fromIdx), this.kinds[toIndex] as TByte, target).to().plain())
+            const script = this.scripts[toIndex]
+            outputs.push(Output.NewOutput(currentRealAmountToSend, newIntArrayFilled(inputIdxLength, fromIdx), script).to().plain())
         }
 
         const pushSurplusOutput = (lastUTXOIdx: number) => {
+            const script = new ScriptEngineV2([])
+            script.append().lockScript(this.wallets[0].keys().get().pubHash())
+            
             const totalUsed = outputs.get().totalValue()
-            const emptyTa: Buffer[] = []
-            outputs.push(Output.NewOutput(this.wallets[0].keys().get().pubHashHex(), Number(utxos.get().totalValue()-totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), EMPTY_CODE, emptyTa).to().plain())
+            outputs.push(Output.NewOutput(Number(utxos.get().totalValue()-totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), script.get()).to().plain())
         }
 
         const totalInEscrow = utxos.get().totalMeltedValue(CCHList)

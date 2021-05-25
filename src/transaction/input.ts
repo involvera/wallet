@@ -1,22 +1,33 @@
 import { Collection, Model } from 'acey'
-import { ByteArrayToB64, DecodeInt, EncodeInt } from '../util'
+import { ScriptEngineV2 } from '../scriptV2'
+import { ByteArrayToB64, EncodeInt, CalcTotalLengthDoubleByteArray } from '../util'
+import { DoubleByteArrayToB64Array, ToArrayBufferFromB64 } from '../util/bytes'
+
 
 export interface IInput {
     prev_transaction_hash: string
     vout: number
-    sign: string
+    script_sig: Buffer[]
 }
 
 export interface IInputRaw {
     prev_transaction_hash: Buffer
     vout: Buffer
-    sign: Buffer
+    script_sig: Buffer[]
 }
 
 export class Input extends Model {
 
     constructor(input: IInput, options: any) {
         super(input, options)
+    }
+
+    size = (): number => {
+        const raw = this.toRaw().default()
+        let size = raw.prev_transaction_hash.length
+        size += CalcTotalLengthDoubleByteArray(raw.script_sig)
+        size += raw.vout.length
+        return size
     }
 
     get = () => {
@@ -26,9 +37,11 @@ export class Input extends Model {
                 return this.state.vout
             return -1
         }
-        const signature = (): string => this.state.sign || ''
+        const script = () => new ScriptEngineV2(this.toRaw().default().script_sig)
 
-        return { vout, prevTxHash, signature }
+        const scriptBase64 = (): string[] => this.state.script_sig
+
+        return { vout, prevTxHash, scriptBase64, script }
     }
 
     toRaw = () => {
@@ -36,7 +49,7 @@ export class Input extends Model {
             return {
                 prev_transaction_hash: Buffer.from(this.get().prevTxHash(), 'hex'),
                 vout: EncodeInt(BigInt(this.get().vout())),
-                sign: Buffer.from(this.get().signature(), 'hex')
+                script_sig: ToArrayBufferFromB64(this.get().scriptBase64())
             }
         }
 
@@ -45,7 +58,7 @@ export class Input extends Model {
             return {
                 prev_transaction_hash: ByteArrayToB64(raw.prev_transaction_hash),
                 vout: ByteArrayToB64(raw.vout), 
-                sign: ByteArrayToB64(raw.sign)
+                script_sig: DoubleByteArrayToB64Array(raw.script_sig)
             }
         }
         
@@ -59,4 +72,14 @@ export class InputList extends Collection {
     constructor(initialState: any, options: any){
         super(initialState, [Input, InputList], options)
     }
+
+    size = (): number => {
+		let size = 0
+		for (let i = 0; i < this.count(); i++){
+			const out = this.nodeAt(i) as Input
+			size += out.size()
+		}
+		return size + this.count()
+	}
+
 }

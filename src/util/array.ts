@@ -5,3 +5,19 @@ export const NewIntArrayFilled = (length: number, from: number): number[] => {
     }
     return ret
 }
+
+export const IsInNumberArray = (array: number[], n: number) => {
+    for (let e of array){
+        if (e == n)
+            return true
+    }
+    return false
+}
+
+export const CalcTotalLengthDoubleByteArray = (array: Buffer[]) => {
+    let total = array.length
+    for (let e of array){
+        total += e.length
+    }
+    return total
+}
