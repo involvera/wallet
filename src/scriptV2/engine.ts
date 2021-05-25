@@ -159,28 +159,34 @@ export class ScriptEngineV2 {
         }
         const contentOPCode = () => byte(OP_CONTENT)
 
-        const lockScript = (pubKeyHash: Buffer) => {
+        const lockScript = (pubKeyHash: Buffer): ScriptEngineV2 => {
             if (pubKeyHash.length != PUBKH_LENGTH) {
                 throw WRONG_PUBKH_FORMAT
             }
             byte(OP_DUP) && byte(OP_HASH160) && bytes(pubKeyHash) && byte(OP_EQUALVERIFY) && byte(OP_CHECKSIG)
+            return this
+
         }
 
-        const unlockScript = (signature: Buffer, pubKey: Buffer) => {
+        const unlockScript = (signature: Buffer, pubKey: Buffer): ScriptEngineV2 => {
             if (pubKey.length != PUBKH_LENGTH) {
                 throw WRONG_PUBK_FORMAT
             }
             bytes(signature) && bytes(pubKey)
+            return this
+
         }
 
-        const applicationProposalScript = (contentNonce: number, contentPKH: Buffer) => {
+        const applicationProposalScript = (contentNonce: number, contentPKH: Buffer): ScriptEngineV2 => {
             targetableContent(contentNonce, contentPKH)
             byte(PROPOSAL_APPLICATION__CAT_DEPTH_2)
             byte(PROPOSAL__CAT_DEPTH_1)
             contentOPCode()
+            return this
+
         }
 
-        const costProposalScript = (contentNonce: number, contentPKH: Buffer, threadCost: BigInt, proposalCost: BigInt) => {
+        const costProposalScript = (contentNonce: number, contentPKH: Buffer, threadCost: BigInt, proposalCost: BigInt): ScriptEngineV2 => {
             targetableContent(contentNonce, contentPKH)
             if (threadCost > BigInt(0)){
                 bytes(EncodeInt64(threadCost))
@@ -193,39 +199,48 @@ export class ScriptEngineV2 {
             byte(PROPOSAL_COST__CAT_DEPTH_2)
             byte(PROPOSAL__CAT_DEPTH_1)
             contentOPCode()
+            return this
+
         }
 
-        const constitutionProposalScript = (contentNonce: number, contentPKH: Buffer, constitution: TConstitution) => {
+        const constitutionProposalScript = (contentNonce: number, contentPKH: Buffer, constitution: TConstitution): ScriptEngineV2 => {
             targetableContent(contentNonce, contentPKH)
             bytes(SerialConstitution(constitution))
             byte(PROPOSAL_CONSTITUTION__CAT_DEPTH_2)
             byte(PROPOSAL__CAT_DEPTH_1)
             contentOPCode()
+            return this
+
         }
 
-        const threadScript = (contentNonce: number, contentPKH: Buffer) => {
+        const threadScript = (contentNonce: number, contentPKH: Buffer): ScriptEngineV2 => {
             targetableContent(contentNonce, contentPKH)
             byte(THREAD_THREAD__CAT_DEPTH_2)
             byte(THREAD__CAT_DEPTH_1)
             contentOPCode()
+            return this
+
         }
 
-        const rethreadScript = (contentNonce: number, contentPKH: Buffer, targetedThreadPKH: Buffer) => {
+        const rethreadScript = (contentNonce: number, contentPKH: Buffer, targetedThreadPKH: Buffer): ScriptEngineV2 => {
             targetableContent(contentNonce, contentPKH)
             bytes(targetedThreadPKH)
             byte(THREAD_RETHREAD__CAT_DEPTH_2)
             byte(THREAD__CAT_DEPTH_1)
             contentOPCode()
+            return this
+
         }
 
-        const rewardScript = (targetedThreadPKH: Buffer, voutRedistribution: number) => {
+        const rewardScript = (targetedThreadPKH: Buffer, voutRedistribution: number): ScriptEngineV2 => {
             bytes(targetedThreadPKH)
             byte(voutRedistribution as TByte)
             byte(REWARD__CAT_DEPTH_1)
             contentOPCode()
+            return this
         }
 
-        const voteScript = (targetedProposalPKH: Buffer, accept: boolean) => {
+        const voteScript = (targetedProposalPKH: Buffer, accept: boolean): ScriptEngineV2 => {
             let voteInt = VOTE_DECLINED__CAT_DEPTH_2
             if (accept) {
                 voteInt = VOTE_ACCEPTED__CAT_DEPTH_2
@@ -234,6 +249,7 @@ export class ScriptEngineV2 {
             byte(voteInt as TByte)
             byte(VOTE__CAT_DEPTH_1)
             contentOPCode()
+            return this
         }
 
         return {
@@ -529,15 +545,19 @@ export class ScriptEngineV2 {
             return false
         }
 
+        const targetableContent = (): boolean => threadDepth1Script() || proposalScript()
+        const targetedContent = (): boolean => rewardScript() || voteScript() || rethreadScript()
+
+
         return {
-                contentCategoryAtIndex,
-                opcodeAtIndex,
-                indexContentCategory,
-                indexOpcode,
-                indexPKH,
-                indexSignature,
-                indexPubKey,
-                indexContentNonce,
+                // contentCategoryAtIndex,
+                // opcodeAtIndex,
+                // indexContentCategory,
+                // indexOpcode,
+                // indexPKH,
+                // indexSignature,
+                // indexPubKey,
+                // indexContentNonce,
             lockScript,
             unlockingScript,
             contentScript,
@@ -551,7 +571,9 @@ export class ScriptEngineV2 {
             rewardScript,
             voteScript,
             declinedVoteScript,
-            acceptedVoteScript
+            acceptedVoteScript,
+            targetableContent,
+            targetedContent
         }
 
 

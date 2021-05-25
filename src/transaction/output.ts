@@ -71,21 +71,21 @@ export class Output extends Model {
 
 		const script = () => new ScriptEngineV2(this.toRaw().default().script)
  		
-		const contentPKH = (): string => {
+		const contentPKH = (): Buffer => {
 			const s = this.get().script()
 			if (s.is().targetableContent())
-				return s.parse().PKHFromContentScript().toString('hex')
+				return s.parse().PKHFromContentScript()
 			throw NOT_A_TARGETABLE_CONTENT
 		}
 
-		const targetedContentPKH = (): string => {
+		const targetedContentPKH = (): Buffer => {
 			const s = this.get().script()
 			if (s.is().targetedContent())
-				return s.parse().targetPKHFromContentScript().toString('hex')
+				return s.parse().targetPKHFromContentScript()
 			throw NOT_A_TARGETING_CONTENT
 		}
 
-		const pubKH = (): string => this.get().script().parse().PKHFromLockScript().toString('hex')
+		const pubKH = (): Buffer => this.get().script().parse().PKHFromLockScript()
 
 		// const contentUUID = (): string => PubKeyHashHexToUUID(pubKHHexContent())
 
@@ -131,10 +131,10 @@ export class OutputList extends Collection {
 		return size + this.count()
 	}
 
-	containsToPubKH = (pubKH: string) => {
+	containsToPubKH = (pubKH: Buffer) => {
 		for (let i = 0; i < this.count(); i++){
 			const out = this.nodeAt(i) as Output
-			if (out.get().pubKH() === pubKH)
+			if (out.get().pubKH().toString('hex') === pubKH.toString('hex'))
 				return true
 		}
 		return false
