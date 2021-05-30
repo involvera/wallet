@@ -3,11 +3,10 @@ import { ScriptEngineV2 } from '../scriptV2'
 import { ByteArrayToB64, EncodeInt, CalcTotalLengthDoubleByteArray } from '../util'
 import { DoubleByteArrayToB64Array, ToArrayBufferFromB64 } from '../util/bytes'
 
-
 export interface IInput {
     prev_transaction_hash: string
     vout: number
-    script_sig: Buffer[]
+    script_sig: string[]
 }
 
 export interface IInputRaw {
@@ -37,9 +36,8 @@ export class Input extends Model {
                 return this.state.vout
             return -1
         }
-        const script = () => new ScriptEngineV2(this.toRaw().default().script_sig)
-
         const scriptBase64 = (): string[] => this.state.script_sig
+        const script = () => new ScriptEngineV2(ToArrayBufferFromB64(scriptBase64()))
 
         return { vout, prevTxHash, scriptBase64, script }
     }
@@ -49,7 +47,7 @@ export class Input extends Model {
             return {
                 prev_transaction_hash: Buffer.from(this.get().prevTxHash(), 'hex'),
                 vout: EncodeInt(BigInt(this.get().vout())),
-                script_sig: ToArrayBufferFromB64(this.get().scriptBase64())
+                script_sig: this.get().script().bytes()
             }
         }
 
@@ -58,7 +56,7 @@ export class Input extends Model {
             return {
                 prev_transaction_hash: ByteArrayToB64(raw.prev_transaction_hash),
                 vout: ByteArrayToB64(raw.vout), 
-                script_sig: DoubleByteArrayToB64Array(raw.script_sig)
+                script_sig: this.get().script().base64()
             }
         }
         

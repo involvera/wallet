@@ -71,7 +71,7 @@ export class UTXOList extends Collection {
     toInputs = () => {
         return new InputList(
             this.map((utxo: UTXO) => {
-                return {prev_transaction_hash: utxo.get().txID(), vout: utxo.get().idx(), sign: ''}
+                return {prev_transaction_hash: utxo.get().txID(), vout: utxo.get().idx(), script_sig: Buffer.from([]) }
             }),
             {}
         )

@@ -9,13 +9,13 @@ export default class Info extends Model {
         super(initialState, options)
     }
     
-    iterateTotalContent = (n: number) => this.setState({total_content: this.get().countTotalContent() + n})
+    iterateTotalContent = (n: number) => this.setState({content_nonce: this.get().contentNonce() + n})
 
     get = () => {
-        const countTotalContent = (): number => this.state.total_content 
+        const contentNonce = (): number => this.state.content_nonce 
         const balance = (): number => this.state.balance
 
-        return { countTotalContent, balance }
+        return { contentNonce, balance }
     }
 
     fetch = async (headerSig: IHeaderSignature) => {

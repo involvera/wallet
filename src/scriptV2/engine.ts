@@ -5,8 +5,8 @@ import {
     THREAD_SCRIPT_LENGTH, VOTE_SCRIPT_LENGTH } from "../constant"
 
 import { WRONG_PUBK_FORMAT, WRONG_PUBKH_FORMAT } from "../constant/errors"
-import { DecodeInt, EncodeInt, EncodeInt64, IsInNumberArray } from "../util"
-import { OPCODE_LIST, OP_CHECKSIG, OP_CONTENT, OP_DUP, OP_EQUALVERIFY, OP_HASH160 } from './opcode'
+import { DecodeInt, DoubleByteArrayToB64Array, EncodeInt, EncodeInt64, IsInNumberArray, Sha256 } from "../util"
+import { OpcodeToString, OPCODE_LIST, OP_CHECKSIG, OP_CONTENT, OP_DUP, OP_EQUALVERIFY, OP_HASH160 } from './opcode'
 
 import { 
     PROPOSAL_APPLICATION__CAT_DEPTH_2, PROPOSAL__CAT_DEPTH_1, 
@@ -15,7 +15,7 @@ import {
     THREAD_THREAD__CAT_DEPTH_2, THREAD__CAT_DEPTH_1,
     THREAD_RETHREAD__CAT_DEPTH_2, REWARD__CAT_DEPTH_1,
     VOTE_DECLINED__CAT_DEPTH_2, VOTE_ACCEPTED__CAT_DEPTH_2,
-    VOTE__CAT_DEPTH_1, TOTAL_MAX_LENGTH, COST_PROPOSAL_CAT_LIST, PROPOSAL_CODE, THREAD_CODE, REWARD_CODE, VOTE_CODE, EMPTY_CODE
+    VOTE__CAT_DEPTH_1, TOTAL_MAX_LENGTH, COST_PROPOSAL_CAT_LIST, PROPOSAL_CODE, THREAD_CODE, REWARD_CODE, VOTE_CODE, EMPTY_CODE, CategoryDepth3ToString, CategoryDepth2ToString, CategoryDepth1ToString
 } from './content'
 
 import { 
@@ -110,8 +110,10 @@ export class ScriptEngineV2 {
         this._script = script
     }
 
-    public length = (): number => this.get().length
-    public get = ():  Buffer[] => this._script
+    public length = (): number => this.bytes().length
+    public bytes = ():  Buffer[] => this._script
+    public base64 = (): string[] => DoubleByteArrayToB64Array(this.bytes())
+
     public set = (script: Buffer[]) => this._script = script
 
     public kind = () => {
@@ -144,11 +146,11 @@ export class ScriptEngineV2 {
     public append = () => {
         
         const byte = (b: TByte) => {
-            this.get().push(Buffer.from([b]))
+            this.bytes().push(Buffer.from([b]))
             return true
         }
         const bytes = (bytes: Buffer) => {
-            this.get().push(bytes)
+            this.bytes().push(bytes)
             return true
         }
 
@@ -169,7 +171,7 @@ export class ScriptEngineV2 {
         }
 
         const unlockScript = (signature: Buffer, pubKey: Buffer): ScriptEngineV2 => {
-            if (pubKey.length != PUBKH_LENGTH) {
+            if (pubKey.length != PUBK_LENGTH) {
                 throw WRONG_PUBK_FORMAT
             }
             bytes(signature) && bytes(pubKey)
@@ -269,7 +271,7 @@ export class ScriptEngineV2 {
     public parse = () => {
         const PKHFromLockScript = (): Buffer => {
             if(this.is().lockScript())
-                return this.get()[2]
+                return this.bytes()[2]
             if (this.is().contentScript())
                 return Buffer.from(PUBKEY_H_BURNER, 'hex')
             throw WRONG_LOCK_SCRIPT
@@ -277,24 +279,24 @@ export class ScriptEngineV2 {
 
         const PKHFromContentScript = (): Buffer => {
             if (this.is().threadDepth1Script() || this.is().proposalScript()){
-                return this.get()[1]
+                return this.bytes()[1]
             }
             throw NOT_A_TARGETABLE_CONTENT
         }
 
         const targetPKHFromContentScript = (): Buffer => {
             if (this.is().voteScript() || this.is().rewardScript()){
-                this.get()[0]
+                this.bytes()[0]
             }
             if (this.is().rethreadScript()){
-                this.get()[2]
+                this.bytes()[2]
             }
             throw NOT_A_TARGETING_CONTENT
         }
 
         const constitution = (): TConstitution => {
             if (this.is().constitutionProposalScript()){
-                return DeserializeConstitution(this.get()[2])
+                return DeserializeConstitution(this.bytes()[2])
             }
             throw NOT_A_CONSTITUTION_PROPOSAL
         }
@@ -304,9 +306,9 @@ export class ScriptEngineV2 {
                 let thread = BigInt(-1)
                 let proposal = BigInt(-1)
                 let i = 2
-                while (this.get()[i].length == 8){
-                    const price = DecodeInt(this.get()[i], false)
-                    const cat = this.get()[i][0]
+                while (this.bytes()[i].length == 8){
+                    const price = DecodeInt(this.bytes()[i], false)
+                    const cat = this.bytes()[i+1][0]
                     if (cat == PROPOSAL_COST_PROPOSAL__CAT_DEPTH_3)
                         proposal = BigInt(price)
                     if (cat == PROPOSAL_COST_THREAD__CAT_DEPTH_3)
@@ -322,11 +324,10 @@ export class ScriptEngineV2 {
 
         const distributionVout = (): TByte => {
             if (this.is().rewardScript()){
-                return this.get()[1][0] as TByte
+                return this.bytes()[1][0] as TByte
             }
             throw NOT_A_REWARD_SCRIPT
         }
-
 
         return {
             PKHFromLockScript,
@@ -338,9 +339,10 @@ export class ScriptEngineV2 {
         }
     }
 
-    public is = () => {
+
+    private _is = () => {
         const contentCategoryAtIndex = (index: TByte): boolean => {
-            const e = this.get()[index]
+            const e = this.bytes()[index]
             if (!e)
                 return false
             if (e.length == 1) 
@@ -349,7 +351,7 @@ export class ScriptEngineV2 {
         }
 
         const opcodeAtIndex = (index: TByte): boolean => {
-            const e = this.get()[index]
+            const e = this.bytes()[index]
             if (!e)
                 return false
             if (e.length == 1){
@@ -364,41 +366,41 @@ export class ScriptEngineV2 {
 
         const indexContentCategory = (index: TByte, category: number): boolean => {
             if (contentCategoryAtIndex(index)){
-                return this.get()[index][0] == category
+                return this.bytes()[index][0] == category
             }
             return false
         }
 
         const indexOpcode = (index: TByte, opcode: number): boolean => {
             if (opcodeAtIndex(index)){
-                return this.get()[index][0] == opcode
+                return this.bytes()[index][0] == opcode
             }
             return false
         }
 
         const indexPKH = (index: TByte): boolean => {
-            const e = this.get()[index]
+            const e = this.bytes()[index]
             if (!e)
                 return false
             return e.length == PUBKH_LENGTH
         }
 
         const indexSignature = (index: TByte): boolean => {
-            const e = this.get()[index]
+            const e = this.bytes()[index]
             if (!e)
                 return false
             return e.length >= 66 && e.length <= 72
         }
 
         const indexPubKey = (index: TByte): boolean => {
-            const e = this.get()[index]
+            const e = this.bytes()[index]
             if (!e)
                 return false
             return e.length == PUBK_LENGTH
         }
 
         const indexContentNonce = (index: TByte): boolean => {
-            const e = this.get()[index]
+            const e = this.bytes()[index]
             if (!e)
                 return false
             const nonce = DecodeInt(e, false)
@@ -407,6 +409,59 @@ export class ScriptEngineV2 {
             }
             return true
         }
+
+        return {
+            contentCategoryAtIndex,
+            opcodeAtIndex,
+            indexContentCategory,
+            indexContentNonce,
+            indexOpcode,
+            indexPKH,
+            indexPubKey,
+            indexSignature,
+        }
+    }
+
+    private _parse = () => {
+        const nonceAtIndex = (index: TByte): Number => {
+            if (this._is().indexContentNonce(index)){
+                return Number(DecodeInt(this.bytes()[index], false))
+            }
+            throw new Error("Not a content nonce")
+        }
+
+        const contentCategoryAtIndex = (index: TByte): TByte => {
+            if (this._is().contentCategoryAtIndex(index)){
+                return this.bytes()[index][0] as TByte
+            }
+            throw new Error("Not a content category")
+        }
+
+        const opcodeAtIndex = (index: TByte): TByte => {
+            if (this._is().opcodeAtIndex(index)){
+                return this.bytes()[index][0] as TByte
+            }
+            throw new Error("Not an opcode")
+        } 
+
+        return { 
+            nonceAtIndex,
+            contentCategoryAtIndex,
+            opcodeAtIndex
+        }
+    }
+
+    public is = () => {
+    
+        const {
+            indexContentCategory,
+            indexContentNonce,
+            indexOpcode,
+            indexPKH,
+            indexPubKey,
+            indexSignature,
+        } = this._is()
+
 
         const lockScript = (): boolean => {
             if (this.length() == LOCK_SCRIPT_LENGTH){
@@ -434,7 +489,7 @@ export class ScriptEngineV2 {
                 return false
             }
             if (this.length() >= MIN_COST_PROPOSAL_SCRIPT_LENGTH && this.length() <= MAX_COST_PROPOSAL_SCRIPT_LENGTH){
-                indexContentCategory(this.length() - 2 as TByte, PROPOSAL__CAT_DEPTH_1) && indexPKH(1) && indexContentNonce(0)
+                return indexContentCategory(this.length() - 2 as TByte, PROPOSAL__CAT_DEPTH_1) && indexPKH(1) && indexContentNonce(0)
             }
             return false
         }
@@ -454,13 +509,13 @@ export class ScriptEngineV2 {
                 return false
             }
             if (this.length() == MIN_COST_PROPOSAL_SCRIPT_LENGTH || this.length() == MAX_COST_PROPOSAL_SCRIPT_LENGTH){
-               let i = 2
-               while (this.get()[i].length == 8){
-                   const cost = DecodeInt(this.get()[i], false)
-                    if (cost <= BigInt(0) || cost > BigInt(MAX_UNIT_WRITING_COST)){
+                let i = 2
+               while (this.bytes()[i].length == 8){
+                   const cost = DecodeInt(this.bytes()[i], false)
+                   if (cost <= BigInt(0) || cost > BigInt(MAX_UNIT_WRITING_COST)){
                         return false
                     }
-                   const cat = this.get()[i][0]
+                   const cat = this.bytes()[i+1][0]
                    if (!IsInNumberArray(COST_PROPOSAL_CAT_LIST, cat)) {
                        return false
                    }
@@ -476,7 +531,7 @@ export class ScriptEngineV2 {
                 return false
             }
             if (this.length() == CONSTITUTION_PROPOSAL_SCRIPT_LENGTH){
-                return DeserializeConstitution(this.get()[2]).toString().split('\n').length == MAX_CONSTITUTION_RULE * 2
+                return DeserializeConstitution(this.bytes()[2]).toString().split('\n').length == MAX_CONSTITUTION_RULE * 2
             }
             return false
         }
@@ -510,7 +565,7 @@ export class ScriptEngineV2 {
                 return false
             }
             if (this.length() == REWARD_SCRIPT_LENGTH){
-                const voutRedistribution = this.get()[1][0]
+                const voutRedistribution = this.bytes()[1][0]
                 if (voutRedistribution < 0 || voutRedistribution > MAX_TX_OUTPUT-1){
                     return false
                 }
@@ -550,14 +605,6 @@ export class ScriptEngineV2 {
 
 
         return {
-                // contentCategoryAtIndex,
-                // opcodeAtIndex,
-                // indexContentCategory,
-                // indexOpcode,
-                // indexPKH,
-                // indexSignature,
-                // indexPubKey,
-                // indexContentNonce,
             lockScript,
             unlockingScript,
             contentScript,
@@ -575,12 +622,64 @@ export class ScriptEngineV2 {
             targetableContent,
             targetedContent
         }
-
-
     }
 
 
+    toString = () => {
 
+        const {
+            contentCategoryAtIndex,
+            opcodeAtIndex
+        } = this._parse()
 
+        if (this.is().contentScript()){
+            let i = 0
+            let str = ''
+            if (this.is().proposalScript()){
+                str = `NONCE_${this._parse().nonceAtIndex(0)} PKH_${this.bytes()[1].toString('hex')} `
+                i = 2
+                if (this.is().costProposalScript()){
+                    while (this.bytes()[i].length == 8){
+                        str += `${DecodeInt(this.bytes()[i], false).toLocaleString()} ${CategoryDepth3ToString(PROPOSAL__CAT_DEPTH_1, PROPOSAL_COST__CAT_DEPTH_2, contentCategoryAtIndex(i+1 as TByte))} `
+                        i += 2
+                    }
+                } else if (this.is().constitutionProposalScript()){
+                    str += `CONSTITUTION_SHA256_${Sha256(this.bytes()[i])} `
+                    i++
+                }
+                str += `${CategoryDepth2ToString(contentCategoryAtIndex(i+1 as TByte), contentCategoryAtIndex(i as TByte))} `
+                i++
+            } else if (this.is().threadDepth1Script()){
+                str = `NONCE: ${this._parse().nonceAtIndex(0)} PKH: ${this.bytes()[1].toString('hex')} `
+                i = 2
+                if (this.is().rethreadScript()){
+                    str += `TARGET_CONTENT_PKH_${this.bytes()[i].toString('hex')} ` 
+                    i++
+                }
+                str += `${CategoryDepth2ToString(contentCategoryAtIndex(i+1 as TByte), contentCategoryAtIndex(i as TByte))} `
+                i++
+            } else if (this.is().rewardScript()){
+                str = `THREAD_PKH_${this.bytes()[0].toString('hex')} VOUT_REDIS_${Number(this.bytes()[i][0])}`
+                str += ` ${CategoryDepth2ToString( REWARD__CAT_DEPTH_1, contentCategoryAtIndex(1) )} `
+                i = 2
+            } else if (this.is().voteScript()){
+                str = `PROPOSAL_PKH_${this.bytes()[0].toString('hex')}`
+                str += ` ${CategoryDepth2ToString( VOTE__CAT_DEPTH_1, contentCategoryAtIndex(1) )} `
+                i = 2
+            }
 
+            str += `${CategoryDepth1ToString(contentCategoryAtIndex(i as TByte))} `
+            i++
+            str += OpcodeToString(opcodeAtIndex(i as TByte))
+            return str
+        }
+
+        if (this.is().lockScript()){
+            return `${OpcodeToString(opcodeAtIndex(0))} ${OpcodeToString(opcodeAtIndex(1))} ${this.bytes()[2].toString('hex')} ${OpcodeToString(opcodeAtIndex(3))} ${OpcodeToString(opcodeAtIndex(4))}`            
+        }
+
+        if (this.is().unlockingScript()){
+            return `SIGNATURE_${this.bytes()[0].toString('hex')} PUBLIC_KEY_${this.bytes()[1].toString('hex')}`
+        }
+    }
 }

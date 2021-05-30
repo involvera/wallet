@@ -1,16 +1,17 @@
 import { Model } from 'acey'
 import { IOutput, OutputList } from './output'
 import { IInput, Input, InputList } from './input'
-import { ByteArrayToB64, CalcTotalLengthDoubleByteArray, EncodeInt, EncodeInt64, IsUUID, Sha256 } from '../util'
+import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256} from '../util'
 import { Wallet } from '../wallet/wallet'
 import { IInputRaw } from './input'
 import { IOutputRaw, Output } from './output'
 import { UTXO, UTXOList } from './utxo'
 import axios from 'axios'
 
-import { BILLED_SIGNATURE_LENGTH, PUBK_LENGTH } from '../constant'
+import { BILLED_SIGNATURE_LENGTH, PUBK_LENGTH, TXID_LENGTH } from '../constant'
 import config from '../config'
 import { UUIDToPubKeyHashHex } from '../util/hash'
+import { ScriptEngineV2 } from '../scriptV2'
 
 export interface ITransaction {
     lh:      number
@@ -78,6 +79,7 @@ export class Transaction extends Model {
             }
             return response
         } catch (e){
+            console.log(e.response.data)
             throw new Error(e)
         }
     }
@@ -85,8 +87,6 @@ export class Transaction extends Model {
     isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as Input).get().prevTxHash().length == 0
 
     sign = async (utxos: UTXOList, wallets: Wallet[]) => {
-        try {
-
             const utxos2 = new UTXOList([], undefined)
             for (let i = 0; i < wallets.length; i++){
                 const w = wallets[i]
@@ -104,20 +104,21 @@ export class Transaction extends Model {
             for (let i = 0; i < inputs.count(); i++){
                 const prevTx = (utxos.nodeAt(i) as UTXO).get().tx() as Transaction
                 const input = this.get().inputs().nodeAt(i) as Input
-                let signature = ''
+                
+                let signature: Buffer = Buffer.from([])
+                let pubkey: Buffer = Buffer.from([])
+
                 for (let i = 0; i < wallets.length; i++){
                     const w = wallets[i]
                     const exist = w.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash(), input.get().vout())
                     if (exist){
-                        signature = w.sign().value(prevTx.get().hash())                
+                        signature = Buffer.from(w.sign().value(prevTx.get().hash()))
+                        pubkey = w.keys().get().pub()
                     }
                 }
-                input.setState({ sign: Buffer.from(signature).toString('hex') })
+                input.setState({ script_sig: new ScriptEngineV2([]).append().unlockScript(signature, pubkey ).base64()  })
             }
             return true
-        } catch (e) {
-            throw new Error(e);            
-        }
     }
 
     get = () => {
@@ -130,13 +131,16 @@ export class Transaction extends Model {
 
         const billedSize = (): number => {
             let size = this.size()
+            size -= this.get().inputs().size()
 
-            this.get().inputs().forEach((m: Input) => {
-                size -= CalcTotalLengthDoubleByteArray(m.toRaw().default().script_sig)
-                size += m.get().script().length()
-            })
-            
-            size += this.get().inputs().count() * (BILLED_SIGNATURE_LENGTH + PUBK_LENGTH)
+            const countInputs = this.get().inputs().count()
+            const scriptSize = countInputs + (countInputs * PUBK_LENGTH) + (countInputs * BILLED_SIGNATURE_LENGTH) + (countInputs * 2)
+            const voutSize = countInputs * 4
+            const prevTxHashSize = countInputs * TXID_LENGTH
+
+            const billedInputsSize = scriptSize + voutSize + prevTxHashSize
+            size += billedInputsSize
+
             return size
         }
 
@@ -191,5 +195,18 @@ export class Transaction extends Model {
 
         return { default: def, base64 }
     }
+
+    toString = () => {
+        const plain = this.to().plain()
+        for (let i = 0; i < plain.inputs.length; i++){
+            plain.inputs[i].script_sig = (this.get().inputs().nodeAt(i) as Input).get().script().toString()
+        }
+
+        for (let i = 0; i < plain.outputs.length; i++){
+            plain.outputs[i].script = (this.get().outputs().nodeAt(i) as Output).get().script().toString()
+        }
+        return plain
+    }
+
 }
 

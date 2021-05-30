@@ -3,11 +3,12 @@ import { MAX_IS_2_POW_53, NOT_A_TARGETABLE_CONTENT, NOT_A_TARGETING_CONTENT } fr
 import  { ScriptEngineV2 } from '../scriptV2'
 import { ByteArrayToB64, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeInt64, CalcTotalLengthDoubleByteArray } from '../util'
 import { ToArrayBufferFromB64 } from '../util/bytes'
+import { PubKeyHashHexToUUID } from '../util/hash'
 
 export interface IOutput {
 	input_src_idxs: number[]
 	value:        number
-	script:				Buffer[]
+	script:				string[]
 }
 
 export interface IOutputRaw {
@@ -18,13 +19,13 @@ export interface IOutputRaw {
 
 export class Output extends Model {
 
-	static NewOutput = (value: number, InputSrcIdxs: number[], script: Buffer[]) => {
+	static NewOutput = (value: number, InputSrcIdxs: number[], script: string[]) => {
 		if (value > Math.pow(2, 53))
 			throw MAX_IS_2_POW_53
 		
 		const out: IOutput = {
-			value,
 			input_src_idxs: InputSrcIdxs,
+			value,
 			script
 		}
 		return new Output(out, {})
@@ -49,7 +50,7 @@ export class Output extends Model {
 			return {
 				input_src_idxs: EncodeArrayInt(this.get().inputSourceIdxs()),
 				value: EncodeInt64(this.get().value()),
-				script: ToArrayBufferFromB64(this.get().scriptBase64())
+				script: this.get().script().bytes()
 			}
 		}
 
@@ -58,7 +59,7 @@ export class Output extends Model {
 			return {
 				input_src_idxs: DoubleByteArrayToB64Array(raw.input_src_idxs),
 				value: ByteArrayToB64(raw.value), 
-				script: DoubleByteArrayToB64Array(raw.script)
+				script: this.get().script().base64()
 			}
 		}
 
@@ -69,7 +70,8 @@ export class Output extends Model {
 		const value = (): BigInt => this.state.value 
 		const inputSourceIdxs = (): number[] => this.state.input_src_idxs
 
-		const script = () => new ScriptEngineV2(this.toRaw().default().script)
+		const scriptBase64 = (): string[] => this.state.script
+		const script = () => new ScriptEngineV2(ToArrayBufferFromB64(scriptBase64()))
  		
 		const contentPKH = (): Buffer => {
 			const s = this.get().script()
@@ -86,15 +88,11 @@ export class Output extends Model {
 		}
 
 		const pubKH = (): Buffer => this.get().script().parse().PKHFromLockScript()
-
-		// const contentUUID = (): string => PubKeyHashHexToUUID(pubKHHexContent())
-
-
-		const scriptBase64 = (): string[] => this.state.script
+		const contentUUID = (): string => PubKeyHashHexToUUID(contentPKH().toString('hex'))
 
 		return {
 			value, inputSourceIdxs, script, scriptBase64,
-			contentPKH, pubKH, targetedContentPKH
+			contentPKH, pubKH, targetedContentPKH, contentUUID
 		}
 	}
 

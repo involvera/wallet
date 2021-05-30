@@ -1,7 +1,6 @@
-import { TByte } from "../constant";
 import { CANT_SEND_0_VALUE, LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
 import { ScriptEngineV2 } from "../scriptV2";
-import { InputList, Output, OutputList, Transaction, UTXO, UTXOList } from "../transaction"
+import {  InputList, Output, OutputList, Transaction, UTXO, UTXOList } from "../transaction"
 import { PubKeyHashFromAddress } from "../util";
 import { CalculateOutputValueFromMelted } from "../util/output";
 import { Wallet } from './'
@@ -39,29 +38,34 @@ export default class TxBuild {
         const lockScript = new ScriptEngineV2([])
         lockScript.append().lockScript(PubKeyHashFromAddress(this.wallets[0].fees().get().addressToSend()))
         this.amount_required.push(fees)
-        this.scripts.push(lockScript.get())       
+        this.scripts.push(lockScript.bytes())       
     }
 
-    private _removeLastUTXO = () => {
+    private _removeLastOutput = () => {
         this.scripts.pop()
         this.amount_required.pop()
     }
 
     private _makeTxWithFees = (tx: Transaction): UTXOList => {
         const fees = tx.get().billedSize() * this.wallets[0].fees().get().feePerByte()
+        
         this._addTXFeesToBuild(fees)
         const { utxos, outputs } = this._generateMeltingPuts()
         const inputs = utxos.toInputs()
+
         const shouldRecall = inputs.count() != tx.get().inputs().count() || outputs.count() != tx.get().outputs().count()
+
         tx.setState({ 
             inputs: new InputList(inputs.to().plain(), tx.kids()),
             outputs: new OutputList(outputs.to().plain(), tx.kids()),
         })
 
         if (shouldRecall){
-            this._removeLastUTXO()
+            this._removeLastOutput()
             return this._makeTxWithFees(tx)
         }
+
+
         return utxos
     }
 
@@ -93,10 +97,11 @@ export default class TxBuild {
         
         let tx = new Transaction({
             lh: this.wallets[0].cch().get().lastHeight(),
-            t: Math.floor((new Date().getTime() / 1000)),
+            t: Date.now(),
             inputs: utxos.toInputs().to().plain(), 
             outputs: outputs.to().plain(),
         }, {})
+
 
         if (await tx.sign(this._makeTxWithFees(tx), this.wallets)){
             return tx
@@ -134,8 +139,8 @@ export default class TxBuild {
 
         const pushOutput = (toIndex: number, fromIdx: number, toIdx: number) => {
             const inputIdxLength = toIdx - fromIdx + 1
-            const script = this.scripts[toIndex]
-            outputs.push(Output.NewOutput(currentRealAmountToSend, newIntArrayFilled(inputIdxLength, fromIdx), script).to().plain())
+            const script = new ScriptEngineV2(this.scripts[toIndex])
+            outputs.push(Output.NewOutput(currentRealAmountToSend, newIntArrayFilled(inputIdxLength, fromIdx), script.base64() ).to().plain())
         }
 
         const pushSurplusOutput = (lastUTXOIdx: number) => {
@@ -143,7 +148,7 @@ export default class TxBuild {
             script.append().lockScript(this.wallets[0].keys().get().pubHash())
             
             const totalUsed = outputs.get().totalValue()
-            outputs.push(Output.NewOutput(Number(utxos.get().totalValue()-totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), script.get()).to().plain())
+            outputs.push(Output.NewOutput(Number(utxos.get().totalValue()-totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), script.base64()).to().plain())
         }
 
         const totalInEscrow = utxos.get().totalMeltedValue(CCHList)
