@@ -169,14 +169,12 @@ export class ScriptEngineV2 {
             return this
 
         }
-
         const unlockScript = (signature: Buffer, pubKey: Buffer): ScriptEngineV2 => {
             if (pubKey.length != PUBK_LENGTH) {
                 throw WRONG_PUBK_FORMAT
             }
             bytes(signature) && bytes(pubKey)
             return this
-
         }
 
         const applicationProposalScript = (contentNonce: number, contentPKH: Buffer): ScriptEngineV2 => {
@@ -185,7 +183,6 @@ export class ScriptEngineV2 {
             byte(PROPOSAL__CAT_DEPTH_1)
             contentOPCode()
             return this
-
         }
 
         const costProposalScript = (contentNonce: number, contentPKH: Buffer, threadCost: BigInt, proposalCost: BigInt): ScriptEngineV2 => {
@@ -202,7 +199,6 @@ export class ScriptEngineV2 {
             byte(PROPOSAL__CAT_DEPTH_1)
             contentOPCode()
             return this
-
         }
 
         const constitutionProposalScript = (contentNonce: number, contentPKH: Buffer, constitution: TConstitution): ScriptEngineV2 => {
@@ -212,7 +208,6 @@ export class ScriptEngineV2 {
             byte(PROPOSAL__CAT_DEPTH_1)
             contentOPCode()
             return this
-
         }
 
         const threadScript = (contentNonce: number, contentPKH: Buffer): ScriptEngineV2 => {
@@ -221,7 +216,6 @@ export class ScriptEngineV2 {
             byte(THREAD__CAT_DEPTH_1)
             contentOPCode()
             return this
-
         }
 
         const rethreadScript = (contentNonce: number, contentPKH: Buffer, targetedThreadPKH: Buffer): ScriptEngineV2 => {
@@ -231,7 +225,6 @@ export class ScriptEngineV2 {
             byte(THREAD__CAT_DEPTH_1)
             contentOPCode()
             return this
-
         }
 
         const rewardScript = (targetedThreadPKH: Buffer, voutRedistribution: number): ScriptEngineV2 => {
@@ -244,9 +237,9 @@ export class ScriptEngineV2 {
 
         const voteScript = (targetedProposalPKH: Buffer, accept: boolean): ScriptEngineV2 => {
             let voteInt = VOTE_DECLINED__CAT_DEPTH_2
-            if (accept) {
+            if (accept) 
                 voteInt = VOTE_ACCEPTED__CAT_DEPTH_2
-            }
+
             bytes(targetedProposalPKH)
             byte(voteInt as TByte)
             byte(VOTE__CAT_DEPTH_1)
@@ -488,7 +481,7 @@ export class ScriptEngineV2 {
             if (!contentScript()){
                 return false
             }
-            if (this.length() >= MIN_COST_PROPOSAL_SCRIPT_LENGTH && this.length() <= MAX_COST_PROPOSAL_SCRIPT_LENGTH){
+            if (this.length() >= APPLICATION_PROPOSAL_SCRIPT_LENGTH && this.length() <= MAX_COST_PROPOSAL_SCRIPT_LENGTH){
                 return indexContentCategory(this.length() - 2 as TByte, PROPOSAL__CAT_DEPTH_1) && indexPKH(1) && indexContentNonce(0)
             }
             return false
@@ -530,9 +523,8 @@ export class ScriptEngineV2 {
             if (!proposalScript()){
                 return false
             }
-            if (this.length() == CONSTITUTION_PROPOSAL_SCRIPT_LENGTH){
-                return DeserializeConstitution(this.bytes()[2]).toString().split('\n').length == MAX_CONSTITUTION_RULE * 2
-            }
+            if (this.length() == CONSTITUTION_PROPOSAL_SCRIPT_LENGTH)
+                return DeserializeConstitution(this.bytes()[2]).length == MAX_CONSTITUTION_RULE
             return false
         }
 
@@ -644,7 +636,7 @@ export class ScriptEngineV2 {
                         i += 2
                     }
                 } else if (this.is().constitutionProposalScript()){
-                    str += `CONSTITUTION_SHA256_${Sha256(this.bytes()[i])} `
+                    str += `CONSTITUTION_SHA256_${Sha256(this.bytes()[i]).toString('hex')} `
                     i++
                 }
                 str += `${CategoryDepth2ToString(contentCategoryAtIndex(i+1 as TByte), contentCategoryAtIndex(i as TByte))} `

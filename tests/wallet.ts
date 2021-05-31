@@ -264,7 +264,7 @@ const main = () => {
             expect(response.status).to.eq(201)
             await wallet.synchronize()
             expect(wallet2.puts().count()).to.eq(3)
-            expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().reaction0()-tx.get().fees(wallet2.fees().get().feePerByte())-2)
+            expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().reaction0()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
             const lastPut = wallet2.puts().sortByTime().first() as UnserializedPut
             expect(lastPut.get().valueAtCreationTime()).to.eq((wallet2.costs().get().reaction0() * 0.3)+1)
             expect(lastPut.get().senderPKH()).to.eq(wallet2.keys().get().pubHashHex())
@@ -287,18 +287,18 @@ const main = () => {
         }
     })
 
-    // it('Wallet1 -> Puts:', () => {
-    //     expect(wallet.puts().count()).to.eq(19)
-    //     expect(wallet.puts().get().totalVotePower()).to.eq(BigInt(11611604044790))
-    //     expect(wallet.puts().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('0.145')
-    //     const now = new Date()
-    //     now.setTime(now.getTime() - (1000 * 86400 * 90))
-    //     expect(wallet.puts().get().totalReceivedDonationSince(now, wallet.keys().get().pubHashHex())).to.eq(BigInt(4050000006))
-    // })
+    it('Wallet1 -> Puts:', () => {
+        expect(wallet.puts().count()).to.eq(19)
+        expect(wallet.puts().get().totalVotePower()).to.eq(BigInt(11611604044790))
+        expect(wallet.puts().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('0.145')
+        const now = new Date()
+        now.setTime(now.getTime() - (1000 * 86400 * 90))
+        expect(wallet.puts().get().totalReceivedDonationSince(now, wallet.keys().get().pubHashHex())).to.eq(BigInt(4050000006))
+    })
 
-    // it('Wallet1 -> Puts: Vote power distribution', () => {
-    //     expect(wallet.puts().get().votePowerDistribution().count()).to.eq(3)
-    // })
+    it('Wallet1 -> Puts: Vote power distribution', () => {
+        expect(wallet.puts().get().votePowerDistribution().count()).to.eq(3)
+    })
 }
 
 main()

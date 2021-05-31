@@ -9,5 +9,5 @@ export const IsTxHashRightFormat = (hash: Buffer) => {
 }
 
 export const IsUUID = (uuid: string) => { 
-    return uuid.length > 32
+    return uuid.indexOf('-') >= 0
 }

@@ -99,7 +99,7 @@ export class Wallet extends Model {
                 const contentNonce = this.info().get().contentNonce() + 1
     
                 const script = new ScriptEngineV2([]).append().applicationProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce)) 
-    
+
                 const builder = new TxBuild({ 
                     wallet: [this],
                     amount_required: [this.costs().get().proposal()],
