@@ -86,41 +86,6 @@ export class Transaction extends Model {
 
     isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as Input).get().prevTxHash().length == 0
 
-    sign = async (utxos: UTXOList, wallets: Wallet[]) => {
-            const utxos2 = new UTXOList([], undefined)
-            for (let i = 0; i < wallets.length; i++){
-                const w = wallets[i]
-                const wUTXOs = new UTXOList([], undefined)
-                utxos.map((u: UTXO) => {          
-                    const exist = w.utxos().get().get().UTXOByTxHashAndVout(u.get().txID(), u.get().idx())
-                    exist && wUTXOs.push(exist)
-                })
-                await wUTXOs.fetchPrevTxList(w.sign().header())
-                utxos2.concat(wUTXOs.state)
-            }
-
-            const inputs = this.get().inputs()
-
-            for (let i = 0; i < inputs.count(); i++){
-                const prevTx = (utxos.nodeAt(i) as UTXO).get().tx() as Transaction
-                const input = this.get().inputs().nodeAt(i) as Input
-                
-                let signature: Buffer = Buffer.from([])
-                let pubkey: Buffer = Buffer.from([])
-
-                for (let i = 0; i < wallets.length; i++){
-                    const w = wallets[i]
-                    const exist = w.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash(), input.get().vout())
-                    if (exist){
-                        signature = Buffer.from(w.sign().value(prevTx.get().hash()))
-                        pubkey = w.keys().get().pub()
-                    }
-                }
-                input.setState({ script_sig: new ScriptEngineV2([]).append().unlockScript(signature, pubkey ).base64()  })
-            }
-            return true
-    }
-
     get = () => {
         const time = (): number => this.state.t
         const lughHeight = (): number => this.state.lh

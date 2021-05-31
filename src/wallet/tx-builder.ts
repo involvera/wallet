@@ -6,7 +6,7 @@ import { CalculateOutputValueFromMelted } from "../util/output";
 import { Wallet } from './'
 
 export interface ITXBuild {
-    wallet:         Wallet[]
+    wallet:         Wallet
 	amount_required: number[]
 	scripts:             Buffer[][]
 }
@@ -15,12 +15,12 @@ export default class TxBuild {
 
     private amount_required: number[]
     private scripts:             Buffer[][]
-    private wallets: Wallet[]
+    private wallet: Wallet
 
     constructor(txb: ITXBuild){
         this.amount_required = txb.amount_required
         this.scripts = txb.scripts
-        this.wallets = txb.wallet
+        this.wallet = txb.wallet
     }
 
     private _checkStructureBuild = () => {
@@ -36,7 +36,7 @@ export default class TxBuild {
 
     private _addTXFeesToBuild = (fees: number) => {
         const lockScript = new ScriptEngineV2([])
-        lockScript.append().lockScript(PubKeyHashFromAddress(this.wallets[0].fees().get().addressToSend()))
+        lockScript.append().lockScript(PubKeyHashFromAddress(this.wallet.fees().get().addressToSend()))
         this.amount_required.push(fees)
         this.scripts.push(lockScript.bytes())       
     }
@@ -47,7 +47,7 @@ export default class TxBuild {
     }
 
     private _makeTxWithFees = (tx: Transaction): UTXOList => {
-        const fees = tx.get().billedSize() * this.wallets[0].fees().get().feePerByte()
+        const fees = tx.get().billedSize() * this.wallet.fees().get().feePerByte()
         
         this._addTXFeesToBuild(fees)
         const { utxos, outputs } = this._generateMeltingPuts()
@@ -70,19 +70,9 @@ export default class TxBuild {
     }
 
     setupUTXOs = (amountRequired: number) => {
-        const availableUTXOs: UTXOList = new UTXOList([], undefined)
-        let newAmountRequired = amountRequired
-
-        for (let i = 0; i < this.wallets.length; i++) {
-            availableUTXOs.append(this.wallets[i].utxos().get().get().requiredList(newAmountRequired, this.wallets[i].cch().get().list()).state)
-            const totalEscrow = availableUTXOs.get().totalMeltedValue(this.wallets[i].cch().get().list())
-            if (totalEscrow >= amountRequired){
-                break
-            }
-            newAmountRequired = amountRequired - totalEscrow
-        }
-
-        if (availableUTXOs.get().totalMeltedValue(this.wallets[0].cch().get().list()) < amountRequired){
+        const availableUTXOs = this.wallet.utxos().get().get().requiredList(amountRequired, this.wallet.cch().get().list())
+        const totalEscrow = availableUTXOs.get().totalMeltedValue(this.wallet.cch().get().list())
+        if (totalEscrow < amountRequired){
             throw NOT_ENOUGH_FUNDS_ERROR
         }
         return availableUTXOs
@@ -91,19 +81,19 @@ export default class TxBuild {
     newTx = async () => {
         this._checkStructureBuild()
         const { outputs, utxos } = this._generateMeltingPuts()
-        const lastCCH = this.wallets[0].cch().get().last()
+        const lastCCH = this.wallet.cch().get().last()
         if (!lastCCH)
             throw LAST_CCH_NOT_FOUND_ERROR
         
         let tx = new Transaction({
-            lh: this.wallets[0].cch().get().lastHeight(),
+            lh: this.wallet.cch().get().lastHeight(),
             t: Date.now(),
             inputs: utxos.toInputs().to().plain(), 
             outputs: outputs.to().plain(),
         }, {})
 
-
-        if (await tx.sign(this._makeTxWithFees(tx), this.wallets)){
+        this._makeTxWithFees(tx)
+        if (await this.wallet.sign().transaction(tx)){
             return tx
         }
         return null
@@ -114,7 +104,7 @@ export default class TxBuild {
         const utxos = this.setupUTXOs(this.totalAmount())
         const amounts = this.amount_required
         const nInputs = utxos.count()
-        const CCHList = this.wallets[0].cch().get().list()
+        const CCHList = this.wallet.cch().get().list()
 
         let currentRealAmountToSend: number = 0 
         let toIndex = 0
@@ -145,7 +135,7 @@ export default class TxBuild {
 
         const pushSurplusOutput = (lastUTXOIdx: number) => {
             const script = new ScriptEngineV2([])
-            script.append().lockScript(this.wallets[0].keys().get().pubHash())
+            script.append().lockScript(this.wallet.keys().get().pubHash())
             
             const totalUsed = outputs.get().totalValue()
             outputs.push(Output.NewOutput(Number(utxos.get().totalValue()-totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), script.base64()).to().plain())

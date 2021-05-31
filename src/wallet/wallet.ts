@@ -6,7 +6,7 @@ import TxBuild from './tx-builder'
 
 import axios from 'axios'
 import config from '../config'
-import { Transaction, UTXOList } from '../transaction'
+import { Input, Transaction, UTXO, UTXOList } from '../transaction'
 
 import AuthContract from './auth-contract'
 import Fees from './fees'
@@ -101,7 +101,7 @@ export class Wallet extends Model {
                 const script = new ScriptEngineV2([]).append().applicationProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce)) 
 
                 const builder = new TxBuild({ 
-                    wallet: [this],
+                    wallet: this,
                     amount_required: [this.costs().get().proposal()],
                     scripts: [script.bytes()]
                 })
@@ -115,7 +115,7 @@ export class Wallet extends Model {
                 const script = new ScriptEngineV2([]).append().costProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), threadCost, proposalCost)
 
                 const builder = new TxBuild({ 
-                    wallet: [this],
+                    wallet: this,
                     amount_required: [this.costs().get().proposal()],
                     scripts: [script.bytes()]
                 })
@@ -129,7 +129,7 @@ export class Wallet extends Model {
                 const script = new ScriptEngineV2([]).append().constitutionProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), constitution) 
                 
                 const builder = new TxBuild({ 
-                    wallet: [this],
+                    wallet: this,
                     amount_required: [this.costs().get().proposal()],
                     scripts: [script.bytes()]
                 })
@@ -145,7 +145,7 @@ export class Wallet extends Model {
             const script = new ScriptEngineV2([]).append().lockScript(PubKeyHashFromAddress(address))
 
             const builder = new TxBuild({ 
-                wallet: [this],
+                wallet: this,
                 amount_required: [amount],
                 scripts: [script.bytes()]
             })
@@ -160,7 +160,7 @@ export class Wallet extends Model {
             const script = new ScriptEngineV2([]).append().threadScript(contentNonce, this.keys().get().derivedPubHash(contentNonce))
             
             const builder = new TxBuild({ 
-                wallet: [this],
+                wallet: this,
                 amount_required: [this.costs().get().thread()],
                 scripts: [script.bytes()]
             })
@@ -177,7 +177,7 @@ export class Wallet extends Model {
             const script = new ScriptEngineV2([]).append().rethreadScript(contentNonce, contentPKH, targetPKH)
 
             const builder = new TxBuild({ 
-                wallet: [this],
+                wallet: this,
                 amount_required: [this.costs().get().thread()],
                 scripts: [script.bytes()]
             })
@@ -197,7 +197,7 @@ export class Wallet extends Model {
             const distributed = cost - burned
 
             const builder = new TxBuild({ 
-                wallet: [this],
+                wallet: this,
                 amount_required: [burned, distributed],
                 scripts: [scriptReward.bytes(), scriptDistribution.bytes()]
             })
@@ -212,7 +212,7 @@ export class Wallet extends Model {
             const script = new ScriptEngineV2([]).append().voteScript(targetPKH, accept)
 
             const builder = new TxBuild({ 
-                wallet: [this],
+                wallet: this,
                 amount_required: [1],
                 scripts: [script.bytes()]
             })
@@ -225,7 +225,6 @@ export class Wallet extends Model {
             thread, rethread, reward 
         }
     }
-
 
     memory = () => {
         const get = () => {
@@ -299,8 +298,40 @@ export class Wallet extends Model {
 
     sign = () => {
         const value = (val: Buffer) => ec.sign(val, this.keys().get().priv()).toDER()
+        
+        const transaction = async (tx: Transaction) => {
+            
+            const UTXOs = new UTXOList([], undefined)
+            tx.get().inputs().forEach((i: Input) => {
+                const exist = this.utxos().get().get().UTXOByTxHashAndVout(i.get().prevTxHash(), i.get().vout())
+                exist && UTXOs.push(exist)
+            })
+            await UTXOs.fetchPrevTxList(this.sign().header())
+
+            const inputs = tx.get().inputs()
+
+            for (let i = 0; i < inputs.count(); i++){
+                const prevTx = (UTXOs.nodeAt(i) as UTXO).get().tx() as Transaction
+                const input = inputs.nodeAt(i) as Input
+                
+                let signature: Buffer = Buffer.from([])
+                let pubkey: Buffer = Buffer.from([])
+
+                const exist = this.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash(), input.get().vout())
+                if (exist){
+                    signature = Buffer.from(this.sign().value(prevTx.get().hash()))
+                    pubkey = this.keys().get().pub()
+                }
+
+                input.setState({ script_sig: new ScriptEngineV2([]).append().unlockScript(signature, pubkey ).base64()  })
+            }
+
+            return true
+        }
+        
         return {
             value,
+            transaction,
             header: (): IHeaderSignature => {
                 return {
                     pubkey: this.keys().get().pubHex() as string,
