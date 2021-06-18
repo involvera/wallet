@@ -5,13 +5,11 @@ import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256} from '../util'
 import { Wallet } from '../wallet/wallet'
 import { IInputRaw } from './input'
 import { IOutputRaw, Output } from './output'
-import { UTXO, UTXOList } from './utxo'
 import axios from 'axios'
 
 import { BILLED_SIGNATURE_LENGTH, PUBK_LENGTH, TXID_LENGTH } from '../constant'
 import config from '../config'
 import { UUIDToPubKeyHashHex } from '../util/hash'
-import { ScriptEngineV2 } from '../scriptV2'
 
 export interface ITransaction {
     lh:      number

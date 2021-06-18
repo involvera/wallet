@@ -50,9 +50,16 @@ export default class Keys extends Model {
             return ToPubKeyHash(m.publicKey)
         }
 
+        const derivedPrivate = (index: number): Buffer => {
+            const m = master().derivePath('m/1/' + index.toString())
+            return ToPubKeyHash(m.privateKey as Buffer)
+        }
+
+
         return {
             seed, master, priv, pub, 
             pubHex, pubHash, pubHashHex,
+            derivedPrivate,
             address, derivedPubHash, mnemonic
         }
     }

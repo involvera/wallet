@@ -89,7 +89,6 @@ export class Wallet extends Model {
 
     public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
 
-
     buildTX = () => {
 
         const proposal = () => {
@@ -298,7 +297,8 @@ export class Wallet extends Model {
 
     sign = () => {
         const value = (val: Buffer) => ec.sign(val, this.keys().get().priv()).toDER()
-        
+        const valueWithContentNonce = (contentNonce: number, val: Buffer) => ec.sign(val, this.keys().get().derivedPrivate(contentNonce)).toDER()
+
         const transaction = async (tx: Transaction) => {
             
             const UTXOs = new UTXOList([], undefined)
@@ -331,6 +331,7 @@ export class Wallet extends Model {
         
         return {
             value,
+            valueWithContentNonce,
             transaction,
             header: (): IHeaderSignature => {
                 return {

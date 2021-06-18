@@ -262,6 +262,15 @@ export class ScriptEngineV2 {
 
 
     public parse = () => {
+
+        const contentNonce = (): Number => {
+            if (this.is().threadDepth1Script() || this.is().proposalScript()) {
+                return this._parse().nonceAtIndex(0)
+            }
+            throw NOT_A_TARGETABLE_CONTENT
+
+        }
+
         const PKHFromLockScript = (): Buffer => {
             if(this.is().lockScript())
                 return this.bytes()[2]
@@ -328,7 +337,8 @@ export class ScriptEngineV2 {
             targetPKHFromContentScript,
             constitution,
             proposalCosts,
-            distributionVout
+            distributionVout,
+            contentNonce
         }
     }
 

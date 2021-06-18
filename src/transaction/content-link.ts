@@ -6,6 +6,12 @@ import { IOutput, IOutputRaw, Output } from './output';
 
 import axios from 'axios'
 
+export interface IVoteSummary {
+    closed_at_lh: string
+    approved: string
+    declined: string
+}
+
 export interface IKindLink {
     tx_id: string
     lh: number
@@ -23,6 +29,8 @@ export interface IKindLinkRaw {
 }
 
 export interface IContentLink { 
+    vote: IVoteSummary
+    index: number
     link: IKindLink
     pubkh_origin: string
 }
@@ -41,9 +49,6 @@ export class ContentLink extends Model {
         }
 
         const response = await axios(config.getRootAPIUrl() + '/thread/' + hash, {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-            },
             timeout: 10000
         })
         if (response.status === 200){
@@ -85,7 +90,9 @@ export class ContentLink extends Model {
             lh: (): number => this.state.link.lh,
             output: (): Output => this.state.link.output,
             targetContent: (): string => this.state.link.target_content,
-            pubKHAuthor: (): string => this.state.pubkh_origin
+            pubKHAuthor: (): string => this.state.pubkh_origin,
+            index: (): number => this.state.index,
+            vote: (): IVoteSummary => this.state.vote
         }
     }
 

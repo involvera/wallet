@@ -1,6 +1,6 @@
 import { Collection, Model } from 'acey'
 import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT, TByte } from '../constant';
-import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, ShortenAddress } from '../util';
+import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash } from '../util';
 import axios from 'axios'
 import config from '../config'
 import { IHeaderSignature } from './wallet';

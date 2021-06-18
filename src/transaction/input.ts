@@ -1,7 +1,7 @@
 import { Collection, Model } from 'acey'
 import { ScriptEngineV2 } from '../scriptV2'
 import { ByteArrayToB64, EncodeInt, CalcTotalLengthDoubleByteArray } from '../util'
-import { DoubleByteArrayToB64Array, ToArrayBufferFromB64 } from '../util/bytes'
+import { ToArrayBufferFromB64 } from '../util/bytes'
 
 export interface IInput {
     prev_transaction_hash: string
