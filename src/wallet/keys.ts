@@ -45,21 +45,23 @@ export default class Keys extends Model {
             return naclUtil.encodeUTF8(msg2 as Uint8Array)
         } 
 
-        const derivedPubHash = (index: number): Buffer => {
+        const derivedPubHash = (index: number): Buffer => ToPubKeyHash(derivedPub(index))
+
+        const derivedPub = (index: number): Buffer => {
             const m = master().derivePath('m/1/' + index.toString())
-            return ToPubKeyHash(m.publicKey)
+            return m.publicKey
         }
 
         const derivedPrivate = (index: number): Buffer => {
             const m = master().derivePath('m/1/' + index.toString())
-            return ToPubKeyHash(m.privateKey as Buffer)
+            return m.privateKey as Buffer
         }
 
 
         return {
             seed, master, priv, pub, 
             pubHex, pubHash, pubHashHex,
-            derivedPrivate,
+            derivedPrivate, derivedPub,
             address, derivedPubHash, mnemonic
         }
     }
