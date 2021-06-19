@@ -4,7 +4,7 @@ import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
 
 import { COIN_UNIT, MAX_SUPPLY_AMOUNT } from '../src/constant';
-import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from '../src/util';
+import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from 'wallet-util';
 import { Wallet } from '../src/wallet'
 import { UnserializedPut } from '../src/wallet/puts';
 import { NewConstitution } from '../src/scriptV2/constitution';
