@@ -3,7 +3,7 @@ import { Collection, Model } from 'acey'
 import { Output } from './output'
 
 import { CYCLE_IN_LUGH } from '../constant'
-import { CalculateOutputMeltedValue } from '../util/output'
+import { CalculateOutputMeltedValue } from 'wallet-util'
 import { ITransaction, Transaction } from './transaction'
 import { IHeaderSignature } from '../wallet/wallet'
 import { Input, InputList } from './input'

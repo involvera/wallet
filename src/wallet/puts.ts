@@ -1,10 +1,9 @@
 import { Collection, Model } from 'acey'
 import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT, TByte } from '../constant';
-import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash } from '../util';
+import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, PubKeyHashHexToUUID } from 'wallet-util';
 import axios from 'axios'
 import config from '../config'
 import { IHeaderSignature } from './wallet';
-import { PubKeyHashHexToUUID } from '../util/hash';
 
 export interface ILink {
     from: string

@@ -2,10 +2,10 @@ import { Model } from 'acey'
 
 import * as bip39 from 'bip39'
 import * as bip32 from 'bip32'
-import { GetAddressFromPubKeyHash, ToPubKeyHash } from '../util/wallet'
+import { GetAddressFromPubKeyHash, ToPubKeyHash, Sha256 } from 'wallet-util'
 import nacl from 'tweetnacl'
 import naclUtil from 'tweetnacl-util'
-import { Sha256 } from '../util'
+
 
 export default class Keys extends Model {
 

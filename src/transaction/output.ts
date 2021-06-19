@@ -1,9 +1,9 @@
 import { Model, Collection } from 'acey'
 import { MAX_IS_2_POW_53, NOT_A_TARGETABLE_CONTENT, NOT_A_TARGETING_CONTENT } from '../constant/errors'
 import  { ScriptEngineV2 } from '../scriptV2'
-import { ByteArrayToB64, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeInt64, CalcTotalLengthDoubleByteArray } from '../util'
-import { ToArrayBufferFromB64 } from '../util/bytes'
-import { PubKeyHashHexToUUID } from '../util/hash'
+import { ByteArrayToB64, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeInt64, 
+	CalcTotalLengthDoubleByteArray, ToArrayBufferFromB64, PubKeyHashHexToUUID
+} from 'wallet-util'
 
 export interface IOutput {
 	input_src_idxs: number[]

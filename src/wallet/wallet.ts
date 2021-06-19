@@ -1,6 +1,6 @@
 import { Model } from 'acey'
 
-import { B64ToByteArray, PubKeyHashFromAddress, Sha256 } from '../util'
+import { B64ToByteArray, PubKeyHashFromAddress, Sha256 } from 'wallet-util'
 import { ec as EC } from 'elliptic'
 import TxBuild from './tx-builder' 
 

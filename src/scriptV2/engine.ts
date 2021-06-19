@@ -5,7 +5,7 @@ import {
     THREAD_SCRIPT_LENGTH, VOTE_SCRIPT_LENGTH } from "../constant"
 
 import { WRONG_PUBK_FORMAT, WRONG_PUBKH_FORMAT } from "../constant/errors"
-import { DecodeInt, DoubleByteArrayToB64Array, EncodeInt, EncodeInt64, IsInNumberArray, Sha256 } from "../util"
+import { DecodeInt, DoubleByteArrayToB64Array, EncodeInt, EncodeInt64, IsInNumberArray, Sha256 } from "wallet-util"
 import { OpcodeToString, OPCODE_LIST, OP_CHECKSIG, OP_CONTENT, OP_DUP, OP_EQUALVERIFY, OP_HASH160 } from './opcode'
 
 import { 

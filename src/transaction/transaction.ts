@@ -1,7 +1,7 @@
 import { Model } from 'acey'
 import { IOutput, OutputList } from './output'
 import { IInput, Input, InputList } from './input'
-import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256} from '../util'
+import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256, UUIDToPubKeyHashHex } from 'wallet-util'
 import { Wallet } from '../wallet/wallet'
 import { IInputRaw } from './input'
 import { IOutputRaw, Output } from './output'
@@ -9,7 +9,6 @@ import axios from 'axios'
 
 import { BILLED_SIGNATURE_LENGTH, PUBK_LENGTH, TXID_LENGTH } from '../constant'
 import config from '../config'
-import { UUIDToPubKeyHashHex } from '../util/hash'
 
 export interface ITransaction {
     lh:      number

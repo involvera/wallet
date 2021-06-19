@@ -1,8 +1,7 @@
 import { CANT_SEND_0_VALUE, LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
 import { ScriptEngineV2 } from "../scriptV2";
 import {  InputList, Output, OutputList, Transaction, UTXO, UTXOList } from "../transaction"
-import { PubKeyHashFromAddress } from "../util";
-import { CalculateOutputValueFromMelted } from "../util/output";
+import { PubKeyHashFromAddress, CalculateOutputValueFromMelted } from "wallet-util";
 import { Wallet } from './'
 
 export interface ITXBuild {

@@ -1,7 +1,6 @@
 import { Collection, Model } from 'acey'
 import config from '../config';
-import { IsUUID } from '../util';
-import { UUIDToPubKeyHashHex } from '../util/hash';
+import { IsUUID, UUIDToPubKeyHashHex } from 'wallet-util';
 import { IOutput, IOutputRaw, Output } from './output';
 
 import axios from 'axios'
