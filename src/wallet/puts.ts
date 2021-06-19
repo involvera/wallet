@@ -1,5 +1,6 @@
 import { Collection, Model } from 'acey'
-import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT, TByte } from '../constant';
+import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT } from '../constant';
+import { TByte } from 'wallet-script'
 import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, PubKeyHashHexToUUID } from 'wallet-util';
 import axios from 'axios'
 import config from '../config'
@@ -127,7 +128,7 @@ export class UnserializedPut extends Model {
         const valueNow = (): number => this.state.value.now
 
         const CCH = (): string => this.state.fetched_at_cch
-        const MR = () => Number(BigInt(valueNow()) / BigInt(valueAtCreationTime()))
+        const MR = () => Number(BigInt(valueNow()) / BigInt(valueAtCreationTime() as any))
 
         const meltedValueRatio = (CCHList: string[]) => {
             let count = 0
@@ -205,7 +206,7 @@ export class UnserializedPutList extends Collection {
 
             this.forEach((p: UnserializedPut) => {
                 if (p.isLughTx()){
-                    total = BigInt(total) + BigInt(p.get().valueAtCreationTime())
+                    total = BigInt(total as any) + BigInt(p.get().valueAtCreationTime() as any)
                 }
             })
 
@@ -213,7 +214,7 @@ export class UnserializedPutList extends Collection {
         }
 
         const votePowerPercent = (lh: number): number => {
-            const total = Number(BigInt(totalVotePower()) / BigInt(10))
+            const total = Number(BigInt(totalVotePower() as any) / BigInt(10))
 
             if (lh >= CYCLE_IN_LUGH){
                 const max = CYCLE_IN_LUGH * (LUGH_AMOUNT / 10)
@@ -229,7 +230,7 @@ export class UnserializedPutList extends Collection {
 
             betweenDates(since, now).forEach((p: UnserializedPut) => {
                 if (p.isReward() && p.get().senderPKH() != pkhHex){
-                    total = BigInt(total) + BigInt(p.get().valueAtCreationTime())
+                    total = BigInt(total as any) + BigInt(p.get().valueAtCreationTime() as any)
                 }
             })
             return total
@@ -242,7 +243,7 @@ export class UnserializedPutList extends Collection {
                 let total = BigInt(0)
                 atDay(d).forEach((p: UnserializedPut) => {
                     if (p.isVote() || p.isThread() || p.isRethread() || p.isProposal() || (p.isReward() && p.get().senderPKH() != pkhHex)){
-                        total = BigInt(total) + BigInt(p.get().valueAtCreationTime())
+                        total = BigInt(total as any) + BigInt(p.get().valueAtCreationTime() as any)
                     }
                 })
                 return total

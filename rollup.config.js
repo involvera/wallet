@@ -7,7 +7,7 @@ import pkg from './package.json'
 
 const config = {
     input: './index.ts',
-    external: [ 'acey', 'axios', 'create-hash', 'tweetnacl', 'tweetnacl-util', 'elliptic', 'bip39', 'bip32', 'wallet-util'],
+    external: [ 'acey', 'axios', 'create-hash', 'tweetnacl', 'tweetnacl-util', 'elliptic', 'bip39', 'bip32', 'wallet-util', 'wallet-script'],
     output: [
         {
             globals: {
@@ -20,7 +20,8 @@ const config = {
                 'elliptic': 'elliptic',
                 'bip39': 'bip39',
                 'bip32': 'bip32',
-                'wallet-util': 'wallet-util'
+                'wallet-util': 'wallet-util',
+                'wallet-script': 'wallet-script'
             },
             file: pkg.main,
             format: 'umd',

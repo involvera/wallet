@@ -151,7 +151,7 @@ export class UTXOList extends Collection {
         const totalValue = () => {
             let total = BigInt(0)
             this.map((utxo: UTXO) => {
-                total += BigInt(utxo.get().output().get().value())
+                total += BigInt(utxo.get().output().get().value() as any)
             })
             return total
         }

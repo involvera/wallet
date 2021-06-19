@@ -1,13 +1,17 @@
+import axios from 'axios'
 import { Model } from 'acey'
+
 import { IOutput, OutputList } from './output'
 import { IInput, Input, InputList } from './input'
-import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256, UUIDToPubKeyHashHex } from 'wallet-util'
 import { Wallet } from '../wallet/wallet'
 import { IInputRaw } from './input'
 import { IOutputRaw, Output } from './output'
-import axios from 'axios'
 
-import { BILLED_SIGNATURE_LENGTH, PUBK_LENGTH, TXID_LENGTH } from '../constant'
+import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256, UUIDToPubKeyHashHex } from 'wallet-util'
+import { BILLED_SIGNATURE_LENGTH, TXID_LENGTH } from '../constant'
+import { Constant } from 'wallet-script'
+
+
 import config from '../config'
 
 export interface ITransaction {
@@ -96,7 +100,7 @@ export class Transaction extends Model {
             size -= this.get().inputs().size()
 
             const countInputs = this.get().inputs().count()
-            const scriptSize = countInputs + (countInputs * PUBK_LENGTH) + (countInputs * BILLED_SIGNATURE_LENGTH) + (countInputs * 2)
+            const scriptSize = countInputs + (countInputs * Constant.PUBK_LENGTH) + (countInputs * BILLED_SIGNATURE_LENGTH) + (countInputs * 2)
             const voutSize = countInputs * 4
             const prevTxHashSize = countInputs * TXID_LENGTH
 

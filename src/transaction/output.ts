@@ -1,6 +1,6 @@
 import { Model, Collection } from 'acey'
-import { MAX_IS_2_POW_53, NOT_A_TARGETABLE_CONTENT, NOT_A_TARGETING_CONTENT } from '../constant/errors'
-import  { ScriptEngineV2 } from '../scriptV2'
+import { MAX_IS_2_POW_53 } from '../constant/errors'
+import { ScriptEngine, Error } from 'wallet-script'
 import { ByteArrayToB64, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeInt64, 
 	CalcTotalLengthDoubleByteArray, ToArrayBufferFromB64, PubKeyHashHexToUUID
 } from 'wallet-util'
@@ -71,20 +71,20 @@ export class Output extends Model {
 		const inputSourceIdxs = (): number[] => this.state.input_src_idxs
 
 		const scriptBase64 = (): string[] => this.state.script
-		const script = () => new ScriptEngineV2(ToArrayBufferFromB64(scriptBase64()))
+		const script = () => new ScriptEngine(ToArrayBufferFromB64(scriptBase64()))
  		
 		const contentPKH = (): Buffer => {
 			const s = this.get().script()
 			if (s.is().targetableContent())
 				return s.parse().PKHFromContentScript()
-			throw NOT_A_TARGETABLE_CONTENT
+			throw Error.NOT_A_TARGETABLE_CONTENT
 		}
 
 		const targetedContentPKH = (): Buffer => {
 			const s = this.get().script()
 			if (s.is().targetedContent())
 				return s.parse().targetPKHFromContentScript()
-			throw NOT_A_TARGETING_CONTENT
+			throw Error.NOT_A_TARGETING_CONTENT
 		}
 
 		const pubKH = (): Buffer => this.get().script().parse().PKHFromLockScript()
@@ -152,7 +152,7 @@ export class OutputList extends Collection {
 		const totalValue = () => {
 			let total = BigInt(0)
             this.map((out: Output) => {
-				total += BigInt(out.get().value())
+				total += BigInt(out.get().value() as any)
             })
             return total
 		}

@@ -7,7 +7,7 @@ import { COIN_UNIT, MAX_SUPPLY_AMOUNT } from '../src/constant';
 import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from 'wallet-util';
 import { Wallet } from '../src/wallet'
 import { UnserializedPut } from '../src/wallet/puts';
-import { NewConstitution } from '../src/scriptV2/constitution';
+import { Constitution } from 'wallet-script';
 import { ContentLink, Output } from '../src/transaction';
 
 const wallet = new Wallet({}, { key: 'wallet', connected: true })
@@ -112,7 +112,7 @@ const main = () => {
 
     it('Wallet1 -> create a proposal : constitution', async () => {
         const balance = wallet.balance()
-        const c = NewConstitution()
+        const c = Constitution.NewConstitution()
         c[0].title = "Title #0"
         c[0].content = "Content #0"
 

@@ -1,5 +1,5 @@
 import { Collection, Model } from 'acey'
-import { ScriptEngineV2 } from '../scriptV2'
+import { ScriptEngine } from 'wallet-script'
 import { ByteArrayToB64, EncodeInt, CalcTotalLengthDoubleByteArray, ToArrayBufferFromB64 } from 'wallet-util'
 
 export interface IInput {
@@ -36,7 +36,7 @@ export class Input extends Model {
             return -1
         }
         const scriptBase64 = (): string[] => this.state.script_sig
-        const script = () => new ScriptEngineV2(ToArrayBufferFromB64(scriptBase64()))
+        const script = () => new ScriptEngine(ToArrayBufferFromB64(scriptBase64()))
 
         return { vout, prevTxHash, scriptBase64, script }
     }

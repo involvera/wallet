@@ -16,9 +16,8 @@ import { UnserializedPutList } from './puts'
 
 import Info from './info'
 import { BURNING_RATIO } from '../constant'
-import { TConstitution } from '../scriptV2/constitution'
+import { Constitution, ScriptEngine } from 'wallet-script'
 import { ContentLink } from '../transaction/content-link'
-import { ScriptEngineV2 } from '../scriptV2'
 
 const ec = new EC('secp256k1');
 
@@ -97,7 +96,7 @@ export class Wallet extends Model {
                 await this.synchronize()
                 const contentNonce = this.info().get().contentNonce() + 1
     
-                const script = new ScriptEngineV2([]).append().applicationProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce)) 
+                const script = new ScriptEngine([]).append().applicationProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce)) 
 
                 const builder = new TxBuild({ 
                     wallet: this,
@@ -111,7 +110,7 @@ export class Wallet extends Model {
                 await this.synchronize()
                 const contentNonce = this.info().get().contentNonce() + 1
 
-                const script = new ScriptEngineV2([]).append().costProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), threadCost, proposalCost)
+                const script = new ScriptEngine([]).append().costProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), threadCost, proposalCost)
 
                 const builder = new TxBuild({ 
                     wallet: this,
@@ -121,11 +120,11 @@ export class Wallet extends Model {
                 return await builder.newTx()
             }
 
-            const constitution = async (constitution: TConstitution) => {
+            const constitution = async (constitution: Constitution.TConstitution) => {
                 await this.synchronize()
                 const contentNonce = this.info().get().contentNonce() + 1
 
-                const script = new ScriptEngineV2([]).append().constitutionProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), constitution) 
+                const script = new ScriptEngine([]).append().constitutionProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), constitution) 
                 
                 const builder = new TxBuild({ 
                     wallet: this,
@@ -141,7 +140,7 @@ export class Wallet extends Model {
         const toAddress = async (address: string, amount: number): Promise<Transaction | null> => {
             await this.synchronize()
 
-            const script = new ScriptEngineV2([]).append().lockScript(PubKeyHashFromAddress(address))
+            const script = new ScriptEngine([]).append().lockScript(PubKeyHashFromAddress(address))
 
             const builder = new TxBuild({ 
                 wallet: this,
@@ -156,7 +155,7 @@ export class Wallet extends Model {
             await this.synchronize()
             const contentNonce = this.info().get().contentNonce() + 1
 
-            const script = new ScriptEngineV2([]).append().threadScript(contentNonce, this.keys().get().derivedPubHash(contentNonce))
+            const script = new ScriptEngine([]).append().threadScript(contentNonce, this.keys().get().derivedPubHash(contentNonce))
             
             const builder = new TxBuild({ 
                 wallet: this,
@@ -173,7 +172,7 @@ export class Wallet extends Model {
             const contentPKH = this.keys().get().derivedPubHash(contentNonce)
             const targetPKH = content.get().output().get().contentPKH()
 
-            const script = new ScriptEngineV2([]).append().rethreadScript(contentNonce, contentPKH, targetPKH)
+            const script = new ScriptEngine([]).append().rethreadScript(contentNonce, contentPKH, targetPKH)
 
             const builder = new TxBuild({ 
                 wallet: this,
@@ -188,8 +187,8 @@ export class Wallet extends Model {
             await this.synchronize()
             const targetPKH = content.get().output().get().contentPKH()
     
-            const scriptReward = new ScriptEngineV2([]).append().rewardScript(targetPKH, 1)
-            const scriptDistribution = new ScriptEngineV2([]).append().lockScript(Buffer.from(content.get().pubKHAuthor(), 'hex'))
+            const scriptReward = new ScriptEngine([]).append().rewardScript(targetPKH, 1)
+            const scriptDistribution = new ScriptEngine([]).append().lockScript(Buffer.from(content.get().pubKHAuthor(), 'hex'))
             
             const cost = this.costs().get()[rewardType]()
             const burned = Math.floor(BURNING_RATIO * cost)
@@ -208,7 +207,7 @@ export class Wallet extends Model {
             await this.synchronize()
             const targetPKH = proposal.get().output().get().contentPKH()
 
-            const script = new ScriptEngineV2([]).append().voteScript(targetPKH, accept)
+            const script = new ScriptEngine([]).append().voteScript(targetPKH, accept)
 
             const builder = new TxBuild({ 
                 wallet: this,
@@ -323,7 +322,7 @@ export class Wallet extends Model {
                     pubkey = this.keys().get().pub()
                 }
 
-                input.setState({ script_sig: new ScriptEngineV2([]).append().unlockScript(signature, pubkey ).base64()  })
+                input.setState({ script_sig: new ScriptEngine([]).append().unlockScript(signature, pubkey ).base64()  })
             }
 
             return true
