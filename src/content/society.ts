@@ -1,7 +1,20 @@
-import { Model } from "acey";
+import { Collection, Model } from "acey";
 import { ISociety } from "./interfaces";
+import axios from 'axios'
+import config from "../config";
 
-export default class Society extends Model {
+export class SocietyModel extends Model {
+
+    static fetch = async (id: number): Promise<SocietyModel|null> => {
+        try {
+            const res = await axios(config.getRootAPIContentUrl() + '/society/' + id.toString())
+            if (res.status == 200)
+                return new SocietyModel(res.data, {})
+            return null
+        } catch (e){
+            throw e
+        }
+    }
 
     constructor(state: ISociety, options:any){
         super(state, options)
@@ -20,5 +33,11 @@ export default class Society extends Model {
             id, created_at, name, description,
             domain, currencySymbol, currencyRouteAPI
         }
+    }
+}
+
+export class SocietyCollection extends Collection {
+    constructor(state: any[], options:any){
+        super(state, options)
     }
 }

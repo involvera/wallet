@@ -47,7 +47,7 @@ export class ContentLink extends Model {
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
 
-        const response = await axios(config.getRootAPIUrl() + '/thread/' + hash, {
+        const response = await axios(config.getRootAPIChainUrl() + '/thread/' + hash, {
             timeout: 10000
         })
         if (response.status === 200){
@@ -63,7 +63,7 @@ export class ContentLink extends Model {
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
 
-        const response = await axios(config.getRootAPIUrl() + '/proposal/' + hash, {
+        const response = await axios(config.getRootAPIChainUrl() + '/proposal/' + hash, {
             timeout: 10000,
         })
         if (response.status === 200){
@@ -80,6 +80,13 @@ export class ContentLink extends Model {
                 output: new Output(initialState.link.output, this.kids())
             })
         })
+    }
+    
+    is2 = () => {
+        return {
+            proposal: () => this.get().index() >= 0,
+            thread: () => this.get().index() == -1
+        }
     }
 
     get = () => {

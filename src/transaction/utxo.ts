@@ -92,7 +92,7 @@ export class UTXOList extends Collection {
             return 
 
         try { 
-            const response = await axios(config.getRootAPIUrl() + '/transactions/list', {
+            const response = await axios(config.getRootAPIChainUrl() + '/transactions/list', {
                 headers: Object.assign({}, headerSignature as any, {list: listUnFetchedTxHash.join(',') }),
                 timeout: 10000,
             })

@@ -35,7 +35,7 @@ export default class Costs extends Model {
 
     fetch = async () => {
         try {
-             const res = await axios(config.getRootAPIUrl() + '/costs', { 
+             const res = await axios(config.getRootAPIChainUrl() + '/costs', { 
                 method: 'GET',
                 timeout: 10000,
             })

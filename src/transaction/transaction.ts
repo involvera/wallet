@@ -35,7 +35,7 @@ export class Transaction extends Model {
         if (IsUUID(hashOrUUID)){
             hash = UUIDToPubKeyHashHex(hashOrUUID)
         }
-        const response = await axios(config.getRootAPIUrl() + '/transaction/' + hash, {
+        const response = await axios(config.getRootAPIChainUrl() + '/transaction/' + hash, {
             timeout: 10000,
         })
         if (response.status == 200){
@@ -64,7 +64,7 @@ export class Transaction extends Model {
 
     broadcast = async (wallet: Wallet) => {
         try {
-            const response = await axios(config.getRootAPIUrl() + '/transaction', {
+            const response = await axios(config.getRootAPIChainUrl() + '/transaction', {
                 method: 'POST',
                 headers: Object.assign(wallet.sign().header() as any, {'content-type': 'application/json' }),
                 data: this.toRaw().base64(),
@@ -80,7 +80,6 @@ export class Transaction extends Model {
             }
             return response
         } catch (e){
-            console.log(e.response.data)
             throw new Error(e)
         }
     }

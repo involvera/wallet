@@ -19,7 +19,7 @@ export default class Fees extends Model {
 
     fetch = async () => {
        try {
-            const res = await axios(config.getRootAPIUrl() + '/fees')
+            const res = await axios(config.getRootAPIChainUrl() + '/fees')
             res.status == 200 && this.setState(res.data).store()
             return res.status
        } catch (e){

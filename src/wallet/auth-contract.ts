@@ -18,7 +18,7 @@ export default class AuthContract extends Model {
     
     fetch = async () => {
         try {
-            const res = await axios(config.getRootAPIUrl() + '/contract', { 
+            const res = await axios(config.getRootAPIChainUrl() + '/contract', { 
                 method: 'GET',
                 timeout: 10000,
              })

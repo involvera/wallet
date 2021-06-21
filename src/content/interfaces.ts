@@ -1,22 +1,17 @@
 import { IContentLink } from "../transaction";
+import { IVote } from "./vote";
 
 export interface IAuthor {
-    address: string
+    public_key_hashed: string
     pp: string
     username: string
 }
-
 export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
-export interface IVote {
-    approved: number
-    declined: number
-    closed_at: Date
-}
 
 export interface IProposal {
     sid: number
-    link: IContentLink
+    content_link: IContentLink
     vote: IVote
     index: number
     created_at: Date

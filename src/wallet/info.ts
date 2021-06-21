@@ -20,7 +20,7 @@ export default class Info extends Model {
 
     fetch = async (headerSig: IHeaderSignature) => {
        try {
-            const res = await axios(config.getRootAPIUrl() + '/wallet/info', {
+            const res = await axios(config.getRootAPIChainUrl() + '/wallet/info', {
                 headers: headerSig as any,
                 timeout: 10000,
             })
