@@ -1,7 +1,7 @@
 import { Model } from 'acey'
 
-import { B64ToByteArray, PubKeyHashFromAddress, Sha256 } from 'wallet-util'
-import { ec as EC } from 'elliptic'
+import { B64ToByteArray, PubKeyHashFromAddress, Sha256, BuildSignature } from 'wallet-util'
+// import { ec as EC } from 'elliptic'
 import TxBuild from './tx-builder' 
 
 import axios from 'axios'
@@ -19,7 +19,7 @@ import { BURNING_RATIO } from '../constant'
 import { Constitution, ScriptEngine } from 'wallet-script'
 import { ContentLink } from '../transaction/content-link'
 
-const ec = new EC('secp256k1');
+// const ec = new EC('secp256k1');
 
 export interface IHeaderSignature {
     pubkey: string
@@ -295,8 +295,7 @@ export class Wallet extends Model {
     }
 
     sign = () => {
-        const value = (val: Buffer) => ec.sign(val, this.keys().get().priv()).toDER()
-        const valueWithContentNonce = (contentNonce: number, val: Buffer) => ec.sign(val, this.keys().get().derivedPrivate(contentNonce)).toDER()
+        const value = (val: Buffer) => BuildSignature(this.keys().get().priv(), val)
 
         const transaction = async (tx: Transaction) => {
             
@@ -330,7 +329,6 @@ export class Wallet extends Model {
         
         return {
             value,
-            valueWithContentNonce,
             transaction,
             header: (): IHeaderSignature => {
                 return {

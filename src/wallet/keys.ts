@@ -47,22 +47,21 @@ export default class Keys extends Model {
 
         const derivedPubHash = (index: number): Buffer => ToPubKeyHash(derivedPub(index))
 
+        const contentWallet = (nonce: number): bip32.BIP32Interface => {
+            return master().derivePath('m/1/' + nonce.toString())
+        }
+
         const derivedPub = (index: number): Buffer => {
             const m = master().derivePath('m/1/' + index.toString())
             return m.publicKey
         }
 
-        const derivedPrivate = (index: number): Buffer => {
-            const m = master().derivePath('m/1/' + index.toString())
-            return m.privateKey as Buffer
-        }
-
-
         return {
             seed, master, priv, pub, 
             pubHex, pubHash, pubHashHex,
-            derivedPrivate, derivedPub,
-            address, derivedPubHash, mnemonic
+            derivedPub, address, 
+            derivedPubHash, mnemonic,
+            contentWallet
         }
     }
 }

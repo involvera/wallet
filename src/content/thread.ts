@@ -1,13 +1,16 @@
+import axios from 'axios'
+import * as bip32 from 'bip32'
 import { Model, Collection } from "acey";
+import { BuildSignatureHex } from 'wallet-util'
+
 import { ContentLink } from "../transaction";
 import { IAuthor, IEmbedData, IThread } from "./interfaces";
-import axios from 'axios'
 import config from '../config'
 
 export class Thread extends Model {
 
-    static NewContent = (sid: number, title: string, content: string, public_key: string, signature: string): Thread => {
-        return new Thread({sid, content, title, signature, public_key} as any, {})
+    static NewContent = (sid: number, title: string, content: string): Thread => {
+        return new Thread({sid, content, title} as any, {})
     }
 
     constructor(state: IThread, options: any){
@@ -16,9 +19,18 @@ export class Thread extends Model {
             link: new ContentLink(state.link, this.kids())
         })
     }
+
+    sign = (wallet: bip32.BIP32Interface) => {
+        const sig = BuildSignatureHex(wallet, Buffer.from(this.get().content()))
+        this.setState({
+            public_key: sig.public_key_hex,
+            signature: sig.signature_hex
+        })
+    }
     
-    broadcast = async () => {
+    broadcast = async (wallet: bip32.BIP32Interface) => {
         try {
+            this.sign(wallet)
             const json = this.to().plain()
             const res = await axios(config.getRootAPIContentUrl() + '/thread/', {
                 method: 'POST',

@@ -1,13 +1,12 @@
+import axios from 'axios'
+import * as bip32 from 'bip32'
 import { Collection, Model } from "acey";
+import { BuildSignatureHex } from 'wallet-util'
+
 import { ContentLink } from "../transaction";
 import { IAuthor, IEmbedData, IProposal, TLayer } from "./interfaces";
-import axios from 'axios'
 import config from "../config";
 import {VoteModel, IVote } from './vote'
-import * as bip32 from 'bip32'
-
-import { ec as EC } from 'elliptic'
-const ec = new EC('secp256k1');
 
 export class Proposal extends Model {
 
@@ -22,20 +21,18 @@ export class Proposal extends Model {
             vote: new VoteModel(state.vote, this.kids())
         })
     }
-
-
+    
     sign = (wallet: bip32.BIP32Interface) => {
-        const priv = wallet.privateKey as Buffer
-        const pub = wallet.publicKey
-        const sig = Buffer.from(ec.sign(this.get().dataToSign(), priv).toDER()).toString('hex')
+        const sig = BuildSignatureHex(wallet, Buffer.from(this.get().dataToSign()))
         this.setState({
-            public_key: pub,
-            signature: sig
+            public_key: sig.public_key_hex,
+            signature: sig.signature_hex
         })
     }
 
-    broadcast = async () => {
+    broadcast = async (wallet: bip32.BIP32Interface) => {
         try {
+            this.sign(wallet)
             const json = this.to().plain()
             json.content = this.get().dataToSign()
 

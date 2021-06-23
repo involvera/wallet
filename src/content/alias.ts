@@ -1,4 +1,6 @@
 import { Model } from "acey";
+import * as bip32 from 'bip32'
+import { BuildSignatureHex } from 'wallet-util'
 import axios from 'axios'
 import config from "../config";
 
@@ -25,11 +27,19 @@ export class Alias extends Model {
         super(state, options) 
     }
 
-    make = async () => {
+    sign = (wallet: bip32.BIP32Interface) => {
+        const sig = BuildSignatureHex(wallet, Buffer.from(this.get().username()))
+        return {
+            public_key: sig.public_key_hex,
+            signature: sig.signature_hex
+        }
+    }
+
+    make = async (wallet: bip32.BIP32Interface) => {
         try {
             const res = await axios(config.getRootAPIContentUrl() + '/alias', {
                 method: 'POST',
-                headers: { 'content-type': 'application/json' },
+                headers: Object.assign({ 'content-type': 'application/json'}, this.sign(wallet)),
                 data: this.to().plain(),
                 timeout: 10_000
             })
