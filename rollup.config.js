@@ -7,7 +7,7 @@ import pkg from './package.json'
 
 const config = {
     input: './index.ts',
-    external: [ 'acey', 'axios', 'create-hash', 'tweetnacl', 'tweetnacl-util', 'elliptic', 'bip39', 'bip32', 'wallet-util', 'wallet-script'],
+    external: [ 'acey', 'axios', 'create-hash', 'tweetnacl', 'tweetnacl-util', 'bip39', 'bip32', 'wallet-util', 'wallet-script'],
     output: [
         {
             globals: {
@@ -15,9 +15,7 @@ const config = {
                 'axios': 'axios',
                 'create-hash': 'create-hash',
                 'tweetnacl': 'tweetnacl',
-                'lodash.clonedeep': 'cloneDeep',
                 'tweetnacl-util': 'tweetnacl-util',
-                'elliptic': 'elliptic',
                 'bip39': 'bip39',
                 'bip32': 'bip32',
                 'wallet-util': 'wallet-util',
