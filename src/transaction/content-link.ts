@@ -48,7 +48,10 @@ export class ContentLink extends Model {
         }
 
         const response = await axios(config.getRootAPIChainUrl() + '/thread/' + hash, {
-            timeout: 10000
+            timeout: 10000,
+            validateStatus: function (status) {
+                return status >= 200 && status < 500;
+            },
         })
         if (response.status === 200){
             const json = response.data
@@ -65,6 +68,9 @@ export class ContentLink extends Model {
 
         const response = await axios(config.getRootAPIChainUrl() + '/proposal/' + hash, {
             timeout: 10000,
+            validateStatus: function (status) {
+                return status >= 200 && status < 500;
+            },
         })
         if (response.status === 200){
             const json = response.data

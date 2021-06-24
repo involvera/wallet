@@ -23,7 +23,7 @@ export interface IProposal {
 
 export interface IThread {
     sid: number
-    link: IContentLink
+    content_link: IContentLink
     author: IAuthor,
     title: string,
     content: string,

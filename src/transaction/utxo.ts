@@ -95,6 +95,9 @@ export class UTXOList extends Collection {
             const response = await axios(config.getRootAPIChainUrl() + '/transactions/list', {
                 headers: Object.assign({}, headerSignature as any, {list: listUnFetchedTxHash.join(',') }),
                 timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
             })
             if (response.status == 200){
                 let list = response.data

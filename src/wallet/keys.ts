@@ -5,11 +5,11 @@ import * as bip32 from 'bip32'
 import { GetAddressFromPubKeyHash, ToPubKeyHash, Sha256 } from 'wallet-util'
 import nacl from 'tweetnacl'
 import naclUtil from 'tweetnacl-util'
-
+import { Alias } from '../content'
 
 export default class Keys extends Model {
 
-    constructor(initialState = {seed: '', mnemonic: ''}, options: any){
+    constructor(initialState = {seed: '', mnemonic: '', alias: null}, options: any){
         super(initialState, options)
     }
     
@@ -18,19 +18,24 @@ export default class Keys extends Model {
         const nonce = new Uint8Array(nacl.box.nonceLength)
         const mnemonicEncrypted = nacl.secretbox(Buffer.from(mnemonic), nonce, pair.secretKey)
 
-        return this.setState({ 
+        this.setState({ 
             seed: bip39.mnemonicToSeedSync(mnemonic, pass).toString('hex'), 
-            mnemonic: Buffer.from(mnemonicEncrypted).toString('hex')
+            mnemonic: Buffer.from(mnemonicEncrypted).toString('hex'),
+        })
+        return this.setState({
+            alias: new Alias({ address: this.get().address() } as any, this.kids())
         })
     }
 
     isSet = () => this.state.seed.length > 0
 
     get = () => {
+        const alias = (): Alias => this.state.alias 
         const seed = () => Buffer.from(this.state.seed, 'hex')
         const master = () => bip32.fromSeed(seed())
-        const priv = () => master()?.derivePath('m/0/0').privateKey as Buffer
-        const pub = () =>  master()?.derivePath('m/0/0').publicKey as Buffer
+        const wallet = () => master()?.derivePath('m/0/0')
+        const priv = () => wallet().privateKey as Buffer
+        const pub = () =>  wallet().publicKey as Buffer
         const pubHex = () => pub().toString('hex')
         const pubHash = () => ToPubKeyHash(pub())
         const pubHashHex = () => pubHash().toString('hex')
@@ -57,11 +62,11 @@ export default class Keys extends Model {
         }
 
         return {
-            seed, master, priv, pub, 
+            seed, master, wallet, priv, pub, 
             pubHex, pubHash, pubHashHex,
             derivedPub, address, 
             derivedPubHash, mnemonic,
-            contentWallet
+            contentWallet, alias
         }
     }
 }

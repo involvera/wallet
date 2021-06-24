@@ -37,6 +37,9 @@ export class Transaction extends Model {
         }
         const response = await axios(config.getRootAPIChainUrl() + '/transaction/' + hash, {
             timeout: 10000,
+            validateStatus: function (status) {
+                return status >= 200 && status < 500;
+            },
         })
         if (response.status == 200){
             const json = response.data
@@ -69,6 +72,9 @@ export class Transaction extends Model {
                 headers: Object.assign(wallet.sign().header() as any, {'content-type': 'application/json' }),
                 data: this.toRaw().base64(),
                 timeout: 15000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
             })
             if (response.status === 201){
                 const { transaction: {lh, t}, puts, utxos } = response.data

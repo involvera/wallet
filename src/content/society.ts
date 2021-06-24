@@ -7,7 +7,11 @@ export class SocietyModel extends Model {
 
     static fetch = async (id: number): Promise<SocietyModel|null> => {
         try {
-            const res = await axios(config.getRootAPIContentUrl() + '/society/' + id.toString())
+            const res = await axios(config.getRootAPIOffChainUrl() + '/society/' + id.toString(), {
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
             if (res.status == 200)
                 return new SocietyModel(res.data, {})
             return null

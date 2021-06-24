@@ -10,16 +10,17 @@ import {VoteModel, IVote } from './vote'
 
 export class Proposal extends Model {
 
-    static NewContent = (sid: number, title: string, content: string[3]): Proposal => {
+    static NewContent = (sid: number, title: string, content: string[]): Proposal => {
+        if (content.length != 3){
+            throw new Error("Wrong proposal contents length")
+        }
         return new Proposal({sid, content, title} as any, {})
     }
 
     constructor(state: IProposal, options: any){
         super(state, options) 
-        this.setState({
-            link: new ContentLink(state.content_link, this.kids()),
-            vote: new VoteModel(state.vote, this.kids())
-        })
+        !!state.content_link && this.setState({ content_link: new ContentLink(state.content_link, this.kids()) })
+        !!state.vote && this.setState({ vote: new VoteModel(state.vote, this.kids()) })        
     }
     
     sign = (wallet: bip32.BIP32Interface) => {
@@ -31,43 +32,54 @@ export class Proposal extends Model {
     }
 
     broadcast = async (wallet: bip32.BIP32Interface) => {
-        try {
             this.sign(wallet)
             const json = this.to().plain()
             json.content = this.get().dataToSign()
-
-            const res = await axios(config.getRootAPIContentUrl() + '/proposal/', {
-                method: 'POST',
-                headers: { 'content-type': 'application/json' },
-                data: json,
-                timeout: 10_000
-            })
-            if (res.status == 201){
-                const json = await res.data()
-                this.setState(json)
+            try {
+                const res = await axios(`${config.getRootAPIOffChainUrl()}/proposal`, {
+                    method: 'post',
+                    headers: { 'Content-Type': 'application/json' },
+                    data: JSON.stringify(json),
+                    timeout: 10_000,
+                    validateStatus: function (status) {
+                        return status >= 200 && status < 500;
+                    },
+                })
+                res.status == 201 && this.setState(res.data)
+                return res
+            } catch (e){
+                return e.toString()
             }
-            return res
-        } catch (e){
-            throw new Error(e)
-        }
     }
 
     get = () => {
-        const contentLink = (): ContentLink => this.state.link
+        const contentLink = (): ContentLink | null => this.state.content_link
         const societyID = (): number => this.state.sid
-        const id = () => contentLink().get().output().get().contentUUID()
         const embedData = (): IEmbedData => this.state.embed_data
-        const costs = () => contentLink().get().output().get().script().parse().proposalCosts()
-        const constitution = () => contentLink().get().output().get().script().parse().constitution()
+        const costs = () => { 
+            const link = contentLink()
+            if (link == null)
+                throw new Error("content_link is null")
+            return link.get().output().get().script().parse().proposalCosts()
+        }
+        const constitution = () => {
+            const link = contentLink()
+            if (link == null)
+                throw new Error("content_link is null")
+            return link.get().output().get().script().parse().constitution()
+        }
         const author = (): IAuthor => this.state.author
         const content = (): string[] => this.state.content 
         const title = (): string => this.state.title
         const created_at = (): Date => this.state.created_at 
-        const vote = (): IVote => this.state.vote
+        const vote = (): IVote | null => this.state.vote
         const dataToSign = (): string => this.get().content().join('~~~_~~~_~~~_~~~')
 
         const layer = (): TLayer => {
-            const is = contentLink().get().output().get().script().is()
+            const link = contentLink()
+            if (link == null)
+                throw new Error("content_link is null")
+            const is = link.get().output().get().script().is()
             if (is.costProposalScript())
                 return 'Economy'
             if (is.constitutionProposalScript())
@@ -76,7 +88,7 @@ export class Proposal extends Model {
         }
 
         return {
-            contentLink, id, embedData, costs, constitution,
+            contentLink, embedData, costs, constitution,
             author, content, title, layer, created_at, 
             vote, societyID, dataToSign
         }

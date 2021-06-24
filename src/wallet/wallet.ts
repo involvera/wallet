@@ -1,7 +1,6 @@
 import { Model } from 'acey'
 
 import { B64ToByteArray, PubKeyHashFromAddress, Sha256, BuildSignature } from 'wallet-util'
-// import { ec as EC } from 'elliptic'
 import TxBuild from './tx-builder' 
 
 import axios from 'axios'
@@ -18,8 +17,6 @@ import Info from './info'
 import { BURNING_RATIO } from '../constant'
 import { Constitution, ScriptEngine } from 'wallet-script'
 import { ContentLink } from '../transaction/content-link'
-
-// const ec = new EC('secp256k1');
 
 export interface IHeaderSignature {
     pubkey: string
@@ -40,7 +37,7 @@ export class Wallet extends Model {
             fees: new Fees(initialState.fees, this.kids()),
             info: new Info(initialState.info, this.kids()),
             costs: new Costs(initialState.costs, this.kids()),
-            memory: initialState.memory || {last_put_fetch_height: 0, is_recovered_wallet: false}
+            memory: initialState.memory || {last_put_fetch_height: 0, is_recovered_wallet: false},
         })
     }
 
@@ -49,7 +46,11 @@ export class Wallet extends Model {
         const response = await axios(config.getRootAPIChainUrl() + '/wallet', {
             headers: Object.assign(this.sign().header() as any, {
                 last_cch: this.cch().get().last(),
+                
             }),
+            validateStatus: function (status) {
+                return status >= 200 && status < 500;
+            },
             timeout: 10000,
         })
         if (response.status == 200){
@@ -261,6 +262,9 @@ export class Wallet extends Model {
                     const res = await axios(config.getRootAPIChainUrl() + '/cch', {
                         headers: Object.assign({}, this.sign().header() as any, {last_cch: get().last() }),
                         timeout: 10000,
+                        validateStatus: function (status) {
+                            return status >= 200 && status < 500;
+                        },
                     })
                     res.status == 200 && _assignJSONResponse(res.data).store()
                     return res.status
@@ -281,6 +285,9 @@ export class Wallet extends Model {
                     method: 'GET',
                     headers: this.sign().header(),
                     timeout: 10000,
+                    validateStatus: function (status) {
+                        return status >= 200 && status < 500;
+                    },
                 })
                 if (res.status == 200){
                     const json = res.data

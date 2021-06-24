@@ -9,6 +9,13 @@ import { Wallet } from '../src/wallet'
 import { UnserializedPut } from '../src/wallet/puts';
 import { Constitution } from 'wallet-script';
 import { ContentLink, Output } from '../src/transaction';
+import { Proposal } from '../src/content/proposal'
+import { Thread } from '../src/content';
+import axios from 'axios';
+import conf from '../src/config'
+
+
+const ADMIN_KEY = ''
 
 const wallet = new Wallet({}, { key: 'wallet', connected: true })
 const wallet2 = new Wallet({}, {key: 'wallet2', connected: true })
@@ -21,6 +28,17 @@ const initWallets = () => {
 }
 
 const main = () => {
+
+    it('OFFCHAIN reset', async () => {
+        const res = await axios(`${conf.getRootAPIOffChainUrl()}/admin/1/reset`, {
+            method: 'POST',
+            headers: {
+                admin_key: ADMIN_KEY
+            }
+        })
+        expect(res.status).to.eq(200)
+    })
+
     it('initialisation', async () => {
         config.setStoreEngine(new LocalStorage('./db'))
         await config.done()
@@ -32,7 +50,7 @@ const main = () => {
         await wallet2.synchronize()
     })
 
-    it('Wallet1 -> UTXOS: ', () => {
+    it('[ONCHAIN] Wallet1 -> Fetch and check UTXOS: ', () => {
         const CCHList = wallet.cch().get().list()
         const utxos = wallet.utxos().get().get()
 
@@ -44,7 +62,7 @@ const main = () => {
         expect(utxos.listUnFetchedTxHash().length).to.eq(7)
     });
 
-    it('Wallet1 -> Address: ', () => {
+    it('Wallet1 -> Check Address: ', () => {
         expect(wallet.keys().get().address()).to.eq("1GHQu3CDZpPZGb6PmaBPP4sZNuT13sja1")
         expect(Buffer.compare(PubKeyHashFromAddress(wallet.keys().get().address()), wallet.keys().get().pubHash())).to.eq(0)
         expect(IsAddressValid(wallet.keys().get().address())).to.eq(true)
@@ -53,7 +71,7 @@ const main = () => {
         expect(DecodeBaseUUID(uuid).toString('hex')).to.eq(wallet.keys().get().pubHashHex())
     })
 
-    it('Wallet1 -> Puts: ', () => {
+    it('[ONCHAIN] Wallet1 -> Fetch and check Puts: ', () => {
         expect(wallet.puts().count()).to.eq(10)
         expect(wallet.puts().get().totalVotePower()).to.eq(BigInt(11611604044790))
         expect(wallet.puts().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('0.145')
@@ -62,7 +80,21 @@ const main = () => {
         expect(wallet.puts().get().totalReceivedDonationSince(now, wallet.keys().get().pubHashHex())).to.eq(BigInt(1800000004))
     })
 
-    it('Wallet1 sends some coins to Wallet2 ', async () => {
+    it('[OFFCHAIN] Wallet1 -> create a thread failed 1/3', async () => {
+        const p = Thread.NewContent(1, "", "Content of my thread")
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce() + 1))
+        expect(res.status).to.eq(404)
+        expect(res.data.error).to.eq("Not Found")
+    })
+
+    it('[OFFCHAIN] Wallet1 -> create a thread failed 2/3', async () => {
+        const p = Thread.NewContent(1, "", "Content of my thread")
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(404)
+        expect(res.data.error).to.eq("You need to create an alias on your address before adding content.")
+    })
+
+    it('[ONCHAIN] Wallet1 sends some coins to Wallet2 ', async () => {
         const total = Math.floor(wallet.balance() / 10)
         const balanceBefore = wallet.balance()
         const tx = await wallet.buildTX().toAddress(wallet2.keys().get().address(), total)
@@ -92,7 +124,14 @@ const main = () => {
         }
     })
 
-    it('Wallet1 -> create a proposal : application', async () => {
+    it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 1/3', async () => {
+        const p = Proposal.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3"])
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(404)
+        expect(res.data.error).to.eq("Not Found")
+    })
+
+    it('[ONCHAIN] Wallet1 -> create a proposal : application', async () => {
         const balance = wallet.balance()
         const tx = await wallet.buildTX().proposal().application()
         expect(tx).not.eq(null)
@@ -110,7 +149,34 @@ const main = () => {
         }
     })
 
-    it('Wallet1 -> create a proposal : constitution', async () => {
+    it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 2/3', async () => {
+        const p = Proposal.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3"])
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(404)
+        expect(res.data.error).to.eq("You need to create an alias on your address before adding content.")
+    })
+
+    it('[OFFCHAIN] Create an alias on Wallet 1', async () => {
+        const alias = wallet.keys().get().alias()
+        alias.setUsername('fantasim')
+        const res = await alias.update(wallet.keys().get().wallet())
+        expect(res.status).to.eq(201)
+    })
+
+    it('[OFFCHAIN] Wallet1 -> create a proposal application content', async () => {
+        const p = Proposal.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3"])
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(201)
+    })
+
+    it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 3/3', async () => {
+        const p = Proposal.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3"])
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(401)
+        expect(res.data.error).to.eq("Proposal is already recorded.")
+    })
+
+    it('[ONCHAIN] Wallet1 -> create a proposal : constitution', async () => {
         const balance = wallet.balance()
         const c = Constitution.NewConstitution()
         c[0].title = "Title #0"
@@ -132,8 +198,14 @@ const main = () => {
         }
     })
 
+    it('[OFFCHAIN] Wallet1 -> create a proposal constitution content', async () => {
+        const p = Proposal.NewContent(1, "This is the title of a constitution proposal", ["Content 1", "Content 2", "Content 3"])
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(201)
+    })
+
     let uuidContent = ""
-    it('Wallet1 -> create a proposal : costs', async () => {
+    it('[ONCHAIN] Wallet1 -> create a proposal : costs', async () => {
         const tx = await wallet.buildTX().proposal().cost(BigInt(-1), BigInt(COIN_UNIT * 2000))
         const balance = wallet.balance()
         expect(tx).not.eq(null)
@@ -153,7 +225,13 @@ const main = () => {
         }
     })
 
-    it('Wallet1 -> create a vote', async () => {
+    it('[OFFCHAIN] Wallet1 -> create a proposal cost content', async () => {
+        const p = Proposal.NewContent(1, "This is the title of a cost proposal", ["Content 1", "Content 2", "Content 3"])
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(201)
+    })
+
+    it('[ONCHAIN] Wallet1 -> create a vote', async () => {
         const proposal = await ContentLink.FetchProposal(uuidContent)
         const tx = await wallet.buildTX().vote(proposal, true)
         const balance = wallet.balance()
@@ -173,7 +251,7 @@ const main = () => {
         }
     })
 
-    it('Wallet1 -> create a thread', async () => {
+    it('[ONCHAIN] Wallet1 -> create a thread', async () => {
         const tx = await wallet.buildTX().thread()
         const balance = wallet.balance()
         expect(tx).not.eq(null)
@@ -194,8 +272,14 @@ const main = () => {
         }
     })
 
+    it('[OFFCHAIN] Wallet1 -> create a thread', async () => {
+        const p = Thread.NewContent(1, "This is a title.", "Content of my thread")
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(201)
+    })
+
     let pkhContent2 = ""
-    it('Wallet1 -> create a rethread', async () => {
+    it('[ONCHAIN] Wallet1 -> create a rethread', async () => {
         const thread = await ContentLink.FetchThread(uuidContent)
         const tx = await wallet.buildTX().rethread(thread)
         const balance = wallet.balance()
@@ -217,7 +301,13 @@ const main = () => {
         }
     })
 
-    it('Wallet2 -> create a reward : upvote', async () => {
+    it('[OFFCHAIN] Wallet1 -> create a rethread', async () => {
+        const p = Thread.NewContent(1, "This is a title.", "Content of my thread")
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(201)
+    })
+
+    it('[ONCHAIN] Wallet2 -> create a reward : upvote', async () => {
         const thread = await ContentLink.FetchThread(uuidContent)
         const tx = await wallet2.buildTX().reward(thread, 'upvote')        
         const balance = wallet2.balance()
@@ -252,7 +342,7 @@ const main = () => {
         }
     })
 
-    it('Wallet2 -> create a reward : reaction0', async () => {
+    it('[ONCHAIN] Wallet2 -> create a reward : reaction0', async () => {
         const thread = await ContentLink.FetchThread(pkhContent2)
         const tx = await wallet2.buildTX().reward(thread, 'reaction0')
         const balance = wallet2.balance()
@@ -287,7 +377,7 @@ const main = () => {
         }
     })
 
-    it('Wallet1 -> Puts:', () => {
+    it('[ONCHAIN] Wallet1 -> Check puts:', () => {
         expect(wallet.puts().count()).to.eq(19)
         expect(wallet.puts().get().totalVotePower()).to.eq(BigInt(11611604044790))
         expect(wallet.puts().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('0.145')
@@ -296,7 +386,7 @@ const main = () => {
         expect(wallet.puts().get().totalReceivedDonationSince(now, wallet.keys().get().pubHashHex())).to.eq(BigInt(4050000006))
     })
 
-    it('Wallet1 -> Puts: Vote power distribution', () => {
+    it('[ONCHAIN] Wallet1 -> Check Vote power distribution on Puts.', () => {
         expect(wallet.puts().get().votePowerDistribution().count()).to.eq(3)
     })
 }

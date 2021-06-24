@@ -16,7 +16,7 @@ export class Thread extends Model {
     constructor(state: IThread, options: any){
         super(state, options) 
         this.setState({
-            link: new ContentLink(state.link, this.kids())
+            content_link: !state.content_link ? null : new ContentLink(state.content_link, this.kids())
         })
     }
 
@@ -32,16 +32,17 @@ export class Thread extends Model {
         try {
             this.sign(wallet)
             const json = this.to().plain()
-            const res = await axios(config.getRootAPIContentUrl() + '/thread/', {
+            !json.title && delete json.title
+            const res = await axios(config.getRootAPIOffChainUrl() + '/thread', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 data: json,
-                timeout: 10_000
+                timeout: 10_000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
             })
-            if (res.status == 201){
-                const json = await res.data()
-                this.setState(json)
-            }
+            res.status == 201 && this.setState(res.data)
             return res
         } catch (e){
             throw new Error(e)
@@ -50,8 +51,7 @@ export class Thread extends Model {
 
     get = () => {
         const societyID = (): number => this.state.sid
-        const link = (): ContentLink => this.state.link
-        const id = () => link().get().output().get().contentUUID()
+        const contentLink = (): ContentLink | null => this.state.content_link
         const embedData = (): IEmbedData => this.state.embed_data
         const author = (): IAuthor => this.state.author
         const title = (): string => this.state.title
@@ -59,7 +59,7 @@ export class Thread extends Model {
         const createdAt = (): Date => this.state.created_at
 
         return {
-            link, id, embedData, author, title,
+            contentLink, embedData, author, title,
             content, createdAt, societyID
         }
     }

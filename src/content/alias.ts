@@ -14,7 +14,7 @@ export class Alias extends Model {
 
     static fetch = async (address: string): Promise<Alias|null> => {
         try {
-            const res = await axios(config.getRootAPIContentUrl() + '/alias/' + address)
+            const res = await axios(config.getRootAPIOffChainUrl() + '/alias/' + address)
             if (res.status == 200)
                 return new Alias(res.data, {})
             return null
@@ -28,6 +28,9 @@ export class Alias extends Model {
     }
 
     sign = (wallet: bip32.BIP32Interface) => {
+        if (this.get().username().length == 0)
+            throw new Error("No username set.")
+
         const sig = BuildSignatureHex(wallet, Buffer.from(this.get().username()))
         return {
             public_key: sig.public_key_hex,
@@ -35,16 +38,19 @@ export class Alias extends Model {
         }
     }
 
-    make = async (wallet: bip32.BIP32Interface) => {
+    update = async (wallet: bip32.BIP32Interface) => {
         try {
-            const res = await axios(config.getRootAPIContentUrl() + '/alias', {
+            const res = await axios(config.getRootAPIOffChainUrl() + '/alias', {
                 method: 'POST',
                 headers: Object.assign({ 'content-type': 'application/json'}, this.sign(wallet)),
-                data: this.to().plain(),
-                timeout: 10_000
+                data: this.to().string(),
+                timeout: 10_000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
             })
-            if (res.status == 200){
-                this.setState(res.data)
+            if (res.status == 200 || res.status == 201){
+                this.setState(res.data).store()
             }
             return res
         } catch (e){
@@ -52,11 +58,23 @@ export class Alias extends Model {
         }
     }
 
+    setUsername = (username: string) => {
+        if (!username.match(/^[a-z0-9_]{3,16}$/))
+            throw new Error("Wrong username pattern: 3-16 characters with a-z,0-9 and _ allowed characters.")
+        return this.setState({ username })
+    }
+
+    setPP = (ppURI: string) => {
+        if (ppURI.length > 255)
+            throw new Error("Too long uri, max 255 characters.")
+        return this.setState({ pp: ppURI })
+    } 
+
     get = () => {
         return {
             address: (): string => this.state.address,
             pp: (): null | string => this.state.pp,
-            username: (): string => this.state.string
+            username: (): string => this.state.username
         }
     }
 }

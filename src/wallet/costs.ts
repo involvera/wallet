@@ -38,6 +38,9 @@ export default class Costs extends Model {
              const res = await axios(config.getRootAPIChainUrl() + '/costs', { 
                 method: 'GET',
                 timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
             })
              res.status == 200 && this.setState(res.data).store()
              return res.status

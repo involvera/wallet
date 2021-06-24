@@ -301,6 +301,9 @@ export class UnserializedPutList extends Collection {
                 const response = await axios(config.getRootAPIChainUrl() + '/puts/' + txHashHex, {
                     headers: headerSignature as any,
                     timeout: 10000,
+                    validateStatus: function (status) {
+                        return status >= 200 && status < 500;
+                    },
                 })
                 if (response.status == 200){
                     const json = response.data
@@ -318,6 +321,9 @@ export class UnserializedPutList extends Collection {
                     method: 'GET',
                     headers: Object.assign({}, headerSignature as any, {last_lh: lastHeight }),
                     timeout: 10000,
+                    validateStatus: function (status) {
+                        return status >= 200 && status < 500;
+                    },
                 })
                 if (response.status == 200){
                     const json = response.data
