@@ -9,13 +9,13 @@ import { Wallet } from '../src/wallet'
 import { UnserializedPut } from '../src/wallet/puts';
 import { Constitution } from 'wallet-script';
 import { ContentLink, Output } from '../src/transaction';
-import { Proposal } from '../src/content/proposal'
-import { Thread } from '../src/content';
+import { Proposal } from '../src/off-chain/proposal'
+import { Thread } from '../src/off-chain';
 import axios from 'axios';
 import conf from '../src/config'
 
 
-const ADMIN_KEY = ''
+const ADMIN_KEY = '2f72e55b962b6cd66ea70e8b6bd8657d1c87a23a65769213d76dcb5da6abf6b5'
 
 const wallet = new Wallet({}, { key: 'wallet', connected: true })
 const wallet2 = new Wallet({}, {key: 'wallet2', connected: true })
@@ -307,6 +307,13 @@ const main = () => {
         expect(res.status).to.eq(201)
     })
 
+    it('[OFFCHAIN] Create an alias on Wallet 2', async () => {
+        const alias = wallet2.keys().get().alias()
+        alias.setUsername('skily')
+        const res = await alias.update(wallet2.keys().get().wallet())
+        expect(res.status).to.eq(201)
+    })
+
     it('[ONCHAIN] Wallet2 -> create a reward : upvote', async () => {
         const thread = await ContentLink.FetchThread(uuidContent)
         const tx = await wallet2.buildTX().reward(thread, 'upvote')        
@@ -316,6 +323,7 @@ const main = () => {
         if (tx){
             const response = await tx.broadcast(wallet2)
             expect(response.status).to.eq(201)
+
             await wallet.synchronize()
             expect(wallet2.puts().count()).to.eq(2)
             expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().upvote()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
