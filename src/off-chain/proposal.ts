@@ -11,7 +11,7 @@ import {VoteModel, IVote } from './vote'
 export class Proposal extends Model {
 
     static NewContent = (sid: number, title: string, content: string[]): Proposal => {
-        if (content.length != 3){
+        if (content.length < 3 || content.length > 4){
             throw new Error("Wrong proposal contents length")
         }
         return new Proposal({sid, content, title} as any, {})

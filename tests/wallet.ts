@@ -123,7 +123,7 @@ const main = () => {
         }
     })
 
-    it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 1/3', async () => {
+    it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 1/4', async () => {
         const p = Proposal.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(404)
@@ -148,8 +148,15 @@ const main = () => {
         }
     })
 
-    it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 2/3', async () => {
+    it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 2/4', async () => {
         const p = Proposal.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3"])
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(406)
+        expect(res.data.error).to.eq("Wrong length of content.")
+    })
+
+    it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 3/4', async () => {
+        const p = Proposal.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3", "Content 4"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(404)
         expect(res.data.error).to.eq("You need to create an alias on your address before adding content.")
@@ -163,13 +170,13 @@ const main = () => {
     })
 
     it('[OFFCHAIN] Wallet1 -> create a proposal application content', async () => {
-        const p = Proposal.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3"])
+        const p = Proposal.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3", "Content 4"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
     })
 
-    it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 3/3', async () => {
-        const p = Proposal.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3"])
+    it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 4/4', async () => {
+        const p = Proposal.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3", "Content 4"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(401)
         expect(res.data.error).to.eq("Proposal is already recorded.")
@@ -197,6 +204,13 @@ const main = () => {
         }
     })
 
+    it('[OFFCHAIN] Wallet1 -> create a proposal constitution failed 1/1', async () => {
+        const p = Proposal.NewContent(1, "This is the title of a constitution proposal", ["Content 1", "Content 2", "Content 3", "Content 4"])
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(406)
+        expect(res.data.error).to.eq("Wrong length of content.")
+    })
+
     it('[OFFCHAIN] Wallet1 -> create a proposal constitution content', async () => {
         const p = Proposal.NewContent(1, "This is the title of a constitution proposal", ["Content 1", "Content 2", "Content 3"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
@@ -222,6 +236,13 @@ const main = () => {
             expect(lastPut.isCostProposal() ).to.eq(true)
             expect(lastPut.get().contentPKH()).to.not.eq("")
         }
+    })
+
+    it('[OFFCHAIN] Wallet1 -> create a proposal cost content failed 1/1', async () => {
+        const p = Proposal.NewContent(1, "This is the title of a cost proposal", ["Content 1", "Content 2", "Content 3", "Content 4"])
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(406)
+        expect(res.data.error).to.eq("Wrong length of content.")
     })
 
     it('[OFFCHAIN] Wallet1 -> create a proposal cost content', async () => {
