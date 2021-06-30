@@ -9,8 +9,7 @@ import { Wallet } from '../src/wallet'
 import { UnserializedPut } from '../src/wallet/puts';
 import { Constitution } from 'wallet-script';
 import { ContentLink, Output } from '../src/transaction';
-import { Proposal } from '../src/off-chain/proposal'
-import { Thread } from '../src/off-chain';
+import { Thread, Proposal, Reward } from '../src/off-chain';
 import axios from 'axios';
 import conf from '../src/config'
 
@@ -314,6 +313,7 @@ const main = () => {
         expect(res.status).to.eq(201)
     })
 
+    let lastReaction = {tx_id: '', vout: -1}
     it('[ONCHAIN] Wallet2 -> create a reward : upvote', async () => {
         const thread = await ContentLink.FetchThread(uuidContent)
         const tx = await wallet2.buildTX().reward(thread, 'upvote')        
@@ -323,7 +323,7 @@ const main = () => {
         if (tx){
             const response = await tx.broadcast(wallet2)
             expect(response.status).to.eq(201)
-
+            lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
             await wallet.synchronize()
             expect(wallet2.puts().count()).to.eq(2)
             expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().upvote()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
@@ -350,6 +350,12 @@ const main = () => {
         }
     })
 
+    it('[OFFCHAIN] Wallet2 -> create a reward : upvote', async () => {
+        const r = Reward.NewContent(1, lastReaction.tx_id, lastReaction.vout)
+        const res = await r.broadcast()
+        expect(res.status).to.eq(201)
+    })
+
     it('[ONCHAIN] Wallet2 -> create a reward : reaction0', async () => {
         const thread = await ContentLink.FetchThread(pkhContent2)
         const tx = await wallet2.buildTX().reward(thread, 'reaction0')
@@ -360,6 +366,7 @@ const main = () => {
         if (tx){
             const response = await tx.broadcast(wallet2)
             expect(response.status).to.eq(201)
+            lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
             await wallet.synchronize()
             expect(wallet2.puts().count()).to.eq(3)
             expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().reaction0()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
@@ -383,6 +390,12 @@ const main = () => {
             expect(lastPut.get().contentPKH()).to.eq("")
             expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().output().get().contentPKH().toString('hex'))
         }
+    })
+
+    it('[OFFCHAIN] Wallet2 -> create a reward : reaction0', async () => {
+        const r = Reward.NewContent(1, lastReaction.tx_id, lastReaction.vout)
+        const res = await r.broadcast()
+        expect(res.status).to.eq(201)
     })
 
     it('[ONCHAIN] Wallet1 -> Check puts:', () => {
