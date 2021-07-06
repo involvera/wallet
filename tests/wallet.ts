@@ -3,7 +3,7 @@ import 'mocha';
 import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
 
-import { COIN_UNIT, MAX_SUPPLY_AMOUNT } from '../src/constant';
+import { COIN_UNIT, LUGH_AMOUNT, MAX_SUPPLY_AMOUNT } from '../src/constant';
 import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from 'wallet-util';
 import { Wallet } from '../src/wallet'
 import { UnserializedPut } from '../src/wallet/puts';
@@ -68,6 +68,19 @@ const main = () => {
         expect(wallet.keys().get().mnemonic("coucou")).to.eq("film dirt damage apart carry horse enroll carry power prison flush bulb")
         const uuid = EncodeBaseUUID(wallet.keys().get().pubHash())
         expect(DecodeBaseUUID(uuid).toString('hex')).to.eq(wallet.keys().get().pubHashHex())
+    })
+
+    it('Wallet1 -> Check Constitution and Costs: ', () => {
+        expect(wallet.costs().get().thread()).to.eq(LUGH_AMOUNT / 200)
+        expect(wallet.costs().get().proposal()).to.eq(LUGH_AMOUNT / 20)
+        expect(wallet.constitution().get().constitution().length).to.eq(10)
+        const constitution = wallet.constitution().get().constitution()
+        expect(constitution[0].title == 'Rule number 1')
+        expect(constitution[0].content == 'Content of the rule number 1')
+        expect(constitution[1].title == 'Rule number 2')
+        expect(constitution[1].content == 'Content of the rule number 2')
+        expect(constitution[2].title == 'No Rule 3')
+        expect(constitution[2].content == 'There is no rule number 3')
     })
 
     it('[ONCHAIN] Wallet1 -> Fetch and check Puts: ', () => {
