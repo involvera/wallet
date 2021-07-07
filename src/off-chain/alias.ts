@@ -5,9 +5,13 @@ import axios from 'axios'
 import config from "../config";
 
 interface IAlias {
-    address: string
     pp: null | string
     username: string
+}
+
+const DEFAULT_STATE: IAlias = {
+    pp: null,
+    username: ''
 }
 
 export class Alias extends Model {
@@ -23,7 +27,7 @@ export class Alias extends Model {
         }
     }
 
-    constructor(state: IAlias, options: any){
+    constructor(state: IAlias = DEFAULT_STATE, options: any){
         super(state, options) 
     }
 
@@ -72,7 +76,6 @@ export class Alias extends Model {
 
     get = () => {
         return {
-            address: (): string => this.state.address,
             pp: (): null | string => this.state.pp,
             username: (): string => this.state.username
         }

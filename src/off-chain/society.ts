@@ -3,6 +3,16 @@ import { ISociety } from "./interfaces";
 import axios from 'axios'
 import config from "../config";
 
+const DEFAULT_STATE: ISociety = {
+    id: 0,
+    created_at: new Date(),
+    name: '',
+    description: '',
+    domain: '',
+    currency_route_api: '',
+    currency_symbol: ''
+}
+
 export class SocietyModel extends Model {
 
     static fetch = async (id: number): Promise<SocietyModel|null> => {
@@ -20,7 +30,7 @@ export class SocietyModel extends Model {
         }
     }
 
-    constructor(state: ISociety, options:any){
+    constructor(state: ISociety = DEFAULT_STATE, options:any){
         super(state, options)
     }
 

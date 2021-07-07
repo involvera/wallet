@@ -22,7 +22,7 @@ export default class Keys extends Model {
             mnemonic: Buffer.from(mnemonicEncrypted).toString('hex'),
         })
         return this.setState({
-            alias: new Alias({ address: this.get().address() } as any, this.kids())
+            alias: new Alias(undefined, this.kids())
         })
     }
 
