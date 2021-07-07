@@ -4,12 +4,12 @@ import { BuildSignatureHex } from 'wallet-util'
 import axios from 'axios'
 import config from "../config";
 
-interface IAlias {
+export interface IAlias {
     pp: string | null,
     username: string
 }
 
-const DEFAULT_STATE: IAlias = {
+export const DEFAULT_STATE: IAlias = {
     pp: null,
     username: ''
 }

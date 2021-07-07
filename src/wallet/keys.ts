@@ -4,12 +4,25 @@ import * as bip32 from 'bip32'
 import { GetAddressFromPubKeyHash, ToPubKeyHash, Sha256 } from 'wallet-util'
 import nacl from 'tweetnacl'
 import naclUtil from 'tweetnacl-util'
-import { Alias } from '../off-chain'
+import { Alias, IAlias, DEFAULT_STATE as AliasDefaultState } from '../off-chain'
+
+export interface IKey {
+    seed: string
+    mnemonic: string
+    alias: IAlias
+}
+
+const DEFAULT_STATE = {
+    seed: '',
+    mnemonic: '',
+    alias: AliasDefaultState
+}
 
 export default class Keys extends Model {
 
-    constructor(initialState = {seed: '', mnemonic: '', alias: null}, options: any){
-        super(initialState, options)
+    constructor(initialState: IKey = DEFAULT_STATE, options: any){
+        super(Object.assign(initialState, {}, 
+            ), options)
     }
     
     set = (mnemonic: string, pass: string) => {
