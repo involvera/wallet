@@ -8,7 +8,6 @@ export interface IAuthor {
 }
 export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
-
 export interface IProposal {
     sid: number
     content_link: IContentLink
@@ -52,4 +51,15 @@ export interface ISociety {
     description: string
     domain: string,
     currency_route_api: string
+}
+
+export interface IScriptOrigin {
+    tx_id: string | null
+    vout: number
+}
+
+export interface IScriptProposal {
+    origin: IScriptOrigin
+    pubkh: string
+    content_nonce: number
 }

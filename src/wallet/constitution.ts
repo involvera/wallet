@@ -3,8 +3,22 @@ import axios from 'axios'
 import config from '../config'
 import { Constitution as C } from 'wallet-script'
 
-const DEFAULT_STATE = {
-    proposal: null,
+import { IScriptProposal } from '../off-chain/interfaces'
+
+interface IConstitutionData {
+    proposal: IScriptProposal
+    constitution: C.TConstitution
+}
+
+const DEFAULT_STATE: IConstitutionData = {
+    proposal: {
+        origin: {
+            tx_id: '',
+            vout: -1
+        },
+        pubkh: '',
+        content_nonce: -1
+    },
     constitution: [] 
 }
 
