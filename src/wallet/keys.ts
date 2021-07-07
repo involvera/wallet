@@ -28,6 +28,25 @@ export default class Keys extends Model {
 
     isSet = () => this.state.seed.length > 0
 
+    fetch = () => {
+        const aliasIfNotSet = async () => {
+            if (this.get().alias() == null){
+                await alias()
+            }
+        }
+
+        const alias = async () => {
+            const alias = await Alias.fetch(this.get().address())
+            if (alias){
+                this.setState({ alias: new Alias(alias.to().plain(), this.kids()) }).save().store()
+            }
+        }
+        return {
+            alias,
+            aliasIfNotSet
+        }
+    }
+
     get = () => {
         const alias = (): Alias => this.state.alias 
         const seed = () => Buffer.from(this.state.seed, 'hex')

@@ -1,6 +1,6 @@
 {
   "name": "involvera-wallet-js",
-  "version": "1.1.8",
+  "version": "1.2.2",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [

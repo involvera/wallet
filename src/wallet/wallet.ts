@@ -65,6 +65,7 @@ export class Wallet extends Model {
             this.costs().setState(json.costs)
             this.constitution().setState(json.constitution)
             this.action().store()
+            await this.keys().fetch().aliasIfNotSet()
             await this.refreshPutList()
         }
     }

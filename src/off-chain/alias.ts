@@ -5,7 +5,7 @@ import axios from 'axios'
 import config from "../config";
 
 interface IAlias {
-    pp: null | string
+    pp: string | null,
     username: string
 }
 
@@ -18,7 +18,11 @@ export class Alias extends Model {
 
     static fetch = async (address: string): Promise<Alias|null> => {
         try {
-            const res = await axios(config.getRootAPIOffChainUrl() + '/alias/' + address)
+            const res = await axios(config.getRootAPIOffChainUrl() + '/alias/address/' + address, {
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
             if (res.status == 200)
                 return new Alias(res.data, {})
             return null
