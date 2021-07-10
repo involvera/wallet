@@ -1,4 +1,4 @@
-import { Model } from "acey";
+import { Collection, Model } from "acey";
 import * as bip32 from 'bip32'
 import { BuildSignatureHex } from 'wallet-util'
 import axios from 'axios'
@@ -86,4 +86,34 @@ export class Alias extends Model {
     }
 }
 
+export class AliasCollection extends Collection {
 
+    constructor(initialState: any, options: any){
+        super(initialState, [Alias, AliasCollection], options)
+    }
+
+    pullByAddresses = async (addresses: string[]) => {
+        try {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/alias/addresses/${JSON.stringify(addresses)}`,  {
+                headers: {
+                    filter: 'author'
+                },
+                timeout: 10_000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (res.status == 200){
+                const data = res.data
+                for (let i = 0; i < data.length; i++){
+                    if (!this.find({address: data[i].address})){
+                        this.push(data[i])
+                    }
+                }
+                this.save().store()
+            }
+        } catch (e){
+            return e.toString()
+        }
+    }
+}

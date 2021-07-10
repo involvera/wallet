@@ -21,8 +21,10 @@ const DEFAULT_STATE = {
 export default class Keys extends Model {
 
     constructor(initialState: IKey = DEFAULT_STATE, options: any){
-        super(Object.assign(initialState, {}, 
-            ), options)
+        super(initialState, options)
+        this.setState({
+            alias: new Alias(initialState.alias, this.kids())
+        })
     }
     
     set = (mnemonic: string, pass: string) => {
