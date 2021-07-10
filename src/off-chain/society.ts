@@ -48,6 +48,14 @@ export class SocietyModel extends Model {
             domain, currencySymbol, currencyRouteAPI
         }
     }
+
+    fetch = () => {
+
+        const stats = async () => {
+            
+        }
+    }
+
 }
 
 export class SocietyCollection extends Collection {

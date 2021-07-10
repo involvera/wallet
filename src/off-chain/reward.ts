@@ -16,7 +16,7 @@ export class Reward extends Model {
     get = () => {
         return {
             sid: (): number => this.state.sid,
-            category: (): 0 | 1 | 2 | 3 => this.state.category,
+            category: (): "upvote" | "reward_0" | "reward_1" | "reward_2" => this.state.category,
             txID: (): string => this.state.tx_id,
             vout: (): string => this.state.vout,
             author: (): IAuthor => this.state.author,
