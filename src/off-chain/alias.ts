@@ -6,12 +6,14 @@ import config from "../config";
 
 export interface IAlias {
     pp: string | null,
-    username: string
+    username: string,
+    address: string
 }
 
 export const DEFAULT_STATE: IAlias = {
     pp: null,
-    username: ''
+    username: '',
+    address: ''
 }
 
 export class Alias extends Model {
@@ -81,7 +83,8 @@ export class Alias extends Model {
     get = () => {
         return {
             pp: (): null | string => this.state.pp,
-            username: (): string => this.state.username
+            username: (): string => this.state.username,
+            address: (): string => this.state.address
         }
     }
 }

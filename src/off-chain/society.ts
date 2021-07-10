@@ -1,7 +1,8 @@
 import { Collection, Model } from "acey";
-import { ISociety } from "./interfaces";
+import { ISociety, ISocietyStats } from "./interfaces";
 import axios from 'axios'
 import config from "../config";
+import { AliasCollection } from "./alias";
 
 const DEFAULT_STATE: ISociety = {
     id: 0,
@@ -10,7 +11,32 @@ const DEFAULT_STATE: ISociety = {
     description: '',
     domain: '',
     currency_route_api: '',
-    currency_symbol: ''
+    currency_symbol: '',
+    stats: {
+        active_addresses: 0,
+        most_active_addresses: [] as any,
+        circulating_supply:  '',
+        circulating_vp_supply : ''
+    }
+}
+
+export class SocietyStatsModel extends Model {
+    
+    constructor(state: ISocietyStats, options: any){
+        super(state, options)
+        this.setState({
+            most_active_addresses: new AliasCollection(state.most_active_addresses, this.kids())
+        })
+    }
+
+    get = () => {
+        return {
+            activeAddresses: (): number => this.state.active_addresses,
+            mostActiveAddresses: (): AliasCollection => this.state.most_active_addresses,
+            circulatingSupply: (): BigInt => BigInt(this.state.circulating_supply), 
+            circulatingVPSupply: (): BigInt => BigInt(this.state.circulating_vp_supply) 
+        }
+    }
 }
 
 export class SocietyModel extends Model {
@@ -32,6 +58,9 @@ export class SocietyModel extends Model {
 
     constructor(state: ISociety = DEFAULT_STATE, options:any){
         super(state, options)
+        this.setState({
+            stats: new SocietyStatsModel(state.stats, this.kids())
+        })
     }
 
     get = () => {
@@ -42,20 +71,14 @@ export class SocietyModel extends Model {
         const domain = () => this.state.domain
         const currencySymbol = () => this.state.currency_symbol
         const currencyRouteAPI = () => this.state.currency_route_api
+        const stats = (): SocietyStatsModel => this.state.stats
 
         return {
             id, created_at, name, description,
-            domain, currencySymbol, currencyRouteAPI
+            domain, currencySymbol, currencyRouteAPI,
+            stats
         }
     }
-
-    fetch = () => {
-
-        const stats = async () => {
-            
-        }
-    }
-
 }
 
 export class SocietyCollection extends Collection {

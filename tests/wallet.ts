@@ -9,7 +9,7 @@ import { Wallet } from '../src/wallet'
 import { UnserializedPut } from '../src/wallet/puts';
 import { Constitution } from 'wallet-script';
 import { ContentLink, Output } from '../src/transaction';
-import { Thread, Proposal, Reward } from '../src/off-chain';
+import { Thread, Proposal, Reward, SocietyModel } from '../src/off-chain';
 import axios from 'axios';
 import conf from '../src/config'
 
@@ -27,6 +27,17 @@ const initWallets = () => {
 }
 
 const main = () => {
+
+    it('Fetch Society', async () => {
+        const society = await SocietyModel.fetch(1)
+        if (society){
+            expect(society.get().stats().get().activeAddresses()).to.eq(58)
+            expect(society.get().stats().get().circulatingVPSupply()).to.eq(BigInt(8 * LUGH_AMOUNT))
+            expect(society.get().stats().get().mostActiveAddresses().count()).to.eq(1)
+            expect(society.get().name()).to.eq("Involvera")
+            expect(society.get().domain()).to.eq("involvera.com")
+        }
+    })
 
     it('OFFCHAIN reset', async () => {
         const res = await axios(`${conf.getRootAPIOffChainUrl()}/admin/1/reset`, {

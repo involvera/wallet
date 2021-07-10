@@ -43,6 +43,13 @@ export interface IEmbedData{
     reaction_counter?: IReactionCount 
 }
 
+export interface ISocietyStats {
+    active_addresses: number
+    most_active_addresses: IAuthor,
+    circulating_supply: string
+    circulating_vp_supply: string
+}
+
 export interface ISociety {
     id: number
     name: string
@@ -51,6 +58,7 @@ export interface ISociety {
     description: string
     domain: string,
     currency_route_api: string
+    stats: ISocietyStats
 }
 
 export interface IScriptOrigin {
