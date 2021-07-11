@@ -2,7 +2,16 @@ import { Model } from 'acey'
 import axios from 'axios'
 import config from '../config'
 
-const DEFAULT_STATE = {
+export interface ICost {
+    thread: number
+    proposal: number
+    upvote: number
+    reaction_0: number
+    reaction_1: number
+    reaction_2: number
+}
+
+export const DEFAULT_STATE: ICost = {
     thread: 0, 
     proposal: 0, 
     upvote: 0, 
@@ -10,6 +19,7 @@ const DEFAULT_STATE = {
     reaction_1: 0, 
     reaction_2: 0
 }
+
 
 export default class Costs extends Model {
 

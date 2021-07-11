@@ -28,17 +28,6 @@ const initWallets = () => {
 
 const main = () => {
 
-    it('Fetch Society', async () => {
-        const society = await SocietyModel.fetch(1)
-        if (society){
-            expect(society.get().stats().get().activeAddresses()).to.eq(58)
-            expect(society.get().stats().get().circulatingVPSupply()).to.eq(BigInt(8 * LUGH_AMOUNT))
-            expect(society.get().stats().get().mostActiveAddresses().count()).to.eq(1)
-            expect(society.get().name()).to.eq("Involvera")
-            expect(society.get().domain()).to.eq("involvera.com")
-        }
-    })
-
     it('OFFCHAIN reset', async () => {
         const res = await axios(`${conf.getRootAPIOffChainUrl()}/admin/1/reset`, {
             method: 'POST',
@@ -81,17 +70,9 @@ const main = () => {
         expect(DecodeBaseUUID(uuid).toString('hex')).to.eq(wallet.keys().get().pubHashHex())
     })
 
-    it('Wallet1 -> Check Constitution and Costs: ', () => {
+    it('Wallet1 -> Check Costs: ', () => {
         expect(wallet.costs().get().thread()).to.eq(LUGH_AMOUNT / 200)
         expect(wallet.costs().get().proposal()).to.eq(LUGH_AMOUNT / 20)
-        expect(wallet.constitution().get().constitution().length).to.eq(10)
-        const constitution = wallet.constitution().get().constitution()
-        expect(constitution[0].title == 'Rule number 1')
-        expect(constitution[0].content == 'Content of the rule number 1')
-        expect(constitution[1].title == 'Rule number 2')
-        expect(constitution[1].content == 'Content of the rule number 2')
-        expect(constitution[2].title == 'No Rule 3')
-        expect(constitution[2].content == 'There is no rule number 3')
     })
 
     it('[ONCHAIN] Wallet1 -> Fetch and check Puts: ', () => {
@@ -454,6 +435,31 @@ const main = () => {
 
     it('[ONCHAIN] Wallet1 -> Check Vote power distribution on Puts.', () => {
         expect(wallet.puts().get().votePowerDistribution().count()).to.eq(3)
+    })
+
+    it('Fetch Society', async () => {
+        const society = await SocietyModel.fetch(1)
+        if (society){
+            expect(society.get().stats().get().activeAddresses()).to.eq(58)
+            expect(society.get().stats().get().circulatingVPSupply()).to.eq(BigInt(8 * LUGH_AMOUNT))
+            expect(society.get().stats().get().mostActiveAddresses().count()).to.eq(1)
+            expect(society.get().name()).to.eq("Involvera")
+            expect(society.get().domain()).to.eq("involvera.com")
+
+            const costs = society.get().costs()
+            const consti = society.get().constitution()
+
+            expect(costs.get().thread()).to.eq(LUGH_AMOUNT / 200)
+            expect(costs.get().proposal()).to.eq(LUGH_AMOUNT / 20)
+            expect(consti.get().constitution().length).to.eq(10)
+            const constitution = consti.get().constitution()
+            expect(constitution[0].title == 'Rule number 1')
+            expect(constitution[0].content == 'Content of the rule number 1')
+            expect(constitution[1].title == 'Rule number 2')
+            expect(constitution[1].content == 'Content of the rule number 2')
+            expect(constitution[2].title == 'No Rule 3')
+            expect(constitution[2].content == 'There is no rule number 3')
+        }
     })
 }
 

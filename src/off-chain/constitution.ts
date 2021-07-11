@@ -2,15 +2,9 @@ import { Model } from 'acey'
 import axios from 'axios'
 import config from '../config'
 import { Constitution as C } from 'wallet-script'
+import { IConstitutionData } from './interfaces'
 
-import { IScriptProposal } from '../off-chain/interfaces'
-
-interface IConstitutionData {
-    proposal: IScriptProposal
-    constitution: C.TConstitution
-}
-
-const DEFAULT_STATE: IConstitutionData = {
+export const DEFAULT_STATE: IConstitutionData = {
     proposal: {
         origin: {
             tx_id: '',

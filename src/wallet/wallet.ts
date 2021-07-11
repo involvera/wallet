@@ -11,7 +11,6 @@ import AuthContract from './auth-contract'
 import Fees from './fees'
 import Costs from './costs'
 import Keys from './keys'
-import ConstitutionModel from './constitution'
 import { UnserializedPutList } from './puts'
 
 import Info from './info'
@@ -37,7 +36,6 @@ export class Wallet extends Model {
             fees: new Fees(initialState.fees, this.kids()),
             info: new Info(initialState.info, this.kids()),
             costs: new Costs(initialState.costs, this.kids()),
-            constitution: new ConstitutionModel(initialState.constitution, this.kids()),
             memory: initialState.memory || {last_put_fetch_height: 0, is_recovered_wallet: false},
         })
     }
@@ -63,7 +61,6 @@ export class Wallet extends Model {
             this.fees().setState(json.fees)
             this.utxos().get().setState(json.utxos || [])
             this.costs().setState(json.costs)
-            this.constitution().setState(json.constitution)
             this.action().store()
             await this.keys().fetch().aliasIfNotSet()
             await this.refreshPutList()
@@ -90,7 +87,6 @@ export class Wallet extends Model {
     public costs = (): Costs => this.state.costs
     public info = (): Info => this.state.info
     public puts = (): UnserializedPutList => this.state.puts
-    public constitution = (): ConstitutionModel => this.state.constitution
     public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
 
     buildTX = () => {

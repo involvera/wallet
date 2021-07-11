@@ -1,5 +1,7 @@
 import { IContentLink } from "../transaction";
 import { IVote } from "./vote";
+import { Constitution as C } from 'wallet-script'
+import { ICost  } from '../wallet/costs'
 
 export interface IAuthor {
     public_key_hashed: string
@@ -43,6 +45,11 @@ export interface IEmbedData{
     reaction_counter?: IReactionCount 
 }
 
+export interface IConstitutionData {
+    proposal: IScriptProposal
+    constitution: C.TConstitution
+}
+
 export interface ISocietyStats {
     active_addresses: number
     most_active_addresses: IAuthor,
@@ -58,7 +65,9 @@ export interface ISociety {
     description: string
     domain: string,
     currency_route_api: string
-    stats: ISocietyStats
+    stats: ISocietyStats,
+    costs: ICost
+    constitution: IConstitutionData
 }
 
 export interface IScriptOrigin {

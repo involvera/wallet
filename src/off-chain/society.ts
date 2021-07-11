@@ -3,6 +3,8 @@ import { ISociety, ISocietyStats } from "./interfaces";
 import axios from 'axios'
 import config from "../config";
 import { AliasCollection } from "./alias";
+import Constitution, { DEFAULT_STATE as ConstiDS } from './constitution'
+import Costs, { DEFAULT_STATE as CostsDS } from '../wallet/costs'
 
 const DEFAULT_STATE: ISociety = {
     id: 0,
@@ -17,7 +19,9 @@ const DEFAULT_STATE: ISociety = {
         most_active_addresses: [] as any,
         circulating_supply:  '',
         circulating_vp_supply : ''
-    }
+    },
+    constitution: ConstiDS,
+    costs: CostsDS
 }
 
 export class SocietyStatsModel extends Model {
@@ -25,7 +29,7 @@ export class SocietyStatsModel extends Model {
     constructor(state: ISocietyStats, options: any){
         super(state, options)
         this.setState({
-            most_active_addresses: new AliasCollection(state.most_active_addresses, this.kids())
+            most_active_addresses: new AliasCollection(state.most_active_addresses, this.kids()),
         })
     }
 
@@ -34,7 +38,7 @@ export class SocietyStatsModel extends Model {
             activeAddresses: (): number => this.state.active_addresses,
             mostActiveAddresses: (): AliasCollection => this.state.most_active_addresses,
             circulatingSupply: (): BigInt => BigInt(this.state.circulating_supply), 
-            circulatingVPSupply: (): BigInt => BigInt(this.state.circulating_vp_supply) 
+            circulatingVPSupply: (): BigInt => BigInt(this.state.circulating_vp_supply),
         }
     }
 }
@@ -59,7 +63,9 @@ export class SocietyModel extends Model {
     constructor(state: ISociety = DEFAULT_STATE, options:any){
         super(state, options)
         this.setState({
-            stats: new SocietyStatsModel(state.stats, this.kids())
+            stats: new SocietyStatsModel(state.stats, this.kids()),
+            costs: new Costs(state.costs, this.kids()),
+            constitution: new Constitution(state.constitution, this.kids()),
         })
     }
 
@@ -72,11 +78,13 @@ export class SocietyModel extends Model {
         const currencySymbol = () => this.state.currency_symbol
         const currencyRouteAPI = () => this.state.currency_route_api
         const stats = (): SocietyStatsModel => this.state.stats
+        const costs = (): Costs => this.state.costs
+        const constitution = (): Constitution => this.state.constitution
 
         return {
             id, created_at, name, description,
             domain, currencySymbol, currencyRouteAPI,
-            stats
+            stats, costs, constitution
         }
     }
 }
