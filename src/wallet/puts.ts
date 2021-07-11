@@ -238,7 +238,6 @@ export class UnserializedPutList extends Collection {
             return total
         }
 
-
         const activity = (pkhHex: string) => {
 
             const atDayActivity = (d: Date) => {
