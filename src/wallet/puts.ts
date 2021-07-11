@@ -214,8 +214,10 @@ export class UnserializedPutList extends Collection {
         }
 
         const votePowerPercent = (lh: number): number => {
-            const total = Number(BigInt(totalVotePower() as any) / BigInt(10))
-
+            const total_vp = totalVotePower()
+            if (total_vp === BigInt(0))
+                return 0
+            const total = Number(BigInt(totalVotePower as any) / BigInt(10))
             if (lh >= CYCLE_IN_LUGH){
                 const max = CYCLE_IN_LUGH * (LUGH_AMOUNT / 10)
                 return total / max
