@@ -102,12 +102,32 @@ export class ProposalList extends Collection {
         super(initialState, [Proposal, ProposalList], options)
     }
 
-    pullLastProposals = async (societyID: number, page: number, filter: T_FETCHING_FILTER) => {
+
+    pullProposalByIndex = async (societyID: number, index: number) => {
+        try {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}/${index}`,  {
+                timeout: 10_000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (res.status == 200){
+                const { data } = res
+                const idx = this.findIndex({sid: societyID, index: data.index})
+                idx < 0 ? this.push(data) : this.updateAt(this.newNode(data), idx)
+                this.save().store()
+            }
+        } catch (e){
+            return e.toString()
+        }
+    }
+
+
+    pullLastProposals = async (societyID: number, page: number) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}`,  {
                 headers: {
                     page: page,
-                    filter
                 },
                 timeout: 10_000,
                 validateStatus: function (status) {
@@ -115,9 +135,9 @@ export class ProposalList extends Collection {
                 },
             })
             if (res.status == 200){
-                const data = res.data
+                const { data } = res
                 for (let i = 0; i < data.length; i++){
-                    if (!this.find({public_key_hashed: data[i].public_key_hashed})){
+                    if (!this.find({sid: societyID, public_key_hashed: data[i].public_key_hashed})){
                         this.push(data[i])
                     }
                 }

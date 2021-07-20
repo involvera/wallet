@@ -1,24 +1,26 @@
 import { Model } from 'acey'
 import * as bip39 from 'bip39'
 import * as bip32 from 'bip32'
-import { GetAddressFromPubKeyHash, ToPubKeyHash, Sha256 } from 'wallet-util'
+import { GetAddressFromPubKeyHash, ToPubKeyHash, Ripemd160, Sha256 } from 'wallet-util'
 import nacl from 'tweetnacl'
 import naclUtil from 'tweetnacl-util'
 import { Alias, IAlias, DEFAULT_STATE as AliasDefaultState } from '../off-chain'
 
 export interface IKey {
-    seed: string
+    pass_hash: string
     mnemonic: string
     alias: IAlias
 }
 
 const DEFAULT_STATE = {
-    seed: '',
+    pass_hash: '',
     mnemonic: '',
     alias: AliasDefaultState
 }
 
 export default class Keys extends Model {
+
+    private _password: string = ''
 
     constructor(initialState: IKey = DEFAULT_STATE, options: any){
         super(initialState, options)
@@ -26,14 +28,30 @@ export default class Keys extends Model {
             alias: new Alias(initialState.alias, this.kids())
         })
     }
-    
+
+    _hashPass = (pass: string) => Sha256(Ripemd160(pass)).toString('hex')
+
+    _triggerPasswordError = () => {
+        if (this.getPassword() == ''){
+            throw new Error("Password is not set")
+        }
+        if (this._hashPass(this.getPassword()) !== this.get().passHash()){
+            throw new Error("Wrong password")
+        }
+    }
+
+    setPassword = (pass: string) => this._password = pass
+    getPassword = () => this._password
+    get256BitsPassword = () => Sha256(this.getPassword())
+
     set = (mnemonic: string, pass: string) => {
         const pair = nacl.box.keyPair.fromSecretKey(Sha256(pass))
         const nonce = new Uint8Array(nacl.box.nonceLength)
         const mnemonicEncrypted = nacl.secretbox(Buffer.from(mnemonic), nonce, pair.secretKey)
 
+        this.setPassword(pass)
         this.setState({ 
-            seed: bip39.mnemonicToSeedSync(mnemonic, pass).toString('hex'), 
+            pass_hash: this._hashPass(pass),
             mnemonic: Buffer.from(mnemonicEncrypted).toString('hex'),
         })
         return this.setState({
@@ -41,7 +59,7 @@ export default class Keys extends Model {
         })
     }
 
-    isSet = () => this.state.seed.length > 0
+    isSet = () => this.state.mnemonic.length > 0
 
     fetch = () => {
         const aliasIfNotSet = async () => {
@@ -63,8 +81,9 @@ export default class Keys extends Model {
     }
 
     get = () => {
+        const passHash = (): string => this.state.pass_hash
         const alias = (): Alias => this.state.alias 
-        const seed = () => Buffer.from(this.state.seed, 'hex')
+        const seed = () => bip39.mnemonicToSeedSync(mnemonic(), this.getPassword())
         const master = () => bip32.fromSeed(seed())
         const wallet = () => master()?.derivePath('m/0/0')
         const priv = () => wallet().privateKey as Buffer
@@ -74,9 +93,11 @@ export default class Keys extends Model {
         const pubHashHex = () => pubHash().toString('hex')
         const address = () => GetAddressFromPubKeyHash(pubHash())
 
-        const mnemonic = (pass: string) => {
+        const mnemonic = () => {
+            this._triggerPasswordError()
             const { mnemonic } = this.state
-            const pair = nacl.box.keyPair.fromSecretKey(Sha256(pass))
+
+            const pair = nacl.box.keyPair.fromSecretKey(this.get256BitsPassword())
             const nonce = new Uint8Array(nacl.box.nonceLength)
             const msg2 = nacl.secretbox.open(new Uint8Array(Buffer.from(mnemonic, 'hex')), nonce, pair.secretKey)
 
@@ -95,11 +116,12 @@ export default class Keys extends Model {
         }
 
         return {
+            passHash,
             seed, master, wallet, priv, pub, 
             pubHex, pubHash, pubHashHex,
             derivedPub, address, 
             derivedPubHash, mnemonic,
-            contentWallet, alias
+            contentWallet, alias,
         }
     }
 }

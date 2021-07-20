@@ -6,7 +6,6 @@ import { BuildSignatureHex } from 'wallet-util'
 import { ContentLink } from "../transaction";
 import { IAuthor, IEmbedData, IThread } from "./interfaces";
 import config from '../config'
-import { T_FETCHING_FILTER } from '../constant/off-chain';
 
 export class Thread extends Model {
 
@@ -71,12 +70,30 @@ export class ThreadList extends Collection {
         super(initialState, [Thread, ThreadList], options)
     }
 
-    pullLastThreads = async (societyID: number, page: number, filter: T_FETCHING_FILTER) => {
+    pullThreadByPKH = async (societyID: number, pubkh: string) => {
+        try {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}/${pubkh}`,  {
+                timeout: 10_000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (res.status == 200){
+                const { data } = res
+                const index = this.findIndex({sid: societyID, public_key_hashed: data.public_key_hashed})
+                index < 0 ? this.push(data) : this.updateAt(this.newNode(data), index)
+                this.save().store()
+            }
+        } catch (e){
+            return e.toString()
+        }
+    }
+
+    pullLastThreads = async (societyID: number, page: number) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}`,  {
                 headers: {
-                    page: page,
-                    filter
+                    page: page
                 },
                 timeout: 10_000,
                 validateStatus: function (status) {
@@ -84,9 +101,9 @@ export class ThreadList extends Collection {
                 },
             })
             if (res.status == 200){
-                const data = res.data
+                const { data } = res
                 for (let i = 0; i < data.length; i++){
-                    if (!this.find({public_key_hashed: data[i].public_key_hashed})){
+                    if (!this.find({sid: societyID, public_key_hashed: data[i].public_key_hashed})){
                         this.push(data[i])
                     }
                 }
