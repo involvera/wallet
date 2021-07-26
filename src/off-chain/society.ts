@@ -15,6 +15,7 @@ const DEFAULT_STATE: ISociety = {
     currency_route_api: '',
     currency_symbol: '',
     stats: {
+        last_height: 0,
         active_addresses: 0,
         most_active_addresses: [] as any,
         circulating_supply:  '',

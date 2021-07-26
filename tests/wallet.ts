@@ -13,6 +13,8 @@ import { Thread, Proposal, Reward, SocietyModel } from '../src/off-chain';
 import axios from 'axios';
 import conf from '../src/config'
 
+conf.setRootAPIChainUrl('http://185.212.226.103:8080')
+conf.setRootAPIOffChainUrl('http://185.212.226.103:3020')
 
 const ADMIN_KEY = '2f72e55b962b6cd66ea70e8b6bd8657d1c87a23a65769213d76dcb5da6abf6b5'
 
@@ -217,7 +219,7 @@ const main = () => {
     })
 
     it('[OFFCHAIN] Wallet1 -> create a proposal constitution content', async () => {
-        const p = Proposal.NewContent(1, "This is the title of a constitution proposal", ["Content 1", "Content 2", "Content 3"])
+        const p = Proposal.NewContent(1, "This is the title of a constitution proposal", ["Content 1: %[proposal/8]", "Content 2: %[involvera/proposal/8]", "Content 3: %[https://involvera.com/involvera/proposal/8]"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
     })
@@ -251,7 +253,7 @@ const main = () => {
     })
 
     it('[OFFCHAIN] Wallet1 -> create a proposal cost content', async () => {
-        const p = Proposal.NewContent(1, "This is the title of a cost proposal", ["Content 1", "Content 2", "Content 3"])
+        const p = Proposal.NewContent(1, "This is the title of a cost proposal", ["Content 1: %[proposal/8]\n%[https://involvera.com/involvera/proposal/9]", "Content 2: %[involvera/proposal/8]\n%[proposal/9]", "Content 3: %[https://involvera.com/involvera/proposal/8]\n%[involvera/proposal/9]"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
     })
@@ -276,6 +278,7 @@ const main = () => {
         }
     })
 
+    let pkhContent0 = ""
     it('[ONCHAIN] Wallet1 -> create a thread', async () => {
         const tx = await wallet.buildTX().thread()
         const balance = wallet.balance()
@@ -284,6 +287,7 @@ const main = () => {
             const response = await tx.broadcast(wallet)
             const out = tx.get().outputs().nodeAt(0) as Output
             uuidContent = out.get().contentUUID()
+            pkhContent0 = out.get().contentPKH().toString('hex')
             expect(response.status).to.eq(201)
             expect(wallet.puts().count()).to.eq(16)
             expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte())-1)
@@ -298,7 +302,7 @@ const main = () => {
     })
 
     it('[OFFCHAIN] Wallet1 -> create a thread', async () => {
-        const p = Thread.NewContent(1, "This is a title.", "Content of my thread")
+        const p = Thread.NewContent(1, "This is a title.", "Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
     })
@@ -327,7 +331,7 @@ const main = () => {
     })
 
     it('[OFFCHAIN] Wallet1 -> create a rethread', async () => {
-        const p = Thread.NewContent(1, "This is a title.", "Content of my thread")
+        const p = Thread.NewContent(1, "This is a title.", `Here my favorite Thread: %[thread/${pkhContent0}] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]`)
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
     })
