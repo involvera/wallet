@@ -53,7 +53,7 @@ export interface IConstitutionData {
 export interface ISocietyStats {
     last_height: number,
     active_addresses: number
-    most_active_addresses: IAuthor,
+    most_active_addresses: IAuthor[],
     circulating_supply: string
     circulating_vp_supply: string
 }
