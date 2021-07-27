@@ -10,6 +10,12 @@ export interface IAuthor {
 }
 export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
+export interface IContributorStats { 
+    addr: string
+    position: number
+    sid: number
+}
+
 export interface IProposal {
     sid: number
     content_link: IContentLink
@@ -17,18 +23,18 @@ export interface IProposal {
     index: number
     created_at: Date
     title: string,
-    content: string[3],
-    author: IAuthor,
-    embed_data: IEmbedData,
+    content: string[3]
+    author: IAuthor
+    embed_data: IEmbedData
 }
 
 export interface IThread {
     sid: number
     content_link: IContentLink
-    author: IAuthor,
-    title: string,
-    content: string,
-    embed_data: IEmbedData,
+    author: IAuthor
+    title: string
+    content: string
+    embed_data: IEmbedData
     created_at: Date
 }
 
@@ -40,8 +46,8 @@ export interface IReactionCount {
 }
 
 export interface IEmbedData{
-    proposals: IProposal[],
-    threads: IThread[],
+    proposals: IProposal[]
+    threads: IThread[]
     reaction_counter?: IReactionCount 
 }
 
@@ -51,9 +57,10 @@ export interface IConstitutionData {
 }
 
 export interface ISocietyStats {
-    last_height: number,
+    last_height: number
+    total_contributor: number
     active_addresses: number
-    most_active_addresses: IAuthor[],
+    most_active_addresses: IAuthor[]
     circulating_supply: string
     circulating_vp_supply: string
 }
@@ -66,9 +73,10 @@ export interface ISociety {
     description: string
     domain: string,
     currency_route_api: string
-    stats: ISocietyStats,
+    stats: ISocietyStats
     costs: ICost
     constitution: IConstitutionData
+    contributor: IContributorStats
 }
 
 export interface IScriptOrigin {

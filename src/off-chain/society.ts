@@ -5,6 +5,7 @@ import config from "../config";
 import { AliasCollection } from "./alias";
 import Constitution, { DEFAULT_STATE as ConstiDS } from './constitution'
 import Costs, { DEFAULT_STATE as CostsDS } from '../wallet/costs'
+import { IContributorStats } from ".";
 
 const DEFAULT_STATE: ISociety = {
     id: 0,
@@ -15,11 +16,17 @@ const DEFAULT_STATE: ISociety = {
     currency_route_api: '',
     currency_symbol: '',
     stats: {
+        total_contributor: 0,
         last_height: 0,
         active_addresses: 0,
         most_active_addresses: [] as any,
         circulating_supply:  '',
         circulating_vp_supply : ''
+    },
+    contributor: {
+        addr: '',
+        position: 0,
+        sid: 0,
     },
     constitution: ConstiDS,
     costs: CostsDS
@@ -70,6 +77,24 @@ export class SocietyModel extends Model {
         })
     }
 
+    isContributorFetch = () => this.get().contributor().addr == ''
+
+    fetchContributor = async (addr: string) => {
+        try {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/society/${this.get().id()}/address/${addr}/stats`, {
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (res.status == 200){
+                this.setState({ contributor: res.data })
+            }
+            return res
+        } catch (e){
+            throw e
+        }
+    }
+
     get = () => {
         const id = () => this.state.id
         const created_at = () => this.state.created_at
@@ -81,11 +106,12 @@ export class SocietyModel extends Model {
         const stats = (): SocietyStatsModel => this.state.stats
         const costs = (): Costs => this.state.costs
         const constitution = (): Constitution => this.state.constitution
+        const contributor = (): IContributorStats => this.state.contributor
 
         return {
             id, created_at, name, description,
             domain, currencySymbol, currencyRouteAPI,
-            stats, costs, constitution
+            stats, costs, constitution, contributor
         }
     }
 }

@@ -55,7 +55,7 @@ export default class Keys extends Model {
             mnemonic: Buffer.from(mnemonicEncrypted).toString('hex'),
         })
         return this.setState({
-            alias: new Alias({pp: null, username: '', address: this.get().address() }, this.kids())
+            alias: new Alias(Object.assign(AliasDefaultState, {address: this.get().address()}) , this.kids())
         })
     }
 
