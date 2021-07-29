@@ -13,8 +13,8 @@ import { Thread, Proposal, Reward, SocietyModel } from '../src/off-chain';
 import axios from 'axios';
 import conf from '../src/config'
 
-conf.setRootAPIChainUrl('http://185.212.226.103:8080')
-conf.setRootAPIOffChainUrl('http://185.212.226.103:3020')
+// conf.setRootAPIChainUrl('http://185.212.226.103:8080')
+// conf.setRootAPIOffChainUrl('http://185.212.226.103:3020')
 
 const ADMIN_KEY = '2f72e55b962b6cd66ea70e8b6bd8657d1c87a23a65769213d76dcb5da6abf6b5'
 
@@ -465,6 +465,101 @@ const main = () => {
             expect(constitution[2].content == 'There is no rule number 3')
         }
     })
+
+    it('[ONCHAIN] Wallet1 sends some coins to Wallet3 ', async () => {
+        const costs = wallet.costs().get()
+        const total = costs.reaction0() + costs.reaction1() + costs.reaction2() * 2 + costs.upvote() 
+        const tx = await wallet.buildTX().toAddress(wallet3.keys().get().address(), total)
+        expect(tx).not.eq(null)
+        if (tx){
+            const response = await tx.broadcast(wallet)
+            expect(response.status).to.eq(201)
+            await wallet3.synchronize()
+        }
+    })
+
+    it('[OFFCHAIN] Create an alias on Wallet 3', async () => {
+        const alias = wallet3.keys().get().alias()
+        alias.setUsername('wallet3')
+        const res = await alias.update(wallet3.keys().get().wallet())
+        expect(res.status).to.eq(201)
+    })
+
+
+    it('[ONCHAIN] Wallet3 -> create a reward : reaction0', async () => {
+        const thread = await ContentLink.FetchThread(pkhContent2)
+        const tx = await wallet3.buildTX().reward(thread, 'reaction0')
+        expect(tx).not.eq(null)
+        if (tx){
+            const response = await tx.broadcast(wallet3)
+            expect(response.status).to.eq(201)
+            lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
+            await wallet3.synchronize()
+        }
+    })
+
+    it('[OFFCHAIN] Wallet3 -> create a reward : reaction0', async () => {
+        const r = Reward.NewContent(1, lastReaction.tx_id, lastReaction.vout)
+        const res = await r.broadcast()
+        expect(res.status).to.eq(201)
+    })
+
+    it('[ONCHAIN] Wallet3 -> create a reward : reaction1', async () => {
+        const thread = await ContentLink.FetchThread(pkhContent2)
+        const tx = await wallet3.buildTX().reward(thread, 'reaction1')
+        expect(tx).not.eq(null)
+        if (tx){
+            const response = await tx.broadcast(wallet3)
+            expect(response.status).to.eq(201)
+            lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
+            await wallet3.synchronize()
+        }
+    })
+
+    it('[OFFCHAIN] Wallet3 -> create a reward : reaction1', async () => {
+        const r = Reward.NewContent(1, lastReaction.tx_id, lastReaction.vout)
+        const res = await r.broadcast()
+        expect(res.status).to.eq(201)
+    })
+
+    it('[ONCHAIN] Wallet3 -> create a reward : reaction2', async () => {
+        const thread = await ContentLink.FetchThread(pkhContent2)
+        const tx = await wallet3.buildTX().reward(thread, 'reaction2')
+        expect(tx).not.eq(null)
+        if (tx){
+            const response = await tx.broadcast(wallet3)
+            expect(response.status).to.eq(201)
+            lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
+            await wallet3.synchronize()
+        }
+    })
+
+    it('[OFFCHAIN] Wallet3 -> create a reward : reaction2', async () => {
+        const r = Reward.NewContent(1, lastReaction.tx_id, lastReaction.vout)
+        const res = await r.broadcast()
+        expect(res.status).to.eq(201)
+    })
+
+    it('[ONCHAIN] Wallet3 -> create a reward : upvote', async () => {
+        const thread = await ContentLink.FetchThread(pkhContent2)
+        const tx = await wallet3.buildTX().reward(thread, 'upvote')
+        expect(tx).not.eq(null)
+        if (tx){
+            const response = await tx.broadcast(wallet3)
+            expect(response.status).to.eq(201)
+            lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
+            await wallet3.synchronize()
+        }
+    })
+
+    it('[OFFCHAIN] Wallet3 -> create a reward : upvote', async () => {
+        const r = Reward.NewContent(1, lastReaction.tx_id, lastReaction.vout)
+        const res = await r.broadcast()
+        expect(res.status).to.eq(201)
+    })
+
+
+
 }
 
 main()
