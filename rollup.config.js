@@ -7,7 +7,7 @@ import pkg from './package.json'
 
 const config = {
     input: './index.ts',
-    external: [ 'acey', 'axios', 'create-hash', 'tweetnacl', 'tweetnacl-util', 'bip39', 'bip32', 'wallet-util', 'wallet-script'],
+    external: [ 'acey', 'axios', 'create-hash', 'tweetnacl', 'tweetnacl-util', 'bip39', 'bip32', 'wallet-util', 'wallet-script', 'moment'],
     output: [
         {
             globals: {
@@ -18,6 +18,7 @@ const config = {
                 'tweetnacl-util': 'tweetnacl-util',
                 'bip39': 'bip39',
                 'bip32': 'bip32',
+                'moment': 'moment',
                 'wallet-util': 'wallet-util',
                 'wallet-script': 'wallet-script'
             },

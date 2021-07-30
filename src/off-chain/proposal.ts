@@ -1,3 +1,4 @@
+import moment from 'moment'
 import axios from 'axios'
 import * as bip32 from 'bip32'
 import { Collection, Model } from "acey";
@@ -72,8 +73,43 @@ export class Proposal extends Model {
         const author = (): IAuthor => this.state.author
         const content = (): string[] => this.state.content 
         const title = (): string => this.state.title
-        const created_at = (): Date => this.state.created_at 
+        const created_at = (): number => (this.state.created_at as Date).getTime()
+        const end = (): number => !this.state.end_at ? -1 : (this.state.end_at as Date).getTime()
+
+        const createdAtAgo = (): string => moment(new Date(created_at())).fromNow()
+        const createdAtPretty = (): string => {
+            const today = new Date()
+            const yesterday = new Date()
+            yesterday.setDate(yesterday.getDate()-1)
+            const createDate = new Date(created_at()) 
+
+            const isSameYear = today.getFullYear() === createDate.getFullYear()
+            const isToday = (now: Date, creation: Date) => creation.getDate() === now.getDate() && creation.getMonth() === now.getMonth() && creation.getFullYear() === now.getFullYear();
+
+            if (isToday(today, createDate))
+                return 'today'
+            if (isToday(yesterday, createDate))
+                return 'yesterday'
+
+            return moment(createDate).format(`MMM Do ${isSameYear ? '' : 'YYYY'} `)
+        }
+        
         const vote = (): IVote | null => this.state.vote
+        
+        const approved = (): number => {
+            const v = vote()
+            if (!v)
+                return -1
+            return v.approved
+        }
+
+        const declined = (): number => {
+            const v = vote()
+            if (!v)
+                return -1
+            return v.declined
+        }
+        
         const dataToSign = (): string => this.get().content().join('~~~_~~~_~~~_~~~')
 
         const layer = (): TLayer => {
@@ -91,7 +127,9 @@ export class Proposal extends Model {
         return {
             contentLink, embedData, costs, constitution,
             author, content, title, layer, created_at, 
-            vote, societyID, dataToSign
+            vote, societyID, dataToSign, end, 
+            createdAtAgo, createdAtPretty,
+            approved, declined
         }
     }
 }
@@ -101,7 +139,6 @@ export class ProposalList extends Collection {
     constructor(initialState: any, options: any){
         super(initialState, [Proposal, ProposalList], options)
     }
-
 
     pullProposalByIndex = async (societyID: number, index: number) => {
         try {
