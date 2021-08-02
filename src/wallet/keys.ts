@@ -40,7 +40,11 @@ export default class Keys extends Model {
         }
     }
 
-    setPassword = (pass: string) => this._password = pass
+    setPassword = (pass: string) => {
+        this._password = pass
+        return this.action()
+    }
+
     getPassword = () => this._password
     get256BitsPassword = () => Sha256(this.getPassword())
 
@@ -59,6 +63,7 @@ export default class Keys extends Model {
         })
     }
 
+    isPasswordSet = () => !!this.getPassword()
     isSet = () => this.state.mnemonic.length > 0
 
     fetch = () => {
