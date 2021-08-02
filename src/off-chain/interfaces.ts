@@ -22,6 +22,7 @@ export interface IProposal {
     vote: IVote
     index: number
     created_at: Date
+    end_at: Date | null
     title: string,
     content: string[3]
     author: IAuthor
@@ -73,6 +74,7 @@ export interface ISociety {
     description: string
     domain: string,
     currency_route_api: string
+    pp: null
     stats: ISocietyStats
     costs: ICost
     constitution: IConstitutionData

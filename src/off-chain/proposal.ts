@@ -54,6 +54,14 @@ export class Proposal extends Model {
             }
     }
 
+    is2 = () => {
+        const pending = (): boolean => !!this.get().end_at() 
+        const approved = (): boolean => pending() && this.get().approved() > 50
+        return {
+            pending, approved
+        }
+    }
+
     get = () => {
         const contentLink = (): ContentLink | null => this.state.content_link
         const societyID = (): number => this.state.sid
@@ -74,7 +82,7 @@ export class Proposal extends Model {
         const content = (): string[] => this.state.content 
         const title = (): string => this.state.title
         const created_at = (): number => (this.state.created_at as Date).getTime()
-        const end = (): number => !this.state.end_at ? -1 : (this.state.end_at as Date).getTime()
+        const end_at = (): number => !this.state.end_at ? -1 : (this.state.end_at as Date).getTime()
 
         const createdAtAgo = (): string => moment(new Date(created_at())).fromNow()
         const createdAtPretty = (): string => {
@@ -127,7 +135,7 @@ export class Proposal extends Model {
         return {
             contentLink, embedData, costs, constitution,
             author, content, title, layer, created_at, 
-            vote, societyID, dataToSign, end, 
+            vote, societyID, dataToSign, end_at, 
             createdAtAgo, createdAtPretty,
             approved, declined
         }

@@ -1,6 +1,8 @@
 import { Collection, Model } from "acey";
 import { ISociety, ISocietyStats } from "./interfaces";
 import axios from 'axios'
+import moment from "moment";
+
 import config from "../config";
 import { AliasCollection } from "./alias";
 import Constitution, { DEFAULT_STATE as ConstiDS } from './constitution'
@@ -15,6 +17,7 @@ const DEFAULT_STATE: ISociety = {
     domain: '',
     currency_route_api: '',
     currency_symbol: '',
+    pp: null,
     stats: {
         total_contributor: 0,
         last_height: 0,
@@ -96,22 +99,25 @@ export class SocietyModel extends Model {
     }
 
     get = () => {
-        const id = () => this.state.id
-        const created_at = () => this.state.created_at
-        const name = () => this.state.name
-        const description = () => this.state.description
-        const domain = () => this.state.domain
-        const currencySymbol = () => this.state.currency_symbol
-        const currencyRouteAPI = () => this.state.currency_route_api
+        const id = (): number => this.state.id
+        const created_at = (): Date => this.state.created_at
+        const name = (): string => this.state.name
+        const description = (): string => this.state.description
+        const domain = (): string => this.state.domain
+        const currencySymbol = (): string => this.state.currency_symbol
+        const currencyRouteAPI = (): string => this.state.currency_route_api
         const stats = (): SocietyStatsModel => this.state.stats
         const costs = (): Costs => this.state.costs
         const constitution = (): Constitution => this.state.constitution
         const contributor = (): IContributorStats => this.state.contributor
+        const pp = (): string | null => this.state.pp || null
+        const formatedMonthYearCreationDate = (): string => moment(created_at()).format('MMMM YYYY')
 
         return {
             id, created_at, name, description,
             domain, currencySymbol, currencyRouteAPI,
-            stats, costs, constitution, contributor
+            stats, costs, constitution, contributor,
+            pp, formatedMonthYearCreationDate
         }
     }
 }
