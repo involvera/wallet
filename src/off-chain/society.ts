@@ -46,6 +46,8 @@ export class SocietyStatsModel extends Model {
 
     get = () => {
         return {
+            lastHeight: (): number => this.state.last_height,
+            totalContributor: (): number => this.state.total_contributor,
             activeAddresses: (): number => this.state.active_addresses,
             mostActiveAddresses: (): AliasCollection => this.state.most_active_addresses,
             circulatingSupply: (): BigInt => BigInt(this.state.circulating_supply), 
