@@ -7,7 +7,25 @@ import config from "../config";
 import { AliasCollection } from "./alias";
 import Constitution, { DEFAULT_STATE as ConstiDS } from './constitution'
 import Costs, { DEFAULT_STATE as CostsDS } from '../wallet/costs'
-import { IContributorStats } from ".";
+import { IContributorStats, ILastCostChangeProposal } from ".";
+
+const DEFAULT_LAST_COST_CHANGE_STATE: ILastCostChangeProposal = {
+    created_at: 0,
+    price: 0,
+    index: 0,
+    pubkh: ''
+}
+
+const DEFAULT_SOCIETY_STATS_STATE: ISocietyStats  = {
+    total_contributor: 0,
+    last_height: 0,
+    active_addresses: 0,
+    most_active_addresses: [] as any,
+    circulating_supply:  '',
+    circulating_vp_supply : '',
+    last_thread_cost_change: DEFAULT_LAST_COST_CHANGE_STATE,
+    last_proposal_cost_change: DEFAULT_LAST_COST_CHANGE_STATE
+}
 
 const DEFAULT_STATE: ISociety = {
     id: 0,
@@ -18,14 +36,7 @@ const DEFAULT_STATE: ISociety = {
     currency_route_api: '',
     currency_symbol: '',
     pp: null,
-    stats: {
-        total_contributor: 0,
-        last_height: 0,
-        active_addresses: 0,
-        most_active_addresses: [] as any,
-        circulating_supply:  '',
-        circulating_vp_supply : ''
-    },
+    stats: DEFAULT_SOCIETY_STATS_STATE,
     contributor: {
         addr: '',
         position: 0,
@@ -37,7 +48,7 @@ const DEFAULT_STATE: ISociety = {
 
 export class SocietyStatsModel extends Model {
     
-    constructor(state: ISocietyStats, options: any){
+    constructor(state: ISocietyStats = DEFAULT_SOCIETY_STATS_STATE, options: any){
         super(state, options)
         this.setState({
             most_active_addresses: new AliasCollection(state.most_active_addresses, this.kids()),
@@ -52,6 +63,8 @@ export class SocietyStatsModel extends Model {
             mostActiveAddresses: (): AliasCollection => this.state.most_active_addresses,
             circulatingSupply: (): BigInt => BigInt(this.state.circulating_supply), 
             circulatingVPSupply: (): BigInt => BigInt(this.state.circulating_vp_supply),
+            lastThreadCostChange: (): ILastCostChangeProposal => this.state.last_thread_cost_change,
+            lastProposalCostChange: (): ILastCostChangeProposal => this.state.last_proposal_cost_change
         }
     }
 }

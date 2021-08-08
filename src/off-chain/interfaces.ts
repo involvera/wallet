@@ -57,6 +57,13 @@ export interface IConstitutionData {
     constitution: C.TConstitution
 }
 
+export interface ILastCostChangeProposal {
+    created_at: number
+    price: number
+    index: number
+    pubkh: string
+}
+
 export interface ISocietyStats {
     last_height: number
     total_contributor: number
@@ -64,6 +71,8 @@ export interface ISocietyStats {
     most_active_addresses: IAuthor[]
     circulating_supply: string
     circulating_vp_supply: string
+    last_thread_cost_change: ILastCostChangeProposal
+    last_proposal_cost_change: ILastCostChangeProposal
 }
 
 export interface ISociety {
