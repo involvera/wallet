@@ -223,7 +223,7 @@ export class UnserializedPutList extends Collection {
                 return total / max
             }
             const max = lh * (LUGH_AMOUNT/ 10)
-            return total / max
+            return (total / max) * 100
         }
 
         const totalReceivedDonationSince = (since: Date, pkhHex: string) => {

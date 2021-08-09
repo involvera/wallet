@@ -61,8 +61,8 @@ export class SocietyStatsModel extends Model {
             totalContributor: (): number => this.state.total_contributor,
             activeAddresses: (): number => this.state.active_addresses,
             mostActiveAddresses: (): AliasCollection => this.state.most_active_addresses,
-            circulatingSupply: (): BigInt => BigInt(this.state.circulating_supply), 
-            circulatingVPSupply: (): BigInt => BigInt(this.state.circulating_vp_supply),
+            circulatingSupply: (): string => this.state.circulating_supply, 
+            circulatingVPSupply: (): string => this.state.circulating_vp_supply,
             lastThreadCostChange: (): ILastCostChangeProposal => this.state.last_thread_cost_change,
             lastProposalCostChange: (): ILastCostChangeProposal => this.state.last_proposal_cost_change
         }
