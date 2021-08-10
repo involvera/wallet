@@ -1,25 +1,38 @@
 import axios from 'axios'
 import { Collection, Model } from "acey";
-import { IAuthor } from './interfaces';
 import config from '../config';
+import { IAlias, AliasModel } from './alias'
 
-export class Reward extends Model {
+export type TReward = 'upvote' | 'reward_0' | 'reward_1' | 'reward_2'
 
-    static NewContent = (sid: number, tx_id: string, vout: number): Reward => {
-        return new Reward({sid, tx_id, vout} as any, {})
+export interface IReward {
+    sid: number
+    tx_id: string
+    vout: number
+    category?: TReward
+    author?: IAlias
+    target_pkh?: string
+    created_at?: Date
+}
+
+export class RewardModel extends Model {
+
+    static NewContent = (sid: number, tx_id: string, vout: number): RewardModel => {
+        return new RewardModel({sid, tx_id, vout} as any, {})
     }
 
-    constructor(state: any, options: any){
+    constructor(state: IReward, options: any){
         super(state, options) 
+        !!state.author && this.setState({ author: new AliasModel(state.author,this.kids()) })
     }
 
     get = () => {
         return {
             sid: (): number => this.state.sid,
-            category: (): "upvote" | "reward_0" | "reward_1" | "reward_2" => this.state.category,
+            category: (): TReward => this.state.category,
             txID: (): string => this.state.tx_id,
             vout: (): string => this.state.vout,
-            author: (): IAuthor => this.state.author,
+            author: (): AliasModel => this.state.author,
             targetPKH: (): string => this.state.target_pkh,
             created_at: (): Date => this.state.created_at
         }
@@ -45,8 +58,8 @@ export class Reward extends Model {
     }
 }
 
-export class RewardList extends Collection {
+export class RewardCollection extends Collection {
     constructor(initialState: any, options: any){
-        super(initialState, [Reward, RewardList], options)
+        super(initialState, [RewardModel, RewardCollection], options)
     }
 }

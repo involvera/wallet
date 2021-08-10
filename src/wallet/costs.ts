@@ -20,7 +20,6 @@ export const DEFAULT_STATE: ICost = {
     reaction_2: 0
 }
 
-
 export default class Costs extends Model {
 
     constructor(initialState = DEFAULT_STATE, options: any){

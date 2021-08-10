@@ -4,7 +4,7 @@ import * as bip32 from 'bip32'
 import { GetAddressFromPubKeyHash, ToPubKeyHash, Ripemd160, Sha256 } from 'wallet-util'
 import nacl from 'tweetnacl'
 import naclUtil from 'tweetnacl-util'
-import { Alias, IAlias, DEFAULT_STATE as AliasDefaultState } from '../off-chain'
+import { AliasModel, IAlias, ALIAS_DEFAULT_STATE } from '../off-chain'
 
 export interface IKey {
     pass_hash: string
@@ -15,7 +15,7 @@ export interface IKey {
 const DEFAULT_STATE = {
     pass_hash: '',
     mnemonic: '',
-    alias: AliasDefaultState
+    alias: ALIAS_DEFAULT_STATE
 }
 
 export default class Keys extends Model {
@@ -25,7 +25,7 @@ export default class Keys extends Model {
     constructor(initialState: IKey = DEFAULT_STATE, options: any){
         super(initialState, options)
         this.setState({
-            alias: new Alias(initialState.alias, this.kids())
+            alias: new AliasModel(initialState.alias, this.kids())
         })
     }
 
@@ -59,7 +59,7 @@ export default class Keys extends Model {
             mnemonic: Buffer.from(mnemonicEncrypted).toString('hex'),
         })
         return this.setState({
-            alias: new Alias(Object.assign(AliasDefaultState, {address: this.get().address()}) , this.kids())
+            alias: new AliasModel(Object.assign(ALIAS_DEFAULT_STATE, {address: this.get().address()}) , this.kids())
         })
     }
 
@@ -74,9 +74,9 @@ export default class Keys extends Model {
         }
 
         const alias = async () => {
-            const alias = await Alias.fetch(this.get().address())
+            const alias = await AliasModel.fetch(this.get().address())
             if (alias){
-                this.setState({ alias: new Alias(alias.to().plain(), this.kids()) }).save().store()
+                this.setState({ alias: new AliasModel(alias.to().plain(), this.kids()) }).save().store()
             }
         }
         return {
@@ -87,7 +87,7 @@ export default class Keys extends Model {
 
     get = () => {
         const passHash = (): string => this.state.pass_hash
-        const alias = (): Alias => this.state.alias 
+        const alias = (): AliasModel => this.state.alias 
         const seed = () => bip39.mnemonicToSeedSync(mnemonic(), this.getPassword())
         const master = () => bip32.fromSeed(seed())
         const wallet = () => master()?.derivePath('m/0/0')

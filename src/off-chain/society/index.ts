@@ -1,30 +1,30 @@
-import { Collection, Model } from "acey";
-import { ISociety, ISocietyStats } from "./interfaces";
+import { Model, Collection } from "acey";
 import axios from 'axios'
 import moment from "moment";
 
-import config from "../config";
-import { AliasCollection } from "./alias";
-import Constitution, { DEFAULT_STATE as ConstiDS } from './constitution'
-import Costs, { DEFAULT_STATE as CostsDS } from '../wallet/costs'
-import { IContributorStats, ILastCostChangeProposal } from ".";
+import config from "../../config";
+import { DEFAULT_STATE as DEFAULT_SOCIETY_STATS_STATE  } from './stats'
+import {ConstitutionModel,  DEFAULT_STATE as ConstiDS } from '../constitution'
+import Costs, { DEFAULT_STATE as CostsDS } from '../../wallet/costs'
+import { IConstitutionData } from '../constitution'
+import { ICost } from '../../wallet/costs'
+import { SocietyStatsModel,ISocietyStats } from './stats'
+import { IContributorStats, ContributorModel } from './contributor'
+import { Constitution } from "wallet-script";
 
-const DEFAULT_LAST_COST_CHANGE_STATE: ILastCostChangeProposal = {
-    created_at: 0,
-    price: 0,
-    index: 0,
-    pubkh: ''
-}
-
-const DEFAULT_SOCIETY_STATS_STATE: ISocietyStats  = {
-    total_contributor: 0,
-    last_height: 0,
-    active_addresses: 0,
-    most_active_addresses: [] as any,
-    circulating_supply:  '',
-    circulating_vp_supply : '',
-    last_thread_cost_change: DEFAULT_LAST_COST_CHANGE_STATE,
-    last_proposal_cost_change: DEFAULT_LAST_COST_CHANGE_STATE
+export interface ISociety {
+    id: number
+    name: string
+    created_at: Date
+    currency_symbol: string
+    description: string
+    domain: string,
+    currency_route_api: string
+    pp: null
+    stats: ISocietyStats
+    costs: ICost
+    constitution: IConstitutionData
+    contributor: IContributorStats
 }
 
 const DEFAULT_STATE: ISociety = {
@@ -44,29 +44,6 @@ const DEFAULT_STATE: ISociety = {
     },
     constitution: ConstiDS,
     costs: CostsDS
-}
-
-export class SocietyStatsModel extends Model {
-    
-    constructor(state: ISocietyStats = DEFAULT_SOCIETY_STATS_STATE, options: any){
-        super(state, options)
-        this.setState({
-            most_active_addresses: new AliasCollection(state.most_active_addresses, this.kids()),
-        })
-    }
-
-    get = () => {
-        return {
-            lastHeight: (): number => this.state.last_height,
-            totalContributor: (): number => this.state.total_contributor,
-            activeAddresses: (): number => this.state.active_addresses,
-            mostActiveAddresses: (): AliasCollection => this.state.most_active_addresses,
-            circulatingSupply: (): string => this.state.circulating_supply, 
-            circulatingVPSupply: (): string => this.state.circulating_vp_supply,
-            lastThreadCostChange: (): ILastCostChangeProposal => this.state.last_thread_cost_change,
-            lastProposalCostChange: (): ILastCostChangeProposal => this.state.last_proposal_cost_change
-        }
-    }
 }
 
 export class SocietyModel extends Model {
@@ -91,11 +68,12 @@ export class SocietyModel extends Model {
         this.setState({
             stats: new SocietyStatsModel(state.stats, this.kids()),
             costs: new Costs(state.costs, this.kids()),
-            constitution: new Constitution(state.constitution, this.kids()),
+            constitution: new ConstitutionModel(state.constitution, this.kids()),
+            contributor: new ContributorModel(state.contributor, this.kids())
         })
     }
 
-    isContributorFetch = () => this.get().contributor().addr == ''
+    isContributorFetch = () => this.get().contributor().get().addr() == ''
 
     fetchContributor = async (addr: string) => {
         try {
@@ -123,8 +101,8 @@ export class SocietyModel extends Model {
         const currencyRouteAPI = (): string => this.state.currency_route_api
         const stats = (): SocietyStatsModel => this.state.stats
         const costs = (): Costs => this.state.costs
-        const constitution = (): Constitution => this.state.constitution
-        const contributor = (): IContributorStats => this.state.contributor
+        const constitution = (): ConstitutionModel => this.state.constitution
+        const contributor = (): ContributorModel => this.state.contributor
         const pp = (): string | null => this.state.pp || null
         const formatedMonthYearCreationDate = (): string => moment(created_at()).format('MMMM YYYY')
 

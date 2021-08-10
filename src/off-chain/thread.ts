@@ -2,21 +2,31 @@ import axios from 'axios'
 import * as bip32 from 'bip32'
 import { Model, Collection } from "acey";
 import { BuildSignatureHex } from 'wallet-util'
-
-import { ContentLink } from "../transaction";
-import { IAuthor, IEmbedData, IThread } from "./interfaces";
+import { ContentLink, IContentLink } from "../transaction";
 import config from '../config'
+import { AliasModel, IAlias } from './alias';
 
-export class Thread extends Model {
+export interface IThread {
+    sid: number
+    content_link?: IContentLink
+    author?: IAlias
+    title: string
+    content: string
+    embed_data?: string[]
+    created_at?: Date
+}
 
-    static NewContent = (sid: number, title: string, content: string): Thread => {
-        return new Thread({sid, content, title} as any, {})
+export class ThreadModel extends Model {
+
+    static NewContent = (sid: number, title: string, content: string): ThreadModel => {
+        return new ThreadModel({sid, content, title} as any, {})
     }
 
     constructor(state: IThread, options: any){
         super(state, options) 
         this.setState({
-            content_link: !state.content_link ? null : new ContentLink(state.content_link, this.kids())
+            content_link: new ContentLink(state.content_link as any, this.kids()),
+            author: new AliasModel(state.author, this.kids())
         })
     }
 
@@ -52,8 +62,8 @@ export class Thread extends Model {
     get = () => {
         const societyID = (): number => this.state.sid
         const contentLink = (): ContentLink | null => this.state.content_link
-        const embedData = (): IEmbedData => this.state.embed_data
-        const author = (): IAuthor => this.state.author
+        const embedData = (): string[] => this.state.embed_data
+        const author = (): AliasModel => this.state.author
         const title = (): string => this.state.title
         const content = (): string => this.state.content
         const createdAt = (): Date => this.state.created_at
@@ -65,9 +75,9 @@ export class Thread extends Model {
     }
 }
 
-export class ThreadList extends Collection {
+export class ThreadCollection extends Collection {
     constructor(initialState: any, options: any){
-        super(initialState, [Thread, ThreadList], options)
+        super(initialState, [ThreadModel, ThreadCollection], options)
     }
 
     pullThreadByPKH = async (societyID: number, pubkh: string) => {

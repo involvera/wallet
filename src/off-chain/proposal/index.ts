@@ -3,26 +3,40 @@ import axios from 'axios'
 import * as bip32 from 'bip32'
 import { Collection, Model } from "acey";
 import { BuildSignatureHex } from 'wallet-util'
-
-import { ContentLink } from "../transaction";
-import { IAuthor, IEmbedData, IProposal, TLayer } from "./interfaces";
-import config from "../config";
+import config from "../../config";
+import { ContentLink, IContentLink } from "../../transaction";
+import { IAlias, AliasModel } from '../alias'
 import {VoteModel, IVote } from './vote'
-import { T_FETCHING_FILTER } from '../constant/off-chain';
 
-export class Proposal extends Model {
+export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
-    static NewContent = (sid: number, title: string, content: string[]): Proposal => {
+export interface IProposal {
+    sid: number
+    content_link: IContentLink
+    vote: IVote
+    index: number
+    created_at: Date
+    end_at: Date | null
+    title: string,
+    content: string[3]
+    author: IAlias
+    embeds: string[]
+}
+
+export class ProposalModel extends Model {
+
+    static NewContent = (sid: number, title: string, content: string[]): ProposalModel => {
         if (content.length < 3 || content.length > 4){
             throw new Error("Wrong proposal contents length")
         }
-        return new Proposal({sid, content, title} as any, {})
+        return new ProposalModel({sid, content, title} as any, {})
     }
 
     constructor(state: IProposal, options: any){
         super(state, options) 
-        !!state.content_link && this.setState({ content_link: new ContentLink(state.content_link, this.kids()) })
-        !!state.vote && this.setState({ vote: new VoteModel(state.vote, this.kids()) })        
+        this.setState({ content_link: new ContentLink(state.content_link, this.kids()) })
+        this.setState({ vote: new VoteModel(state.vote, this.kids()) })      
+        this.setState({ author: new AliasModel(state.author, this.kids()) })
     }
     
     sign = (wallet: bip32.BIP32Interface) => {
@@ -56,7 +70,7 @@ export class Proposal extends Model {
 
     is2 = () => {
         const pending = (): boolean => !!this.get().end_at() 
-        const approved = (): boolean => pending() && this.get().approved() > 50
+        const approved = (): boolean => pending() && this.get().vote().get().approved() > 50
         return {
             pending, approved
         }
@@ -65,7 +79,7 @@ export class Proposal extends Model {
     get = () => {
         const contentLink = (): ContentLink | null => this.state.content_link
         const societyID = (): number => this.state.sid
-        const embedData = (): IEmbedData => this.state.embed_data
+        const embedData = (): string[] => this.state.embed_data
         const costs = () => { 
             const link = contentLink()
             if (link == null)
@@ -78,7 +92,7 @@ export class Proposal extends Model {
                 throw new Error("content_link is null")
             return link.get().output().get().script().parse().constitution()
         }
-        const author = (): IAuthor => this.state.author
+        const author = (): AliasModel => this.state.author
         const content = (): string[] => this.state.content 
         const title = (): string => this.state.title
         const created_at = (): number => (this.state.created_at as Date).getTime()
@@ -102,22 +116,8 @@ export class Proposal extends Model {
             return moment(createDate).format(`MMM Do ${isSameYear ? '' : 'YYYY'} `)
         }
         
-        const vote = (): IVote | null => this.state.vote
-        
-        const approved = (): number => {
-            const v = vote()
-            if (!v)
-                return -1
-            return v.approved
-        }
-
-        const declined = (): number => {
-            const v = vote()
-            if (!v)
-                return -1
-            return v.declined
-        }
-        
+        const vote = (): VoteModel => this.state.vote
+                
         const dataToSign = (): string => this.get().content().join('~~~_~~~_~~~_~~~')
 
         const layer = (): TLayer => {
@@ -137,15 +137,14 @@ export class Proposal extends Model {
             author, content, title, layer, created_at, 
             vote, societyID, dataToSign, end_at, 
             createdAtAgo, createdAtPretty,
-            approved, declined
         }
     }
 }
 
-export class ProposalList extends Collection {
+export class ProposalCollection extends Collection {
 
     constructor(initialState: any, options: any){
-        super(initialState, [Proposal, ProposalList], options)
+        super(initialState, [ProposalModel, ProposalCollection], options)
     }
 
     pullProposalByIndex = async (societyID: number, index: number) => {

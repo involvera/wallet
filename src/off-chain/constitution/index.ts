@@ -1,8 +1,14 @@
 import { Model } from 'acey'
 import axios from 'axios'
-import config from '../config'
+import config from '../../config'
 import { Constitution as C } from 'wallet-script'
-import { IConstitutionData } from './interfaces'
+import { IScriptProposal, ProposalScriptModel } from '../proposal-script'
+import { RuleCollection } from './rule'
+
+export interface IConstitutionData {
+    proposal: IScriptProposal
+    constitution: C.TConstitution
+}
 
 export const DEFAULT_STATE: IConstitutionData = {
     proposal: {
@@ -16,22 +22,20 @@ export const DEFAULT_STATE: IConstitutionData = {
     constitution: [] 
 }
 
-export default class Constitution extends Model {
+export class ConstitutionModel extends Model {
 
-    constructor(initialState = DEFAULT_STATE, options: any){
-        super(initialState, options)
+    constructor(state = DEFAULT_STATE, options: any){
+        super(state, options)
+        this.setState({
+            proposal: new ProposalScriptModel(state.proposal, this.kids()),
+            constitution: new RuleCollection(state.constitution, this.kids())
+        })
     }
 
     get = () => {
-        const constitution = (): C.TConstitution => this.state.constitution
-        const pubKHOrigin = (): string | null => {
-            if (this.state.proposal){
-                return this.state.proposal.pubkh
-            }
-            return null
-        }
         return {
-            constitution, pubKHOrigin
+            constitution: (): RuleCollection => this.state.constitution,
+            proposalScript: (): ProposalScriptModel => this.state.proposal
         }
     }
 
