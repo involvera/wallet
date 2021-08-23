@@ -1,25 +1,14 @@
 import { Collection, Model } from 'acey'
-import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT } from '../constant';
+import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT } from '../../constant';
 import { TByte } from 'wallet-script'
 import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, PubKeyHashHexToUUID } from 'wallet-util';
 import axios from 'axios'
-import config from '../config'
-import { IHeaderSignature } from './wallet';
+import config from '../../config'
+import { IHeaderSignature } from '../wallet';
 
-export interface ILink {
-    from: string
-    to: string
-}
-
-export interface IPubKH {
-    sender: string
-    recipient: string
-}
-
-export interface IValue {
-    at_time: number
-    now: number
-}
+import { ILink, LinkModel, DEFAULT_VALUE as LINK_DEFAULT_VALUE } from './link'
+import { IPubKH, PubKHModel, DEFAULT_VALUE as PUBKH_DEFAULT_VALUE } from './pubkh'
+import { IValue, ValueModel, DEFAULT_VALUE as VALUE_DEFAULT_VALUE } from './value'
 
 export interface IUnserializedPut {
     time: number
@@ -40,17 +29,22 @@ const INITIAL_STATE: IUnserializedPut = {
     lh: 0,
     tx_id: "",
     put_index: -1,
-    pubkh: {sender: "", recipient: ""},
-    link: {from: "", to: ""},
-    value: {at_time: 0, now: 0},
+    pubkh: PUBKH_DEFAULT_VALUE,
+    link: LINK_DEFAULT_VALUE,
+    value: VALUE_DEFAULT_VALUE,
     extra_data: "",
     fetched_at_cch: "",
 }
 
 export class UnserializedPut extends Model {
 
-    constructor(initialState = INITIAL_STATE, options: any){
-        super(initialState, options)
+    constructor(state: IUnserializedPut = INITIAL_STATE, options: any){
+        super(state, options)
+        this.setState({
+            link: new LinkModel(state.link, this.kids()),
+            pubkh: new PubKHModel(state.pubkh, this.kids()),
+            value: new ValueModel(state.value, this.kids()),
+        })
     }
 
     isAcceptedVote = () => this.get().extraData() === "accepted"
@@ -72,20 +66,20 @@ export class UnserializedPut extends Model {
     isRethread = () => this.get().extraData() === "" && this.get().contentPKH() != "" && this.get().contentPKHTargeted() != ""
     
     isRegularTx = () => this.get().extraData() == "" && this.get().contentPKH() == "" && this.get().contentPKHTargeted() == ""
-    isLughTx = () => this.isRegularTx() && this.get().senderPKH() == ""
+    isLughTx = () => this.isRegularTx() && this.get().pkh().get().sender() == ""
 
     pretty = (pkh: string) => {
         let action = ''
         let from = ''
         let to = ''
-        const amount = `${this.get().senderPKH() == pkh ? '-' : '+'}${parseFloat((Number(this.get().valueAtCreationTime()) / COIN_UNIT).toFixed(2)).toLocaleString('en')}`
+        const amount = `${this.get().pkh().get().sender() == pkh ? '-' : '+'}${parseFloat((Number(this.get().value().get().atCreationTime()) / COIN_UNIT).toFixed(2)).toLocaleString('en')}`
 
         if (this.isRegularTx()){
             if (this.isLughTx()){
                 from = 'Involvera : Lugh'
             } else {
-                from = this.get().senderPKH() === pkh ? 'You' : GetAddressFromPubKeyHash(Buffer.from(this.get().senderPKH(), 'hex'))
-                to = this.get().recipientPKH() === pkh ? 'you' : GetAddressFromPubKeyHash(Buffer.from(this.get().recipientPKH(), 'hex'))
+                from = this.get().pkh().get().sender() === pkh ? 'You' : GetAddressFromPubKeyHash(Buffer.from(this.get().pkh().get().sender(), 'hex'))
+                to = this.get().pkh().get().recipient() === pkh ? 'you' : GetAddressFromPubKeyHash(Buffer.from(this.get().pkh().get().recipient(), 'hex'))
                 action = 'sent to'
             }
         } else {
@@ -105,10 +99,10 @@ export class UnserializedPut extends Model {
                 const emoji: any = {upvote: '👍', reaction_0: '⭐', reaction_1: '💫', reaction_2: '✨'}
                 action = `${this.get().extraData() === 'upvote' ? 'upvoted' : `reacted ${emoji[this.get().extraData()]}` } to`
                 to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))
-                if (this.get().senderPKH() === pkh)
+                if (this.get().pkh().get().sender() === pkh)
                     from = 'You'
                 else 
-                    from = GetAddressFromPubKeyHash(Buffer.from(this.get().senderPKH(), 'hex'))
+                    from = GetAddressFromPubKeyHash(Buffer.from(this.get().pkh().get().sender(), 'hex'))
             } else if (this.isProposal()){
                 action = `New ${this.get().extraData()} proposal`
                 to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKH(), 'hex'))
@@ -124,11 +118,13 @@ export class UnserializedPut extends Model {
     }
 
     get = () => {
-        const valueAtCreationTime = (): BigInt => this.state.value.at_time
-        const valueNow = (): number => this.state.value.now
+
+        const pkh = (): PubKHModel => this.state.pubkh
+        const link = (): LinkModel => this.state.link
+        const value = (): ValueModel => this.state.value
 
         const CCH = (): string => this.state.fetched_at_cch
-        const MR = () => Number(BigInt(valueNow()) / BigInt(valueAtCreationTime() as any))
+        const MR = () => Number(value().get().now() / value().get().atCreationTime() )
 
         const meltedValueRatio = (CCHList: string[]) => {
             let count = 0
@@ -146,14 +142,16 @@ export class UnserializedPut extends Model {
     
             return r
         }
+        
+        const contentPKH = (): string => link().get().from()
+        const contentPKHTargeted = (): string => link().get().to()
 
-        const currentValue = (CCHList: string[]) => CalculateOutputMeltedValue(valueAtCreationTime(), meltedValueRatio(CCHList))
-        const contentPKH = (): string => this.state.link.from
-        const contentPKHTargeted = (): string => this.state.link.to
+        const currentValue = (CCHList: string[]) => CalculateOutputMeltedValue(BigInt(value().get().atCreationTime()), meltedValueRatio(CCHList))
      
         return {
-            senderPKH: (): string => this.state.pubkh.sender,
-            recipientPKH: (): string => this.state.pubkh.recipient,
+            pkh,
+            link,
+            value,
             txID: (): string => this.state.tx_id,
             createdAt: () => new Date(this.state.time),
             height: (): number => this.state.lh,
@@ -163,7 +161,6 @@ export class UnserializedPut extends Model {
             contentPKHTargeted,
             extraData: (): string => this.state.extra_data,
             currentValue,
-            valueAtCreationTime
         }
     }
 }
@@ -177,8 +174,8 @@ export class UnserializedPutList extends Collection {
     sortByTime = () => this.orderBy('time', 'desc') as UnserializedPutList
 
     get = () => {
-        const inputs = (pkhHex: string): UnserializedPutList => this.filter((p: UnserializedPut) => p.get().senderPKH() == pkhHex) as UnserializedPutList
-        const outputs = (pkhHex: string): UnserializedPutList => this.filter((p: UnserializedPut) => p.get().recipientPKH() == pkhHex) as UnserializedPutList
+        const inputs = (pkhHex: string): UnserializedPutList => this.filter((p: UnserializedPut) => p.get().pkh().get().sender() == pkhHex) as UnserializedPutList
+        const outputs = (pkhHex: string): UnserializedPutList => this.filter((p: UnserializedPut) => p.get().pkh().get().recipient() == pkhHex) as UnserializedPutList
         const rewards = () => this.filter((p: UnserializedPut) => p.isReward()) as UnserializedPutList
         const betweenDates = (from: Date, to: Date) => this.filter((p: UnserializedPut) => from <= p.get().createdAt() && to >= p.get().createdAt()) as UnserializedPutList
        
@@ -206,10 +203,9 @@ export class UnserializedPutList extends Collection {
 
             this.forEach((p: UnserializedPut) => {
                 if (p.isLughTx()){
-                    total = BigInt(total as any) + BigInt(p.get().valueAtCreationTime() as any)
+                    total = BigInt(total as any) + BigInt(p.get().value().get().atCreationTime() as any)
                 }
             })
-
             return total
         }
 
@@ -231,8 +227,8 @@ export class UnserializedPutList extends Collection {
             let total = BigInt(0)
 
             betweenDates(since, now).forEach((p: UnserializedPut) => {
-                if (p.isReward() && p.get().senderPKH() != pkhHex){
-                    total = BigInt(total as any) + BigInt(p.get().valueAtCreationTime() as any)
+                if (p.isReward() && p.get().pkh().get().sender() != pkhHex){
+                    total = BigInt(total as any) + BigInt(p.get().value().get().atCreationTime() as any)
                 }
             })
             return total
@@ -243,8 +239,8 @@ export class UnserializedPutList extends Collection {
             const atDayActivity = (d: Date) => {
                 let total = BigInt(0)
                 atDay(d).forEach((p: UnserializedPut) => {
-                    if (p.isVote() || p.isThread() || p.isRethread() || p.isProposal() || (p.isReward() && p.get().senderPKH() != pkhHex)){
-                        total = BigInt(total as any) + BigInt(p.get().valueAtCreationTime() as any)
+                    if (p.isVote() || p.isThread() || p.isRethread() || p.isProposal() || (p.isReward() && p.get().pkh().get().sender() != pkhHex)){
+                        total = BigInt(total as any) + BigInt(p.get().value().get().atCreationTime() as any)
                     }
                 })
                 return total

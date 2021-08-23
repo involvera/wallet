@@ -6,9 +6,15 @@ export interface IContributorStats {
     sid: number
 }
 
+export const DEFAULT_STATE: IContributorStats = {
+    addr: '',
+    position: 0,
+    sid: 0,
+}
+
 export class ContributorModel extends Model {
 
-    constructor(state: IContributorStats, options: any){
+    constructor(state = DEFAULT_STATE, options: any){
         super(state, options)
     }
 

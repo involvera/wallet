@@ -4,10 +4,11 @@ import Fees from './fees'
 import Info from './info'
 import Keys from './keys'
 
+import { ILink, LinkModel} from './puts/link'
+import { IPubKH, PubKHModel} from './puts/pubkh'
+import { IValue, ValueModel} from './puts/value'
+
 import {
-    ILink,
-    IPubKH,
-    IValue,
     IUnserializedPut,
     UnserializedPut
 } from './puts'
@@ -25,6 +26,9 @@ export {
     Keys,
     Wallet,
     UnserializedPut,
+    PubKHModel,
+    ValueModel,
+    LinkModel
 }
 
 export type {

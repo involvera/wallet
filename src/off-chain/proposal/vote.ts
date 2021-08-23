@@ -6,9 +6,15 @@ export interface IVote {
     closed_at_lh: number
 }
 
+export const DEFAULT_STATE: IVote = {
+    approved: -1,
+    declined: -1,
+    closed_at_lh: 0
+}
+
 export class VoteModel extends Model {
 
-    constructor(state: IVote, options: any){
+    constructor(state: IVote = DEFAULT_STATE, options: any){
         super(state, options) 
     }
 

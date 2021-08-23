@@ -17,7 +17,7 @@ export class RuleModel extends Model {
 
 export class RuleCollection extends Collection {
     constructor(state: C.TConstitution, options:any){
-        super(state, options)
+        super(state, [RuleModel, RuleCollection], options)
     }
 }
 

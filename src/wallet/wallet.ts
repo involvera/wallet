@@ -5,7 +5,7 @@ import TxBuild from './tx-builder'
 
 import axios from 'axios'
 import config from '../config'
-import { Input, Transaction, UTXO, UTXOList } from '../transaction'
+import { InputModel, Transaction, UTXOModel, UTXOCollection } from '../transaction'
 
 import AuthContract from './auth-contract'
 import Fees from './fees'
@@ -16,7 +16,10 @@ import { UnserializedPutList } from './puts'
 import Info from './info'
 import { BURNING_RATIO } from '../constant'
 import { Constitution, ScriptEngine } from 'wallet-script'
-import { ContentLink } from '../transaction/content-link'
+import { ContentLinkModel } from '../transaction/content-link'
+import { CCHModel } from './cch'
+
+import { MemoryModel } from './memory'
 
 export interface IHeaderSignature {
     pubkey: string
@@ -29,14 +32,14 @@ export class Wallet extends Model {
         super(initialState, options)
         this.setState({
             seed: new Keys(initialState.seed, this.kids()),
-            utxos: new UTXOList(initialState.utxos || [], this.kids()),
+            utxos: new UTXOCollection(initialState.utxos || [], this.kids()),
             puts: new UnserializedPutList(initialState.puts || [], this.kids()), 
-            cch: initialState.cch || {list: [], last_height: 0},
+            cch: new CCHModel(initialState.cch, this.kids()),
             contract: new AuthContract(initialState.contract, this.kids()),
             fees: new Fees(initialState.fees, this.kids()),
             info: new Info(initialState.info, this.kids()),
             costs: new Costs(initialState.costs, this.kids()),
-            memory: initialState.memory || {last_put_fetch_height: 0, is_recovered_wallet: false},
+            memory: new MemoryModel(initialState.memory, this.kids())
         })
     }
 
@@ -56,7 +59,7 @@ export class Wallet extends Model {
             const json = response.data
 
             this.info().setState(json.info)
-            this.cch()._assignJSONResponse(json.cch)
+            this.cch().assignJSONResponse(json.cch)
             this.auth().setState(json.contract)
             this.fees().setState(json.fees)
             this.utxos().get().setState(json.utxos || [])
@@ -88,6 +91,8 @@ export class Wallet extends Model {
     public info = (): Info => this.state.info
     public puts = (): UnserializedPutList => this.state.puts
     public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
+    public memory = (): MemoryModel => this.state.memory
+    public cch = (): CCHModel => this.state.cch
 
     buildTX = () => {
 
@@ -167,11 +172,11 @@ export class Wallet extends Model {
             return await builder.newTx()
         }
 
-        const rethread = async (content: ContentLink) => {
+        const rethread = async (content: ContentLinkModel) => {
             await this.synchronize()
             const contentNonce = this.info().get().contentNonce() + 1
             const contentPKH = this.keys().get().derivedPubHash(contentNonce)
-            const targetPKH = content.get().output().get().contentPKH()
+            const targetPKH = content.get().link().get().output().get().contentPKH()
 
             const script = new ScriptEngine([]).append().rethreadScript(contentNonce, contentPKH, targetPKH)
 
@@ -184,9 +189,9 @@ export class Wallet extends Model {
             return await builder.newTx()
         }
 
-        const reward = async (content: ContentLink, rewardType: 'upvote' | 'reaction0' | 'reaction1' | 'reaction2') => {
+        const reward = async (content: ContentLinkModel, rewardType: 'upvote' | 'reaction0' | 'reaction1' | 'reaction2') => {
             await this.synchronize()
-            const targetPKH = content.get().output().get().contentPKH()
+            const targetPKH = content.get().link().get().output().get().contentPKH()
     
             const scriptReward = new ScriptEngine([]).append().rewardScript(targetPKH, 1)
             const scriptDistribution = new ScriptEngine([]).append().lockScript(Buffer.from(content.get().pubKHAuthor(), 'hex'))
@@ -204,9 +209,9 @@ export class Wallet extends Model {
             return await builder.newTx()
         }
 
-        const vote = async (proposal: ContentLink, accept: boolean) => {
+        const vote = async (proposal: ContentLinkModel, accept: boolean) => {
             await this.synchronize()
-            const targetPKH = proposal.get().output().get().contentPKH()
+            const targetPKH = proposal.get().link().get().output().get().contentPKH()
 
             const script = new ScriptEngine([]).append().voteScript(targetPKH, accept)
 
@@ -225,59 +230,8 @@ export class Wallet extends Model {
         }
     }
 
-    memory = () => {
-        const get = () => {
-            return {
-                memory: () => this.state.memory,
-                lastPutFetchHeight: () => this.state.memory.last_put_fetch_height
-            }
-        }
-
-        const set = (o: any) => this.setState({ memory: Object.assign({}, get().memory(), o) })
-        const setRecovered = () => set({ is_recovered_wallet: true }).store()
-
-        const setLastPutFetchHeight = (last_put_fetch_height: number) => set({ last_put_fetch_height })
-
-        return { get, set, setLastPutFetchHeight, setRecovered }
-    }
-
-    cch = () => {
-        const get = () => {
-            const list = (): string[] => this.state.cch.list 
-            const last = () => list().length == 0 ? '' : list()[0]
-            const lastHeight = (): number => this.state.cch.last_height
-            return { list, last, lastHeight }
-        }
-
-        const _assignJSONResponse = (json: any) => {
-            let { list, last_height} = json
-            list = list || []
-            return this.setState({ cch: { list: get().list().concat(list.filter((elem: any) => !!elem)), last_height } } )
-        }
-
-        const fetch = async () => {
-            if (this.utxos().get().count() > 0){
-                await this.auth().refresh()
-                try {
-                    const res = await axios(config.getRootAPIChainUrl() + '/cch', {
-                        headers: Object.assign({}, this.sign().header() as any, {last_cch: get().last() }),
-                        timeout: 10000,
-                        validateStatus: function (status) {
-                            return status >= 200 && status < 500;
-                        },
-                    })
-                    res.status == 200 && _assignJSONResponse(res.data).store()
-                    return res.status
-                } catch (e){
-                    throw new Error(e)
-                }
-            }
-        }
-        return { get, fetch, _assignJSONResponse }
-    }
-
     utxos = () => {
-        const get = (): UTXOList => this.state.utxos
+        const get = (): UTXOCollection => this.state.utxos
         const fetch = async () => {
             await this.auth().refresh()
             try {
@@ -306,8 +260,8 @@ export class Wallet extends Model {
 
         const transaction = async (tx: Transaction) => {
             
-            const UTXOs = new UTXOList([], undefined)
-            tx.get().inputs().forEach((i: Input) => {
+            const UTXOs = new UTXOCollection([], undefined)
+            tx.get().inputs().forEach((i: InputModel) => {
                 const exist = this.utxos().get().get().UTXOByTxHashAndVout(i.get().prevTxHash(), i.get().vout())
                 exist && UTXOs.push(exist)
             })
@@ -316,8 +270,8 @@ export class Wallet extends Model {
             const inputs = tx.get().inputs()
 
             for (let i = 0; i < inputs.count(); i++){
-                const prevTx = (UTXOs.nodeAt(i) as UTXO).get().tx() as Transaction
-                const input = inputs.nodeAt(i) as Input
+                const prevTx = (UTXOs.nodeAt(i) as UTXOModel).get().tx() as Transaction
+                const input = inputs.nodeAt(i) as InputModel
                 
                 let signature: Buffer = Buffer.from([])
                 let pubkey: Buffer = Buffer.from([])

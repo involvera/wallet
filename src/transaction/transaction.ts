@@ -1,16 +1,15 @@
 import axios from 'axios'
 import { Model } from 'acey'
 
-import { IOutput, OutputList } from './output'
-import { IInput, Input, InputList } from './input'
+import { IOutput, OutputCollection, OutputModel } from './output'
+import { IInput, InputModel, InputCollection } from './input'
 import { Wallet } from '../wallet/wallet'
 import { IInputRaw } from './input'
-import { IOutputRaw, Output } from './output'
+import { IOutputRaw } from './output'
 
 import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256, UUIDToPubKeyHashHex } from 'wallet-util'
 import { BILLED_SIGNATURE_LENGTH, TXID_LENGTH } from '../constant'
 import { Constant } from 'wallet-script'
-
 
 import config from '../config'
 
@@ -26,6 +25,13 @@ export interface ITransactionRaw {
 	t:       Buffer
 	inputs:  IInputRaw[]
 	outputs: IOutputRaw[] 
+}
+
+export const DEFAULT_STATE: ITransaction = {
+    lh: 0,
+    t: 0,
+    inputs: [],
+    outputs: []
 }
 
 export class Transaction extends Model {
@@ -48,11 +54,11 @@ export class Transaction extends Model {
         throw new Error(response.data)
     }
 
-    constructor(tx: ITransaction, options: any) {
+    constructor(tx: ITransaction = DEFAULT_STATE, options: any) {
         super(tx, options)
         this.setState({
-            inputs: new InputList(this.state.inputs, this.kids()),
-            outputs: new OutputList(this.state.outputs, this.kids()),
+            inputs: new InputCollection(this.state.inputs, this.kids()),
+            outputs: new OutputCollection(this.state.outputs, this.kids()),
         })
     }
 
@@ -90,15 +96,15 @@ export class Transaction extends Model {
         }
     }
 
-    isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as Input).get().prevTxHash().length == 0
+    isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as InputModel).get().prevTxHash().length == 0
 
     get = () => {
         const time = (): number => this.state.t
         const lughHeight = (): number => this.state.lh
         const hash = () => Sha256(this.to().string())
         const hashHex = () => hash().toString('hex')
-        const inputs = (): InputList => this.state.inputs
-        const outputs = (): OutputList => this.state.outputs
+        const inputs = (): InputCollection => this.state.inputs
+        const outputs = (): OutputCollection => this.state.outputs
 
         const billedSize = (): number => {
             let size = this.size()
@@ -134,12 +140,12 @@ export class Transaction extends Model {
             let outputs: IOutputRaw[] = []
     
             for (let i = 0; i < this.get().inputs().count(); i++){
-                const input = this.get().inputs().nodeAt(i) as Input 
+                const input = this.get().inputs().nodeAt(i) as InputModel 
                 inputs.push(input.toRaw().default())
             }
     
             for (let i = 0; i < this.get().outputs().count(); i++){
-                const output = this.get().outputs().nodeAt(i) as Output 
+                const output = this.get().outputs().nodeAt(i) as OutputModel 
                 outputs.push(output.toRaw().default())
             }
     
@@ -159,8 +165,8 @@ export class Transaction extends Model {
             return {
                 lh: ByteArrayToB64(raw.lh), 
                 t: ByteArrayToB64(raw.t), 
-                inputs: inputs.map((inp: Input) => inp.toRaw().base64()),
-                outputs: outputs.map((out: Output) => out.toRaw().base64())
+                inputs: inputs.map((inp: InputModel) => inp.toRaw().base64()),
+                outputs: outputs.map((out: OutputModel) => out.toRaw().base64())
             }
         }
 
@@ -170,11 +176,11 @@ export class Transaction extends Model {
     toString = () => {
         const plain = this.to().plain()
         for (let i = 0; i < plain.inputs.length; i++){
-            plain.inputs[i].script_sig = (this.get().inputs().nodeAt(i) as Input).get().script().toString()
+            plain.inputs[i].script_sig = (this.get().inputs().nodeAt(i) as InputModel).get().script().toString()
         }
 
         for (let i = 0; i < plain.outputs.length; i++){
-            plain.outputs[i].script = (this.get().outputs().nodeAt(i) as Output).get().script().toString()
+            plain.outputs[i].script = (this.get().outputs().nodeAt(i) as OutputModel).get().script().toString()
         }
         return plain
     }

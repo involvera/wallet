@@ -1,28 +1,28 @@
 import axios from 'axios'
 import { Collection, Model } from 'acey'
-import { Output } from './output'
-
-import { CYCLE_IN_LUGH } from '../constant'
 import { CalculateOutputMeltedValue } from 'wallet-util'
+import config from '../config'
+
+import { IOutput, OutputModel } from './output'
+import { CYCLE_IN_LUGH } from '../constant'
 import { ITransaction, Transaction } from './transaction'
 import { IHeaderSignature } from '../wallet/wallet'
-import { Input, InputList } from './input'
-import config from '../config'
+import { InputModel, InputCollection } from './input'
  
 export interface IUTXO {
     tx_id: string
     idx: number
-    output: Output
+    output: IOutput
     tx: null | ITransaction 
     mr: number
     cch: string
 }
 
-export class UTXO extends Model {
+export class UTXOModel extends Model {
     constructor(utxo: IUTXO, options: any) {
         super(utxo, options)
         this.setState({
-            output: new Output(this.state.output, this.kids()),
+            output: new OutputModel(this.state.output, this.kids()),
             tx: utxo && utxo.tx ? new Transaction(utxo.tx, this.kids()) : null
         })
     }
@@ -30,7 +30,7 @@ export class UTXO extends Model {
     get = () => {
         const txID = (): string => this.state.tx_id
         const idx = (): number => this.state.idx
-        const output = (): Output => this.state.output
+        const output = (): OutputModel => this.state.output
         const MR = (): number => this.state.mr
         const CCH = (): string => this.state.cch
         const tx = (): Transaction | null => this.state.tx
@@ -62,24 +62,24 @@ export class UTXO extends Model {
     }
 }
 
-export class UTXOList extends Collection {
+export class UTXOCollection extends Collection {
 
     constructor(list: IUTXO[] = [], options: any){
-        super(list, [UTXO, UTXOList], options)
+        super(list, [UTXOModel, UTXOCollection], options)
     }
 
     toInputs = () => {
-        return new InputList(
-            this.map((utxo: UTXO) => {
+        return new InputCollection(
+            this.map((utxo: UTXOModel) => {
                 return {prev_transaction_hash: utxo.get().txID(), vout: utxo.get().idx(), script_sig: Buffer.from([]) }
             }),
             {}
         )
     }
 
-    removeUTXOsFromInputs = (inputs: InputList) => {
-        inputs.map((i: Input) => {
-            this.deleteBy((utxo: UTXO) => {
+    removeUTXOsFromInputs = (inputs: InputCollection) => {
+        inputs.map((i: InputModel) => {
+            this.deleteBy((utxo: UTXOModel) => {
                 return utxo.get().txID() == i.get().prevTxHash() && utxo.get().idx() == i.get().vout()
             })
         })
@@ -105,7 +105,7 @@ export class UTXOList extends Collection {
                 for (let i = 0; i < listUnFetchedTxHash.length; i++){
                     const UTXOs = this.get().UTXOByTxHash(listUnFetchedTxHash[i])
                     if (UTXOs){
-                        UTXOs.forEach((u: UTXO) => {
+                        UTXOs.forEach((u: UTXOModel) => {
                             u?.setState({ tx: new Transaction(list[i], this.kids())}).store()
                         })
 
@@ -122,38 +122,38 @@ export class UTXOList extends Collection {
         const listUnFetchedTxHash = () => {
             const ret: string[] = []
             for (let i = 0; i < this.count(); i++){
-                const utxo = this.nodeAt(i) as UTXO
+                const utxo = this.nodeAt(i) as UTXOModel
                 !utxo.get().tx() && ret.push(utxo.get().txID())
             }
             return ret
         }
 
-        const UTXOByTxHash = (txHashHex: string): UTXOList | undefined => {
-            const u = this.filter((utxo: UTXO) => utxo.get().txID() === txHashHex)
-            return u ? u as UTXOList : undefined
+        const UTXOByTxHash = (txHashHex: string): UTXOCollection | undefined => {
+            const u = this.filter((utxo: UTXOModel) => utxo.get().txID() === txHashHex)
+            return u ? u as UTXOCollection : undefined
         }
 
-        const UTXOByTxHashAndVout = (txHashHex: string, vout: number): UTXO | undefined => {
-            const u = UTXOByTxHash(txHashHex)?.find((utxo: UTXO) => utxo.get().idx() === vout)
-            return u ? u as UTXO : undefined
+        const UTXOByTxHashAndVout = (txHashHex: string, vout: number): UTXOModel | undefined => {
+            const u = UTXOByTxHash(txHashHex)?.find((utxo: UTXOModel) => utxo.get().idx() === vout)
+            return u ? u as UTXOModel : undefined
         }
 
-        const requiredList = (amountRequired: number, CCHList: string[]): UTXOList => {
-            let ret: UTXO[] = []
+        const requiredList = (amountRequired: number, CCHList: string[]): UTXOCollection => {
+            let ret: UTXOModel[] = []
             let amountGot = 0
 
             for (let i = 0; i < this.count(); i++){
-                ret.push(this.nodeAt(i) as UTXO)
-                amountGot += (this.nodeAt(i) as UTXO).get().meltedValue(CCHList)
+                ret.push(this.nodeAt(i) as UTXOModel)
+                amountGot += (this.nodeAt(i) as UTXOModel).get().meltedValue(CCHList)
                 if (amountGot > amountRequired) 
                     break
             }
-            return this.newCollection(ret) as UTXOList
+            return this.newCollection(ret) as UTXOCollection
         }
 
         const totalValue = () => {
             let total = BigInt(0)
-            this.map((utxo: UTXO) => {
+            this.map((utxo: UTXOModel) => {
                 total += BigInt(utxo.get().output().get().value() as any)
             })
             return total
@@ -161,7 +161,7 @@ export class UTXOList extends Collection {
 
         const totalMeltedValue = (CCHList: string[]) => {
             let total = 0
-            this.map((utxo: UTXO) => {
+            this.map((utxo: UTXOModel) => {
                 total += utxo.get().meltedValue(CCHList)
             })
             return total

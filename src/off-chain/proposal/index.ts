@@ -4,9 +4,9 @@ import * as bip32 from 'bip32'
 import { Collection, Model } from "acey";
 import { BuildSignatureHex } from 'wallet-util'
 import config from "../../config";
-import { ContentLink, IContentLink } from "../../transaction";
-import { IAlias, AliasModel } from '../alias'
-import {VoteModel, IVote } from './vote'
+import {  IContentLink, ContentLinkModel, DEFAULT_STATE as DEFAULT_LINK_STATE } from '../../transaction/content-link'
+import { IAlias, AliasModel, DEFAULT_STATE as DEFAULT_ALIAS_STATE } from '../alias'
+import {VoteModel, IVote, DEFAULT_STATE as DEFAULT_VOTE_STATE } from './vote'
 
 export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
@@ -23,7 +23,37 @@ export interface IProposal {
     embeds: string[]
 }
 
+export const DEFAUL_STATE: IProposal = {
+    sid: 0,
+    content_link: DEFAULT_LINK_STATE,
+    vote: DEFAULT_VOTE_STATE,
+    index: 0,
+    created_at: new Date(),
+    end_at: null,
+    title: '',
+    content: ['','',''] as any,
+    author:DEFAULT_ALIAS_STATE,
+    embeds: []
+}
+
 export class ProposalModel extends Model {
+
+    static FetchByIndex = async (societyID: number, index: number) => {
+        try {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}/${index}`,  {
+                timeout: 10_000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (res.status == 200){
+                const { data } = res
+                return new ProposalModel(data, {})
+            }
+        } catch (e){
+            throw new Error(e.toString())
+        }
+    }
 
     static NewContent = (sid: number, title: string, content: string[]): ProposalModel => {
         if (content.length < 3 || content.length > 4){
@@ -32,12 +62,20 @@ export class ProposalModel extends Model {
         return new ProposalModel({sid, content, title} as any, {})
     }
 
+    private _setNestedModel = (state: IProposal) => {
+        this.setState(Object.assign(state, { 
+            content_link: new ContentLinkModel(state.content_link, this.kids()),
+            vote: new VoteModel(state.vote, this.kids()),
+            author: new AliasModel(state.author, this.kids())
+        }))
+    }
+
     constructor(state: IProposal, options: any){
         super(state, options) 
-        this.setState({ content_link: new ContentLink(state.content_link, this.kids()) })
-        this.setState({ vote: new VoteModel(state.vote, this.kids()) })      
-        this.setState({ author: new AliasModel(state.author, this.kids()) })
+        this._setNestedModel(state)
     }
+    
+
     
     sign = (wallet: bip32.BIP32Interface) => {
         const sig = BuildSignatureHex(wallet, Buffer.from(this.get().dataToSign()))
@@ -61,9 +99,18 @@ export class ProposalModel extends Model {
                         return status >= 200 && status < 500;
                     },
                 })
-                res.status == 201 && this.setState(res.data)
+                res.status == 201 && this._setNestedModel(Object.assign({},
+                    res.data,
+                    {
+                        vote: JSON.parse(res.data.vote),
+                        content_link: JSON.parse(res.data.content_link),
+                        content: res.data.content.split('~~~_~~~_~~~_~~~')
+                    }
+                ))
+                
                 return res
             } catch (e){
+                console.log(e)
                 return e.toString()
             }
     }
@@ -77,20 +124,20 @@ export class ProposalModel extends Model {
     }
 
     get = () => {
-        const contentLink = (): ContentLink | null => this.state.content_link
+        const contentLink = (): ContentLinkModel | null => this.state.content_link
         const societyID = (): number => this.state.sid
         const embedData = (): string[] => this.state.embed_data
         const costs = () => { 
-            const link = contentLink()
-            if (link == null)
+            const content = contentLink()
+            if (content == null)
                 throw new Error("content_link is null")
-            return link.get().output().get().script().parse().proposalCosts()
+            return content.get().link().get().output().get().script().parse().proposalCosts()
         }
         const constitution = () => {
-            const link = contentLink()
-            if (link == null)
+            const content = contentLink()
+            if (content == null)
                 throw new Error("content_link is null")
-            return link.get().output().get().script().parse().constitution()
+            return content.get().link().get().output().get().script().parse().constitution()
         }
         const author = (): AliasModel => this.state.author
         const content = (): string[] => this.state.content 
@@ -121,10 +168,10 @@ export class ProposalModel extends Model {
         const dataToSign = (): string => this.get().content().join('~~~_~~~_~~~_~~~')
 
         const layer = (): TLayer => {
-            const link = contentLink()
-            if (link == null)
+            const content = contentLink()
+            if (content == null)
                 throw new Error("content_link is null")
-            const is = link.get().output().get().script().is()
+            const is = content.get().link().get().output().get().script().is()
             if (is.costProposalScript())
                 return 'Economy'
             if (is.constitutionProposalScript())
@@ -143,31 +190,7 @@ export class ProposalModel extends Model {
 
 export class ProposalCollection extends Collection {
 
-    constructor(initialState: any, options: any){
-        super(initialState, [ProposalModel, ProposalCollection], options)
-    }
-
-    pullProposalByIndex = async (societyID: number, index: number) => {
-        try {
-            const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}/${index}`,  {
-                timeout: 10_000,
-                validateStatus: function (status) {
-                    return status >= 200 && status < 500;
-                },
-            })
-            if (res.status == 200){
-                const { data } = res
-                const idx = this.findIndex({sid: societyID, index: data.index})
-                idx < 0 ? this.push(data) : this.updateAt(this.newNode(data), idx)
-                this.save().store()
-            }
-        } catch (e){
-            return e.toString()
-        }
-    }
-
-
-    pullLastProposals = async (societyID: number, page: number) => {
+    static FetchLastProposals = async (societyID: number, page: number) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}`,  {
                 headers: {
@@ -180,15 +203,14 @@ export class ProposalCollection extends Collection {
             })
             if (res.status == 200){
                 const { data } = res
-                for (let i = 0; i < data.length; i++){
-                    if (!this.find({sid: societyID, public_key_hashed: data[i].public_key_hashed})){
-                        this.push(data[i])
-                    }
-                }
-                this.save().store()
+                return new ProposalCollection(data, {})
             }
         } catch (e){
-            return e.toString()
+            throw new Error(e.toString())
         }
+    }
+
+    constructor(initialState: any, options: any){
+        super(initialState, [ProposalModel, ProposalCollection], options)
     }
 }

@@ -2,9 +2,9 @@ import axios from 'axios'
 import * as bip32 from 'bip32'
 import { Model, Collection } from "acey";
 import { BuildSignatureHex } from 'wallet-util'
-import { ContentLink, IContentLink } from "../transaction";
+import { ContentLinkModel, IContentLink, DEFAULT_STATE as DEFAULT_LINK_STATE } from "../transaction";
 import config from '../config'
-import { AliasModel, IAlias } from './alias';
+import { AliasModel, IAlias, DEFAULT_STATE as DEFAULT_ALIAS_STATE } from './alias';
 
 export interface IThread {
     sid: number
@@ -16,16 +16,44 @@ export interface IThread {
     created_at?: Date
 }
 
+export const DEFAULT_STATE: IThread = {
+    sid: 0,
+    content_link: DEFAULT_LINK_STATE,
+    author: DEFAULT_ALIAS_STATE,
+    title: '',
+    content: '',
+    embed_data: [],
+    created_at: new Date()
+}
+
 export class ThreadModel extends Model {
+
+    static FetchByPKH = async (societyID: number, pubkh: string) => {
+        try {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}/${pubkh}`,  {
+                timeout: 10_000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (res.status == 200){
+                const { data } = res
+                return new ThreadModel(data, {})
+            }
+        } catch (e){
+            throw new Error(e.toString())
+        }
+        return null
+    }
 
     static NewContent = (sid: number, title: string, content: string): ThreadModel => {
         return new ThreadModel({sid, content, title} as any, {})
     }
 
-    constructor(state: IThread, options: any){
+    constructor(state: IThread = DEFAULT_STATE, options: any){
         super(state, options) 
         this.setState({
-            content_link: new ContentLink(state.content_link as any, this.kids()),
+            content_link: new ContentLinkModel(state.content_link as any, this.kids()),
             author: new AliasModel(state.author, this.kids())
         })
     }
@@ -61,7 +89,7 @@ export class ThreadModel extends Model {
 
     get = () => {
         const societyID = (): number => this.state.sid
-        const contentLink = (): ContentLink | null => this.state.content_link
+        const contentLink = (): ContentLinkModel | null => this.state.content_link
         const embedData = (): string[] => this.state.embed_data
         const author = (): AliasModel => this.state.author
         const title = (): string => this.state.title
@@ -76,30 +104,8 @@ export class ThreadModel extends Model {
 }
 
 export class ThreadCollection extends Collection {
-    constructor(initialState: any, options: any){
-        super(initialState, [ThreadModel, ThreadCollection], options)
-    }
 
-    pullThreadByPKH = async (societyID: number, pubkh: string) => {
-        try {
-            const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}/${pubkh}`,  {
-                timeout: 10_000,
-                validateStatus: function (status) {
-                    return status >= 200 && status < 500;
-                },
-            })
-            if (res.status == 200){
-                const { data } = res
-                const index = this.findIndex({sid: societyID, public_key_hashed: data.public_key_hashed})
-                index < 0 ? this.push(data) : this.updateAt(this.newNode(data), index)
-                this.save().store()
-            }
-        } catch (e){
-            return e.toString()
-        }
-    }
-
-    pullLastThreads = async (societyID: number, page: number) => {
+    static FetchLastThreads = async (societyID: number, page: number) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}`,  {
                 headers: {
@@ -111,17 +117,14 @@ export class ThreadCollection extends Collection {
                 },
             })
             if (res.status == 200){
-                const { data } = res
-                for (let i = 0; i < data.length; i++){
-                    if (!this.find({sid: societyID, public_key_hashed: data[i].public_key_hashed})){
-                        this.push(data[i])
-                    }
-                }
-                this.save().store()
+                return new ThreadCollection(res.data, {})
             }
         } catch (e){
-            return e.toString()
+            throw new Error(e)
         }
     }
 
+    constructor(initialState: any, options: any){
+        super(initialState, [ThreadModel, ThreadCollection], options)
+    }
 }

@@ -2,7 +2,7 @@ import { Model } from 'acey'
 import axios from 'axios'
 import config from '../config'
 
-export default class Fees extends Model {
+export default class FeesModel extends Model {
 
     constructor(initialState = {fee_per_byte: 0, address: ""}, options: any){
         super(initialState, options)

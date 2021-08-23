@@ -3,7 +3,7 @@ import axios from 'axios'
 import config from '../config'
 import { IHeaderSignature } from './wallet'
 
-export default class Info extends Model {
+export default class InfoModel extends Model {
 
     constructor(initialState = {total_content: 0, balance: 0}, options: any){
         super(initialState, options)

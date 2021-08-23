@@ -4,13 +4,12 @@ import moment from "moment";
 
 import config from "../../config";
 import { DEFAULT_STATE as DEFAULT_SOCIETY_STATS_STATE  } from './stats'
-import {ConstitutionModel,  DEFAULT_STATE as ConstiDS } from '../constitution'
-import Costs, { DEFAULT_STATE as CostsDS } from '../../wallet/costs'
+import {ConstitutionModel,  DEFAULT_STATE as CONSTITUTION_DEFAULT_STATE } from '../constitution'
+import Costs, { DEFAULT_STATE as COSTS_DEFAULT_STATE } from '../../wallet/costs'
 import { IConstitutionData } from '../constitution'
 import { ICost } from '../../wallet/costs'
 import { SocietyStatsModel,ISocietyStats } from './stats'
-import { IContributorStats, ContributorModel } from './contributor'
-import { Constitution } from "wallet-script";
+import { IContributorStats, ContributorModel, DEFAULT_STATE as CONTRIBUTOR_DEFAULT_STATE } from './contributor'
 
 export interface ISociety {
     id: number
@@ -37,13 +36,9 @@ const DEFAULT_STATE: ISociety = {
     currency_symbol: '',
     pp: null,
     stats: DEFAULT_SOCIETY_STATS_STATE,
-    contributor: {
-        addr: '',
-        position: 0,
-        sid: 0,
-    },
-    constitution: ConstiDS,
-    costs: CostsDS
+    contributor: CONTRIBUTOR_DEFAULT_STATE,
+    constitution: CONSTITUTION_DEFAULT_STATE,
+    costs: COSTS_DEFAULT_STATE
 }
 
 export class SocietyModel extends Model {
@@ -55,15 +50,16 @@ export class SocietyModel extends Model {
                     return status >= 200 && status < 500;
                 },
             })
-            if (res.status == 200)
+            if (res.status == 200){
                 return new SocietyModel(res.data, {})
+            }                
             return null
         } catch (e){
             throw e
         }
     }
 
-    constructor(state: ISociety = DEFAULT_STATE, options:any){
+    constructor(state: ISociety = DEFAULT_STATE, options:any) {
         super(state, options)
         this.setState({
             stats: new SocietyStatsModel(state.stats, this.kids()),
@@ -83,7 +79,7 @@ export class SocietyModel extends Model {
                 },
             })
             if (res.status == 200){
-                this.setState({ contributor: res.data })
+                this.setState({ contributor: new ContributorModel(res.data, this.kids()) })
             }
             return res
         } catch (e){

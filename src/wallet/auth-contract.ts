@@ -2,7 +2,7 @@ import { Model } from 'acey'
 import axios from 'axios'
 import config from '../config'
 
-export default class AuthContract extends Model {
+export default class AuthContractModel extends Model {
 
     constructor(initialState: any = {next_change: 0, value: ""}, options: any) {
         super(initialState, options)

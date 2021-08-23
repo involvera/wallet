@@ -15,13 +15,19 @@ export interface IReward {
     created_at?: Date
 }
 
+export const DEFAULT_STATE: IReward = {
+    sid: 0,
+    tx_id: '',
+    vout: -1,
+}
+
 export class RewardModel extends Model {
 
     static NewContent = (sid: number, tx_id: string, vout: number): RewardModel => {
         return new RewardModel({sid, tx_id, vout} as any, {})
     }
 
-    constructor(state: IReward, options: any){
+    constructor(state: IReward = DEFAULT_STATE, options: any){
         super(state, options) 
         !!state.author && this.setState({ author: new AliasModel(state.author,this.kids()) })
     }

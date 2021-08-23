@@ -1,5 +1,5 @@
 export * from './content-link'
-export * from './input'
-export * from './output'
-export * from './transaction'
+export { IInput, InputModel, InputCollection } from './input'
+export { IOutput, OutputModel, OutputCollection } from './output'
+export { ITransaction, Transaction } from './transaction'
 export * from './utxo'

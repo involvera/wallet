@@ -2,7 +2,7 @@ import { Model } from 'acey'
 import axios from 'axios'
 import config from '../../config'
 import { Constitution as C } from 'wallet-script'
-import { IScriptProposal, ProposalScriptModel } from '../proposal-script'
+import { IScriptProposal, ProposalScriptModel, DEFAULT_STATE as PSCRIPT_DEFAULT_STATE } from '../proposal-script'
 import { RuleCollection } from './rule'
 
 export interface IConstitutionData {
@@ -11,14 +11,7 @@ export interface IConstitutionData {
 }
 
 export const DEFAULT_STATE: IConstitutionData = {
-    proposal: {
-        origin: {
-            tx_id: '',
-            vout: -1
-        },
-        pubkh: '',
-        content_nonce: -1
-    },
+    proposal: PSCRIPT_DEFAULT_STATE,
     constitution: [] 
 }
 

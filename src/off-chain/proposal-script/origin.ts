@@ -5,8 +5,13 @@ export interface IScriptOrigin {
     vout: number
 }
 
+export const DEFAULT_STATE: IScriptOrigin = {
+    tx_id: '',
+    vout: -1
+}
+
 export class OriginModel extends Model {
-    constructor(state: IScriptOrigin, options: any){
+    constructor(state: IScriptOrigin = DEFAULT_STATE, options: any){
         super(state, options)
     }
     get = () =>{

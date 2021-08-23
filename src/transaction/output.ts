@@ -17,7 +17,13 @@ export interface IOutputRaw {
 	script:				Buffer[]
 }
 
-export class Output extends Model {
+export const DEFAULT_STATE: IOutput = {
+	input_src_idxs: [],
+	value: 0,
+	script: []
+}
+
+export class OutputModel extends Model {
 
 	static NewOutput = (value: number, InputSrcIdxs: number[], script: string[]) => {
 		if (value > Math.pow(2, 53))
@@ -28,10 +34,10 @@ export class Output extends Model {
 			value,
 			script
 		}
-		return new Output(out, {})
+		return new OutputModel(out, {})
 	}
 	
-    constructor(output: IOutput, options: any) {
+    constructor(output: IOutput = DEFAULT_STATE, options: any) {
 		super(output, options)
 		output && !output.input_src_idxs && this.setState({ input_src_idxs: [] })
 		output && !output.script && this.setState({ ta: [] })
@@ -114,16 +120,16 @@ export class Output extends Model {
 	isValueAbove = (val: BigInt) => val < this.get().value()
 }
 
-export class OutputList extends Collection {
+export class OutputCollection extends Collection {
     constructor(initialState: any, options: any){
-        super(initialState, [Output, OutputList], options)
+        super(initialState, [OutputModel, OutputCollection], options)
     }
 
 
 	size = (): number => {
 		let size = 0
 		for (let i = 0; i < this.count(); i++){
-			const out = this.nodeAt(i) as Output
+			const out = this.nodeAt(i) as OutputModel
 			size += out.size()
 		}
 		return size + this.count()
@@ -131,7 +137,7 @@ export class OutputList extends Collection {
 
 	containsToPubKH = (pubKH: Buffer) => {
 		for (let i = 0; i < this.count(); i++){
-			const out = this.nodeAt(i) as Output
+			const out = this.nodeAt(i) as OutputModel
 			if (out.get().pubKH().toString('hex') === pubKH.toString('hex'))
 				return true
 		}
@@ -140,7 +146,7 @@ export class OutputList extends Collection {
 
 	countContent = (): number => {
 		let count = 0;
-		this.forEach((out: Output) => {
+		this.forEach((out: OutputModel) => {
 			if (out.is2().content()){
 				count++
 			}
@@ -151,7 +157,7 @@ export class OutputList extends Collection {
 	get = () => {
 		const totalValue = () => {
 			let total = BigInt(0)
-            this.map((out: Output) => {
+            this.map((out: OutputModel) => {
 				total += BigInt(out.get().value() as any)
             })
             return total

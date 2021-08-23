@@ -18,7 +18,7 @@ export const DEFAULT_STATE: ISocietyStats  = {
     total_contributor: 0,
     last_height: 0,
     active_addresses: 0,
-    most_active_addresses: [] as any,
+    most_active_addresses: [] as IAlias[],
     circulating_supply:  '',
     circulating_vp_supply : '',
     last_thread_cost_change: DEFAULT_LAST_COST_CHANGE_STATE,

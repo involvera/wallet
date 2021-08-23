@@ -14,7 +14,13 @@ export interface IInputRaw {
     script_sig: Buffer[]
 }
 
-export class Input extends Model {
+export const DEFAULT_STATE: IInput = {
+	prev_transaction_hash: '',
+	vout: -2,
+	script_sig: []
+}
+
+export class InputModel extends Model {
 
     constructor(input: IInput, options: any) {
         super(input, options)
@@ -64,16 +70,16 @@ export class Input extends Model {
 
 }
 
-export class InputList extends Collection {
+export class InputCollection extends Collection {
     
     constructor(initialState: any, options: any){
-        super(initialState, [Input, InputList], options)
+        super(initialState, [InputModel, InputCollection], options)
     }
 
     size = (): number => {
 		let size = 0
 		for (let i = 0; i < this.count(); i++){
-			const out = this.nodeAt(i) as Input
+			const out = this.nodeAt(i) as InputModel
 			size += out.size()
 		}
 		return size + this.count()

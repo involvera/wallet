@@ -18,7 +18,7 @@ const DEFAULT_STATE = {
     alias: ALIAS_DEFAULT_STATE
 }
 
-export default class Keys extends Model {
+export default class KeysModel extends Model {
 
     private _password: string = ''
 
