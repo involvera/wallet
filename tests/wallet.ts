@@ -580,9 +580,50 @@ const main = () => {
 
     it('Fetch Thread list', async () => {
         const threads = await ThreadCollection.FetchLastThreads(1, 0)
-        expect(threads.count()).to.eq(2)
+        expect(threads).not.to.eq(null)
+        if (threads){
+            expect(threads.count()).to.eq(2)
+            const thread1 = threads.nodeAt(0) as ThreadModel
+            const thread2 = threads.nodeAt(1) as ThreadModel
+            
+            expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
+            expect(thread1.get().title()).to.eq("This is a title.")
+            expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
+            expect(thread1.get().rewards().get().countUpvote()).to.eq(1)
+            expect(thread1.get().rewards().get().countReward0()).to.eq(2)
+            expect(thread1.get().rewards().get().countReward1()).to.eq(1)
+            expect(thread1.get().rewards().get().countReward2()).to.eq(1)
+            const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
+            if (fullThread1){
+                expect(fullThread1.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+                expect(fullThread1.get().embeds().length).to.eq(4)
+            }
+
+            expect(thread2.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(thread2.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
+            expect(thread2.get().title()).to.eq("This is a title.")
+            expect(thread2.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(thread2.get().contentLink().get().targetContent()).to.eq("")
+            expect(thread2.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
+            expect(thread2.get().rewards().get().countUpvote()).to.eq(1)
+            expect(thread2.get().rewards().get().countReward0()).to.eq(0)
+            expect(thread2.get().rewards().get().countReward1()).to.eq(0)
+            expect(thread2.get().rewards().get().countReward2()).to.eq(0)
+            const fullThread2 = await ThreadModel.FetchByPKH(1, thread2.get().pubKH())
+            if (fullThread2){
+                expect(fullThread2.get().content()).to.eq("Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+                expect(fullThread2.get().embeds().length).to.eq(3)
+            }
 
 
+
+
+
+
+        }
     })
 
 }

@@ -2,27 +2,32 @@ import axios from 'axios'
 import * as bip32 from 'bip32'
 import { Model, Collection } from "acey";
 import { BuildSignatureHex } from 'wallet-util'
-import { ContentLinkModel, IContentLink, DEFAULT_STATE as DEFAULT_LINK_STATE } from "../transaction";
-import config from '../config'
-import { AliasModel, IAlias, DEFAULT_STATE as DEFAULT_ALIAS_STATE } from './alias';
+import { IKindLink, KindLinkModel, DEFAULT_STATE_KIND } from "../../transaction";
+import config from '../../config'
+import { AliasModel, IAlias, DEFAULT_STATE as DEFAULT_ALIAS_STATE } from '../alias';
+import { IRewards, RewardsModel, DEFAULT_STATE as DEFAULT_STATE_REWARDS} from './rewards'
 
 export interface IThread {
     sid: number
-    content_link?: IContentLink
+    content_link?: IKindLink
     author?: IAlias
     title: string
     content: string
-    embed_data?: string[]
+    public_key_hashed: string
+    rewards?: IRewards
+    embeds?: string[]
     created_at?: Date
 }
 
 export const DEFAULT_STATE: IThread = {
     sid: 0,
-    content_link: DEFAULT_LINK_STATE,
+    content_link: DEFAULT_STATE_KIND,
     author: DEFAULT_ALIAS_STATE,
     title: '',
     content: '',
-    embed_data: [],
+    public_key_hashed: "",
+    rewards: DEFAULT_STATE_REWARDS,
+    embeds: [],
     created_at: new Date()
 }
 
@@ -53,8 +58,9 @@ export class ThreadModel extends Model {
     constructor(state: IThread = DEFAULT_STATE, options: any){
         super(state, options) 
         this.setState({
-            content_link: new ContentLinkModel(state.content_link as any, this.kids()),
-            author: new AliasModel(state.author, this.kids())
+            content_link: new KindLinkModel(state.content_link, this.kids()),
+            author: new AliasModel(state.author, this.kids()),
+            rewards: new RewardsModel(state.rewards, this.kids())
         })
     }
 
@@ -89,16 +95,19 @@ export class ThreadModel extends Model {
 
     get = () => {
         const societyID = (): number => this.state.sid
-        const contentLink = (): ContentLinkModel | null => this.state.content_link
-        const embedData = (): string[] => this.state.embed_data
+        const contentLink = (): KindLinkModel => this.state.content_link
+        const embeds = (): string[] => this.state.embeds
         const author = (): AliasModel => this.state.author
         const title = (): string => this.state.title
         const content = (): string => this.state.content
         const createdAt = (): Date => this.state.created_at
+        const pubKH = (): string => this.state.public_key_hashed
+        const rewards = (): RewardsModel => this.state.rewards
 
         return {
-            contentLink, embedData, author, title,
-            content, createdAt, societyID
+            contentLink, embeds, author, title,
+            content, createdAt, societyID,
+            pubKH, rewards
         }
     }
 }
@@ -122,6 +131,7 @@ export class ThreadCollection extends Collection {
         } catch (e){
             throw new Error(e)
         }
+        return null
     }
 
     constructor(initialState: any, options: any){

@@ -73,7 +73,7 @@ export class OutputModel extends Model {
 	}
 
 	get = () => {
-		const value = (): BigInt => this.state.value 
+		const value = (): BigInt => BigInt(this.state.value) 
 		const inputSourceIdxs = (): number[] => this.state.input_src_idxs
 
 		const scriptBase64 = (): string[] => this.state.script
