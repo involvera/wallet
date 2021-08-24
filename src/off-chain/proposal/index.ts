@@ -4,7 +4,7 @@ import * as bip32 from 'bip32'
 import { Collection, Model } from "acey";
 import { BuildSignatureHex } from 'wallet-util'
 import config from "../../config";
-import {  IContentLink, ContentLinkModel, DEFAULT_STATE as DEFAULT_LINK_STATE } from '../../transaction/content-link'
+import {  IKindLink, KindLinkModel, DEFAULT_STATE as DEFAULT_LINK_STATE } from '../../transaction/kind-link'
 import { IAlias, AliasModel, DEFAULT_STATE as DEFAULT_ALIAS_STATE } from '../alias'
 import {VoteModel, IVote, DEFAULT_STATE as DEFAULT_VOTE_STATE } from './vote'
 
@@ -12,10 +12,11 @@ export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
 export interface IProposal {
     sid: number
-    content_link: IContentLink
+    content_link: IKindLink
     vote: IVote
     index: number
     created_at: Date
+    public_key_hashed: string
     end_at: Date | null
     title: string,
     content: string[3]
@@ -29,6 +30,7 @@ export const DEFAUL_STATE: IProposal = {
     vote: DEFAULT_VOTE_STATE,
     index: 0,
     created_at: new Date(),
+    public_key_hashed: '',
     end_at: null,
     title: '',
     content: ['','',''] as any,
@@ -63,11 +65,13 @@ export class ProposalModel extends Model {
     }
 
     private _setNestedModel = (state: IProposal) => {
-        this.setState(Object.assign(state, { 
-            content_link: new ContentLinkModel(state.content_link, this.kids()),
-            vote: new VoteModel(state.vote, this.kids()),
-            author: new AliasModel(state.author, this.kids())
-        }))
+        if (state){
+            this.setState(Object.assign(state, { 
+                content_link: new KindLinkModel(state.content_link, this.kids()),
+                vote: new VoteModel(state.vote, this.kids()),
+                author: new AliasModel(state.author, this.kids())
+            }))
+        }
     }
 
     constructor(state: IProposal, options: any){
@@ -110,7 +114,6 @@ export class ProposalModel extends Model {
                 
                 return res
             } catch (e){
-                console.log(e)
                 return e.toString()
             }
     }
@@ -124,21 +127,25 @@ export class ProposalModel extends Model {
     }
 
     get = () => {
-        const contentLink = (): ContentLinkModel | null => this.state.content_link
+        const index = (): number => this.state.index
+        const contentLink = (): KindLinkModel => this.state.content_link
         const societyID = (): number => this.state.sid
-        const embedData = (): string[] => this.state.embed_data
+        const embeds = (): string[] => this.state.embeds
+
         const costs = () => { 
             const content = contentLink()
             if (content == null)
                 throw new Error("content_link is null")
-            return content.get().link().get().output().get().script().parse().proposalCosts()
+            return content.get().output().get().script().parse().proposalCosts()
         }
+
         const constitution = () => {
             const content = contentLink()
             if (content == null)
                 throw new Error("content_link is null")
-            return content.get().link().get().output().get().script().parse().constitution()
+            return content.get().output().get().script().parse().constitution()
         }
+
         const author = (): AliasModel => this.state.author
         const content = (): string[] => this.state.content 
         const title = (): string => this.state.title
@@ -146,6 +153,7 @@ export class ProposalModel extends Model {
         const end_at = (): number => !this.state.end_at ? -1 : (this.state.end_at as Date).getTime()
 
         const createdAtAgo = (): string => moment(new Date(created_at())).fromNow()
+
         const createdAtPretty = (): string => {
             const today = new Date()
             const yesterday = new Date()
@@ -171,19 +179,21 @@ export class ProposalModel extends Model {
             const content = contentLink()
             if (content == null)
                 throw new Error("content_link is null")
-            const is = content.get().link().get().output().get().script().is()
+            const is = content.get().output().get().script().is()
             if (is.costProposalScript())
                 return 'Economy'
             if (is.constitutionProposalScript())
                 return 'Constitution'
             return 'Application'
         }
+        const pubKH = (): string => this.state.public_key_hashed
 
         return {
-            contentLink, embedData, costs, constitution,
+            index,
+            contentLink, embeds, costs, constitution,
             author, content, title, layer, created_at, 
             vote, societyID, dataToSign, end_at, 
-            createdAtAgo, createdAtPretty,
+            createdAtAgo, createdAtPretty, pubKH
         }
     }
 }
@@ -192,9 +202,9 @@ export class ProposalCollection extends Collection {
 
     static FetchLastProposals = async (societyID: number, page: number) => {
         try {
-            const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}`,  {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}`, {
                 headers: {
-                    page: page,
+                    page,
                 },
                 timeout: 10_000,
                 validateStatus: function (status) {
@@ -202,8 +212,7 @@ export class ProposalCollection extends Collection {
                 },
             })
             if (res.status == 200){
-                const { data } = res
-                return new ProposalCollection(data, {})
+                return new ProposalCollection(res.data, {})
             }
         } catch (e){
             throw new Error(e.toString())
