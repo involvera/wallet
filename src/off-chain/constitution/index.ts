@@ -17,12 +17,20 @@ export const DEFAULT_STATE: IConstitutionData = {
 
 export class ConstitutionModel extends Model {
 
+    private _setNestedModel = (state: IConstitutionData) => {
+        if (state){
+            this.setState({
+                proposal: new ProposalScriptModel(state.proposal, this.kids()),
+                constitution: new RuleCollection(state.constitution, this.kids())
+            })
+            return true
+        }
+        return false
+    }
+
     constructor(state = DEFAULT_STATE, options: any){
         super(state, options)
-        this.setState({
-            proposal: new ProposalScriptModel(state.proposal, this.kids()),
-            constitution: new RuleCollection(state.constitution, this.kids())
-        })
+        this._setNestedModel(state)
     }
 
     get = () => {
@@ -41,7 +49,7 @@ export class ConstitutionModel extends Model {
                     return status >= 200 && status < 500;
                 },
             })
-             res.status == 200 && this.setState(res.data).store()
+             res.status == 200 && this._setNestedModel(res.data) && this.action().store()
              return res.status
         } catch (e){
              throw new Error(e)

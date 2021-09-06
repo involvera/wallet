@@ -27,9 +27,15 @@ export class RewardModel extends Model {
         return new RewardModel({sid, tx_id, vout} as any, {})
     }
 
+    private _setNestedModel = (state: IReward) => {
+        if (state){
+            !!state.author && this.setState({ author: new AliasModel(state.author,this.kids()) })
+        }
+    }
+
     constructor(state: IReward = DEFAULT_STATE, options: any){
         super(state, options) 
-        !!state.author && this.setState({ author: new AliasModel(state.author,this.kids()) })
+        this._setNestedModel(state)
     }
 
     get = () => {
@@ -56,7 +62,7 @@ export class RewardModel extends Model {
                     return status >= 200 && status < 500;
                 },
             })
-            res.status == 201 && this.setState(res.data)
+            res.status == 201 && this._setNestedModel(res.data)
             return res
         } catch (e) {
             return e.toString()

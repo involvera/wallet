@@ -55,13 +55,19 @@ export class ThreadModel extends Model {
         return new ThreadModel({sid, content, title} as any, {})
     }
 
+    private _setNestedModel = (state: IThread) => {
+        if (state){
+            this.setState(Object.assign(state, { 
+                content_link: new KindLinkModel(state.content_link, this.kids()),
+                author: new AliasModel(state.author, this.kids()),
+                rewards: new RewardsModel(state.rewards, this.kids())
+            }))
+        }
+    }
+
     constructor(state: IThread = DEFAULT_STATE, options: any){
         super(state, options) 
-        this.setState({
-            content_link: new KindLinkModel(state.content_link, this.kids()),
-            author: new AliasModel(state.author, this.kids()),
-            rewards: new RewardsModel(state.rewards, this.kids())
-        })
+        this._setNestedModel(state)
     }
 
     sign = (wallet: bip32.BIP32Interface) => {
@@ -86,7 +92,9 @@ export class ThreadModel extends Model {
                     return status >= 200 && status < 500;
                 },
             })
-            res.status == 201 && this.setState(res.data)
+            res.status == 201 && this._setNestedModel(Object.assign({}, res.data, {
+                content_link: JSON.parse(res.data.content_link)               
+            }))
             return res
         } catch (e){
             throw new Error(e)
