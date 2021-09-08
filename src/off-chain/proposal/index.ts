@@ -64,22 +64,14 @@ export class ProposalModel extends Model {
         return new ProposalModel({sid, content, title} as any, {})
     }
 
-    private _setNestedModel = (state: IProposal) => {
-        if (state){
-            this.setState(Object.assign(state, { 
-                content_link: new KindLinkModel(state.content_link, this.kids()),
-                vote: new VoteModel(state.vote, this.kids()),
-                author: new AliasModel(state.author, this.kids())
-            }))
-        }
-    }
-
     constructor(state: IProposal, options: any){
         super(state, options) 
-        this._setNestedModel(state)
+        state && this.setState(Object.assign(state, { 
+            content_link: new KindLinkModel(state.content_link, this.kids()),
+            vote: new VoteModel(state.vote, this.kids()),
+            author: new AliasModel(state.author, this.kids())
+        }))
     }
-    
-
     
     sign = (wallet: bip32.BIP32Interface) => {
         const sig = BuildSignatureHex(wallet, Buffer.from(this.get().dataToSign()))
@@ -103,7 +95,7 @@ export class ProposalModel extends Model {
                         return status >= 200 && status < 500;
                     },
                 })
-                res.status == 201 && this._setNestedModel(Object.assign({},
+                res.status == 201 && this.hydrate(Object.assign({},
                     res.data,
                     {
                         vote: JSON.parse(res.data.vote),

@@ -672,7 +672,6 @@ const main = () => {
                 expect(content[1]).to.eq("Content 2: %[involvera/proposal/8]")
                 expect(content[2]).to.eq("Content 3: %[https://involvera.com/involvera/proposal/8]")
             }
-
             expect(proposal3.get().author().get().address()).eq(wallet.keys().get().address())
             expect(proposal3.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(proposal3.get().title()).to.eq("This is the title of an application proposal")
@@ -695,7 +694,6 @@ const main = () => {
             }
         }
     })
-
 }
 
 main()

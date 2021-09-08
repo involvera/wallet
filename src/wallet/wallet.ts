@@ -97,7 +97,7 @@ export class Wallet extends Model {
     buildTX = () => {
 
         const proposal = () => {
-
+            
             const application = async () => {
                 await this.synchronize()
                 const contentNonce = this.info().get().contentNonce() + 1

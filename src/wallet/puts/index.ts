@@ -292,7 +292,6 @@ export class UnserializedPutList extends Collection {
     }
 
     fetch = () => {
-
         const fromTX = async (txHashHex: string, headerSignature: IHeaderSignature) => {
             try { 
                 const response = await axios(config.getRootAPIChainUrl() + '/puts/' + txHashHex, {
