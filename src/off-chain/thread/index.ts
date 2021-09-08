@@ -45,7 +45,7 @@ export class ThreadModel extends Model {
                 const { data } = res
                 return new ThreadModel(data, {})
             }
-        } catch (e){
+        } catch (e: any){
             throw new Error(e.toString())
         }
         return null
@@ -90,7 +90,7 @@ export class ThreadModel extends Model {
                 content_link: JSON.parse(res.data.content_link)               
             }))
             return res
-        } catch (e){
+        } catch (e: any){
             throw new Error(e)
         }
     }
@@ -130,7 +130,7 @@ export class ThreadCollection extends Collection {
             if (res.status == 200){
                 return new ThreadCollection(res.data, {})
             }
-        } catch (e){
+        } catch (e: any){
             throw new Error(e)
         }
         return null
