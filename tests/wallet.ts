@@ -305,6 +305,7 @@ const main = () => {
         const p = ThreadModel.NewContent(1, "This is a title.", "Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
+        await timeout(1000)
     })
 
     let pkhContent2 = ""
@@ -583,8 +584,8 @@ const main = () => {
         expect(threads).not.to.eq(null)
         if (threads){
             expect(threads.count()).to.eq(2)
-            const thread1 = threads.nodeAt(1) as ThreadModel
-            const thread2 = threads.nodeAt(0) as ThreadModel
+            const thread1 = threads.nodeAt(0) as ThreadModel
+            const thread2 = threads.nodeAt(1) as ThreadModel
 
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
@@ -695,5 +696,10 @@ const main = () => {
         }
     })
 }
+
+const timeout = (ms: number) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 
 main()
