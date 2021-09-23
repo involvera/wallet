@@ -248,7 +248,7 @@ export class Wallet extends Model {
                     get().setState(json.utxos || []).store()
                 }
                 return res.status
-            } catch (e){
+            } catch (e: any){
                 throw new Error(e)
             }
         }

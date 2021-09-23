@@ -27,7 +27,7 @@ export default class AuthContractModel extends Model {
              })
             res.status == 200 && this.setState( res.data ).store()
             return res.status
-        } catch(e){
+        } catch(e: any){
             throw new Error(e);
         }            
     }

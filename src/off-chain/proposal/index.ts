@@ -52,7 +52,7 @@ export class ProposalModel extends Model {
                 const { data } = res
                 return new ProposalModel(data, {})
             }
-        } catch (e){
+        } catch (e: any){
             throw new Error(e.toString())
         }
     }
@@ -105,7 +105,7 @@ export class ProposalModel extends Model {
                 ))
                 
                 return res
-            } catch (e){
+            } catch (e: any){
                 return e.toString()
             }
     }
@@ -206,7 +206,7 @@ export class ProposalCollection extends Collection {
             if (res.status == 200){
                 return new ProposalCollection(res.data, {})
             }
-        } catch (e){
+        } catch (e: any){
             throw new Error(e.toString())
         }
     }

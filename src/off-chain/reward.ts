@@ -58,7 +58,7 @@ export class RewardModel extends Model {
             })
             res.status == 201 && this.hydrate(res.data)
             return res
-        } catch (e) {
+        } catch (e: any) {
             return e.toString()
         }
     }

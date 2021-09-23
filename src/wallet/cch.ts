@@ -34,7 +34,7 @@ export class CCHModel extends Model {
                 })
                 res.status == 200 && this.assignJSONResponse(res.data).store()
                 return res.status
-            } catch (e){
+            } catch (e: any){
                 throw new Error(e)
             }
         }

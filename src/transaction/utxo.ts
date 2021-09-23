@@ -113,7 +113,7 @@ export class UTXOCollection extends Collection {
                 }
             }
             return response.status
-        } catch (e){
+        } catch (e: any){
             throw new Error(e)
         }
     }

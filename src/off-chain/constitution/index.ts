@@ -51,7 +51,7 @@ export class ConstitutionModel extends Model {
             })
              res.status == 200 && this._setNestedModel(res.data) && this.action().store()
              return res.status
-        } catch (e){
+        } catch (e: any){
              throw new Error(e)
         }
      }

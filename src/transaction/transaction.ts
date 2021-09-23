@@ -91,7 +91,7 @@ export class Transaction extends Model {
                 wallet.puts()._handleJSONResponse(puts)
             }
             return response
-        } catch (e){
+        } catch (e: any){
             throw new Error(e)
         }
     }

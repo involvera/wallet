@@ -306,7 +306,7 @@ export class UnserializedPutList extends Collection {
                     this._handleJSONResponse(json)
                 }
                 return response.status
-            } catch (e){
+            } catch (e: any){
                 throw new Error(e)
             }
         }
@@ -326,7 +326,7 @@ export class UnserializedPutList extends Collection {
                     this._handleJSONResponse(json)
                 }
                 return response.status
-            } catch (e){
+            } catch (e: any){
                 throw new Error(e)
             }
         }

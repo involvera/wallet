@@ -115,7 +115,7 @@ export class AliasCollection extends Collection {
                 }
                 this.save().store()
             }
-        } catch (e){
+        } catch (e: any){
             return e.toString()
         }
     }
