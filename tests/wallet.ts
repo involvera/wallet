@@ -583,9 +583,9 @@ const main = () => {
         expect(threads).not.to.eq(null)
         if (threads){
             expect(threads.count()).to.eq(2)
-            const thread1 = threads.nodeAt(0) as ThreadModel
-            const thread2 = threads.nodeAt(1) as ThreadModel
-            
+            const thread1 = threads.nodeAt(1) as ThreadModel
+            const thread2 = threads.nodeAt(0) as ThreadModel
+
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq("This is a title.")
