@@ -59,7 +59,6 @@ export class UnserializedPut extends Model {
     isReaction1 = () => this.get().extraData() === "reaction_1"
     isReaction2 = () => this.get().extraData() === "reaction_2"
     
-    isReward = () => this.isUpvote() || this.isReaction0() || this.isReaction1() || this.isReaction2()
     isProposal = () => this.isConstitutionProposal() || this.isCostProposal() || this.isApplicationProposal()
     isVote = () => this.isAcceptedVote() || this.isDeclinedVote()
     isThread = () => this.get().extraData() === "" && this.get().contentPKH() != ""
@@ -95,14 +94,6 @@ export class UnserializedPut extends Model {
                 from = 'You'
                 action = 'replied to'
                 to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))
-            } else if (this.isReward()){
-                const emoji: any = {upvote: '👍', reaction_0: '⭐', reaction_1: '💫', reaction_2: '✨'}
-                action = `${this.get().extraData() === 'upvote' ? 'upvoted' : `reacted ${emoji[this.get().extraData()]}` } to`
-                to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))
-                if (this.get().pkh().get().sender() === pkh)
-                    from = 'You'
-                else 
-                    from = GetAddressFromPubKeyHash(Buffer.from(this.get().pkh().get().sender(), 'hex'))
             } else if (this.isProposal()){
                 action = `New ${this.get().extraData()} proposal`
                 to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKH(), 'hex'))
@@ -176,7 +167,6 @@ export class UnserializedPutList extends Collection {
     get = () => {
         const inputs = (pkhHex: string): UnserializedPutList => this.filter((p: UnserializedPut) => p.get().pkh().get().sender() == pkhHex) as UnserializedPutList
         const outputs = (pkhHex: string): UnserializedPutList => this.filter((p: UnserializedPut) => p.get().pkh().get().recipient() == pkhHex) as UnserializedPutList
-        const rewards = () => this.filter((p: UnserializedPut) => p.isReward()) as UnserializedPutList
         const betweenDates = (from: Date, to: Date) => this.filter((p: UnserializedPut) => from <= p.get().createdAt() && to >= p.get().createdAt()) as UnserializedPutList
        
         const votePowerDistribution = (): UnserializedPutList => this.filter((p: UnserializedPut) => p.isLughTx()) as UnserializedPutList
@@ -222,6 +212,7 @@ export class UnserializedPutList extends Collection {
             return (total / max) * 100
         }
 
+        /*
         const totalReceivedDonationSince = (since: Date, pkhHex: string) => {
             const now = new Date()
             let total = BigInt(0)
@@ -233,13 +224,14 @@ export class UnserializedPutList extends Collection {
             })
             return total
         }
+        */
 
         const activity = (pkhHex: string) => {
 
             const atDayActivity = (d: Date) => {
                 let total = BigInt(0)
                 atDay(d).forEach((p: UnserializedPut) => {
-                    if (p.isVote() || p.isThread() || p.isRethread() || p.isProposal() || (p.isReward() && p.get().pkh().get().sender() != pkhHex)){
+                    if (p.isVote() || p.isThread() || p.isRethread() || p.isProposal()){
                         total = BigInt(total as any) + BigInt(p.get().value().get().atCreationTime() as any)
                     }
                 })
@@ -270,8 +262,8 @@ export class UnserializedPutList extends Collection {
 
         return {
             inputs, outputs,
-            rewards, betweenDates,
-            totalReceivedDonationSince,
+            betweenDates,
+            // totalReceivedDonationSince,
             totalVotePower,
             atDay,
             votePowerPercent,
