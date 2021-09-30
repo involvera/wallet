@@ -71,7 +71,7 @@ export class Wallet extends Model {
     }
 
     refreshPutList = async () => {
-        const CONFIG_LUGH_INTERVAL = 6
+        const CONFIG_LUGH_INTERVAL = 10
         const lastPutFetchHeight = this.memory().get().lastPutFetchHeight()
         const currentHeight = this.cch().get().lastHeight()
 

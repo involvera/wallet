@@ -44,11 +44,16 @@ const main = () => {
         config.setStoreEngine(new LocalStorage('./db'))
         await config.done()
         initWallets()
+        console.log(wallet.keys().get().pubHashHex())
     })
 
     it('refresh wallets', async () => {
         await wallet.synchronize()
         await wallet2.synchronize()
+    })
+
+    it('P', () =>{
+        console.log(wallet.keys().get().pubHex())
     })
 
     it('[ONCHAIN] Wallet1 -> Fetch and check UTXOS: ', () => {
@@ -83,7 +88,6 @@ const main = () => {
         expect(wallet.puts().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('14.515')
         const now = new Date()
         now.setTime(now.getTime() - (1000 * 86400 * 90))
-        // expect(wallet.puts().get().totalReceivedDonationSince(now, wallet.keys().get().pubHashHex())).to.eq(BigInt(1800000004))
     })
 
     it('[OFFCHAIN] Wallet1 -> create a thread failed 1/3', async () => {

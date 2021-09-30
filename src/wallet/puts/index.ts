@@ -23,7 +23,7 @@ export interface IUnserializedPut {
     fetched_at_cch: string   
 }
 
-const INITIAL_STATE: IUnserializedPut = {
+export const INITIAL_STATE: IUnserializedPut = {
     time: 0,
     kind: 0,
     lh: 0,
@@ -53,12 +53,7 @@ export class UnserializedPut extends Model {
     isCostProposal = () => this.get().extraData() === "costs"
     isApplicationProposal = () => this.get().extraData() === "application"
     isConstitutionProposal = () => this.get().extraData() === "constitution"
- 
-    isUpvote = () => this.get().extraData() === "upvote"
-    isReaction0 = () => this.get().extraData() === "reaction_0"
-    isReaction1 = () => this.get().extraData() === "reaction_1"
-    isReaction2 = () => this.get().extraData() === "reaction_2"
-    
+
     isProposal = () => this.isConstitutionProposal() || this.isCostProposal() || this.isApplicationProposal()
     isVote = () => this.isAcceptedVote() || this.isDeclinedVote()
     isThread = () => this.get().extraData() === "" && this.get().contentPKH() != ""
@@ -212,20 +207,6 @@ export class UnserializedPutList extends Collection {
             return (total / max) * 100
         }
 
-        /*
-        const totalReceivedDonationSince = (since: Date, pkhHex: string) => {
-            const now = new Date()
-            let total = BigInt(0)
-
-            betweenDates(since, now).forEach((p: UnserializedPut) => {
-                if (p.isReward() && p.get().pkh().get().sender() != pkhHex){
-                    total = BigInt(total as any) + BigInt(p.get().value().get().atCreationTime() as any)
-                }
-            })
-            return total
-        }
-        */
-
         const activity = (pkhHex: string) => {
 
             const atDayActivity = (d: Date) => {
@@ -263,7 +244,6 @@ export class UnserializedPutList extends Collection {
         return {
             inputs, outputs,
             betweenDates,
-            // totalReceivedDonationSince,
             totalVotePower,
             atDay,
             votePowerPercent,
