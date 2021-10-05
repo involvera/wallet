@@ -12,6 +12,7 @@ import { ContentLinkModel, OutputModel } from '../src/transaction';
 import { ThreadModel, ProposalModel, RewardModel, SocietyModel, RuleModel, ThreadCollection, ProposalCollection } from '../src/off-chain';
 import axios from 'axios';
 import conf from '../src/config'
+import { RewardSummaryModel } from '../src/wallet/reward-summary';
 
 // conf.setRootAPIChainUrl('http://185.212.226.103:8080')
 // conf.setRootAPIOffChainUrl('http://185.212.226.103:3020')
@@ -44,16 +45,11 @@ const main = () => {
         config.setStoreEngine(new LocalStorage('./db'))
         await config.done()
         initWallets()
-        console.log(wallet.keys().get().pubHashHex())
     })
 
     it('refresh wallets', async () => {
         await wallet.synchronize()
         await wallet2.synchronize()
-    })
-
-    it('P', () =>{
-        console.log(wallet.keys().get().pubHex())
     })
 
     it('[ONCHAIN] Wallet1 -> Fetch and check UTXOS: ', () => {
@@ -67,6 +63,15 @@ const main = () => {
         expect(list.count()).to.equal(7)
         expect(utxos.listUnFetchedTxHash().length).to.eq(7)
     });
+
+    it('[ONCHAIN] Wallet -> Check reward summary data', async () => {
+        await wallet.synchronize()
+        expect(wallet.rewardSummary().count()).to.eq(1)
+        const n1 = wallet.rewardSummary().find({thread_pkh: '50610124b1895156879f0f8fc90ade817bea6753'}) as RewardSummaryModel
+
+        expect(n1.get().value()).eq(1800000004)
+        expect(n1.get().reactionCount()).eq(4)
+    })
 
     it('Wallet1 -> Check Address: ', () => {
         expect(wallet.keys().get().address()).to.eq("1GHQu3CDZpPZGb6PmaBPP4sZNuT13sja1")
@@ -397,6 +402,22 @@ const main = () => {
         expect(res.status).to.eq(201)
     })
 
+    it('[ONCHAIN] Wallet -> Check reward summary data', async () => {
+        expect(wallet.rewardSummary().count()).to.eq(3)
+        const n1 = wallet.rewardSummary().find({thread_pkh: '2c108813b0f957c5776dffec80c5122b4e782864'}) as RewardSummaryModel
+        const n2 = wallet.rewardSummary().find({thread_pkh: '50610124b1895156879f0f8fc90ade817bea6753'}) as RewardSummaryModel
+        const n3 = wallet.rewardSummary().find({thread_pkh: 'af53ae357d42b460838f4f4157cd579de0f9d6fd'}) as RewardSummaryModel
+
+        expect(n1.get().value()).eq(1800000001)
+        expect(n1.get().reactionCount()).eq(1)
+
+        expect(n2.get().value()).eq(1800000004)
+        expect(n2.get().reactionCount()).eq(4)
+
+        expect(n3.get().value()).eq(450000001)
+        expect(n3.get().reactionCount()).eq(1)
+    })
+
     it('[ONCHAIN] Wallet1 -> Check puts:', () => {
         expect(wallet.puts().count()).to.eq(12)
         expect(wallet.puts().get().totalVotePower()).to.eq(BigInt(11611604044790))
@@ -545,6 +566,23 @@ const main = () => {
             await society.fetchContributor(wallet3.keys().get().address())
             expect(society.get().contributor().get().position()).to.eq(169)
         }
+    })
+
+    it('[ONCHAIN] Wallet -> Check reward summary data', async () => {
+        await wallet.synchronize()
+        expect(wallet.rewardSummary().count()).to.eq(3)
+        const n1 = wallet.rewardSummary().find({thread_pkh: '2c108813b0f957c5776dffec80c5122b4e782864'}) as RewardSummaryModel
+        const n2 = wallet.rewardSummary().find({thread_pkh: '50610124b1895156879f0f8fc90ade817bea6753'}) as RewardSummaryModel
+        const n3 = wallet.rewardSummary().find({thread_pkh: 'af53ae357d42b460838f4f4157cd579de0f9d6fd'}) as RewardSummaryModel
+
+        expect(n1.get().value()).eq(41550000003)
+        expect(n1.get().reactionCount()).eq(5)
+        
+        expect(n2.get().value()).eq(1800000004)
+        expect(n2.get().reactionCount()).eq(4)
+
+        expect(n3.get().value()).eq(450000001)
+        expect(n3.get().reactionCount()).eq(1)
     })
 
     it('Fetch Thread list', async () => {
