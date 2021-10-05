@@ -251,7 +251,7 @@ export class UnserializedPutList extends Collection {
         }
     }
 
-    _handleJSONResponse = (json: any) => {
+    assignJSONResponse = (json: any) => {
         json.list = json.list || []
         let countAdded = 0 
         for (const put of json.list){
@@ -275,7 +275,7 @@ export class UnserializedPutList extends Collection {
                 })
                 if (response.status == 200){
                     const json = response.data
-                    this._handleJSONResponse(json)
+                    this.assignJSONResponse(json)
                 }
                 return response.status
             } catch (e: any){
@@ -295,7 +295,7 @@ export class UnserializedPutList extends Collection {
                 })
                 if (response.status == 200){
                     const json = response.data
-                    this._handleJSONResponse(json)
+                    this.assignJSONResponse(json)
                 }
                 return response.status
             } catch (e: any){

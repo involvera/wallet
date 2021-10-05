@@ -100,10 +100,9 @@ export class RewardPutCollection extends Collection {
     cleanUpStorage = () => this.setState(this.orderBy('time', 'desc').limit(20).map(o => o)).store()
     loadMore = (headerSignature: IHeaderSignature) => this.fetch(Math.floor(this.count() / LIMIT) * LIMIT, LIMIT, headerSignature)
 
-    assignJSONResponse = (json: any) => {
-        json.list = json.list || []
+    assignJSONResponse = (data = []) => {
         let countAdded = 0 
-        for (const put of json.list){
+        for (const put of data){
             if (this.indexOf(put) == -1) {
                 this.push(put)
                 countAdded++
