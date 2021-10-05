@@ -18,11 +18,12 @@ export class MemoryModel extends Model {
     }
 
     setRecovered = () => this.setState({ is_recovered_wallet: true }).store()
-    setLastPutFetchHeight = (last_put_fetch_height: number) => this.setState({ last_put_fetch_height })
+    setLastPutFetchHeight = (last_put_fetch_height: number) => this.setState({ last_put_fetch_height }).store()
 
     get = () => {
         return {
             lastPutFetchHeight: (): number => this.state.last_put_fetch_height,
+            isRecoveredWallet: (): boolean => this.state.is_recovered_wallet,
         }
     }
 }

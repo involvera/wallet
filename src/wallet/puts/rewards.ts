@@ -8,6 +8,8 @@ import { IHeaderSignature } from '..';
 import axios from 'axios';
 import config from '../../config';
 
+const LIMIT = 20
+
 export class RewardPutModel extends Model {
 
     constructor(state: IUnserializedPut = INITIAL_STATE, options: any){
@@ -95,7 +97,10 @@ export class RewardPutCollection extends Collection {
         }
     }
 
-    _handleJSONResponse = (json: any) => {
+    cleanUpStorage = () => this.setState(this.orderBy('time', 'desc').limit(20).map(o => o)).store()
+    loadMore = (headerSignature: IHeaderSignature) => this.fetch(Math.floor(this.count() / LIMIT) * LIMIT, LIMIT, headerSignature)
+
+    assignJSONResponse = (json: any) => {
         json.list = json.list || []
         let countAdded = 0 
         for (const put of json.list){
@@ -105,9 +110,10 @@ export class RewardPutCollection extends Collection {
             }
         }
         countAdded > 0 && this.action().store()
+        return countAdded
     }
 
-    fetch = async (offset:number, limit: number, headerSignature: IHeaderSignature) => {
+    fetch = async (offset: number, limit: number, headerSignature: IHeaderSignature) => {
         try {
             const response = await axios(config.getRootAPIChainUrl() + '/puts/rewards', {
                 method: 'GET',
@@ -117,10 +123,7 @@ export class RewardPutCollection extends Collection {
                     return status >= 200 && status < 500;
                 },
             })
-            if (response.status == 200){
-                const json = response.data
-                this._handleJSONResponse(json)
-            }
+            response.status == 200 && this.assignJSONResponse(response.data)
             return response.status
         } catch (e: any){
             throw new Error(e)

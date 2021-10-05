@@ -45,6 +45,7 @@ const main = () => {
         config.setStoreEngine(new LocalStorage('./db'))
         await config.done()
         initWallets()
+        // console.log(wallet.keys().get().pubHashHex())
     })
 
     it('refresh wallets', async () => {

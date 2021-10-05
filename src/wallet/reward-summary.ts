@@ -65,9 +65,7 @@ export class RewardSummaryCollection extends Collection {
             getLastReactionTime
         }
     }
-
-
-
+    
     fetch = async (afterTime: number, header: IHeaderSignature) => {
         try {
             const response = await axios(config.getRootAPIChainUrl() + '/puts/rewards/collection', {

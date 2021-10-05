@@ -12,6 +12,7 @@ import Fees from './fees'
 import Costs from './costs'
 import Keys from './keys'
 import { RewardSummaryCollection } from './reward-summary'
+import {RewardPutCollection} from './puts/rewards'
 import { UnserializedPutList } from './puts'
 
 import Info from './info'
@@ -41,7 +42,8 @@ export class Wallet extends Model {
             info: new Info(initialState.info, this.kids()),
             costs: new Costs(initialState.costs, this.kids()),
             memory: new MemoryModel(initialState.memory, this.kids()),
-            reward_summary: new RewardSummaryCollection(initialState.reward_summary, this.kids())
+            reward_summary: new RewardSummaryCollection(initialState.reward_summary, this.kids()),
+            my_rewards: new RewardPutCollection(initialState.my_rewards, this.kids())
         })
     }
 
@@ -59,13 +61,14 @@ export class Wallet extends Model {
         })
         if (response.status == 200){
             const json = response.data
-
+            
             this.info().setState(json.info)
             this.cch().assignJSONResponse(json.cch)
             this.auth().setState(json.contract)
             this.fees().setState(json.fees)
             this.utxos().get().setState(json.utxos || [])
             this.costs().setState(json.costs)
+            this.myRewards().assignJSONResponse(json.last_rewards) == 20 ? this.myRewards().cleanUpStorage() : null
             this.action().store()
             await this.keys().fetch().aliasIfNotSet()
             await this.refreshPutList()
@@ -101,6 +104,7 @@ export class Wallet extends Model {
     public memory = (): MemoryModel => this.state.memory
     public cch = (): CCHModel => this.state.cch
     public rewardSummary = (): RewardSummaryCollection => this.state.reward_summary
+    public myRewards = (): RewardPutCollection => this.state.my_rewards
 
     buildTX = () => {
 
