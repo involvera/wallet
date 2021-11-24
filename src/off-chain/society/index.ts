@@ -9,7 +9,8 @@ import Costs, { DEFAULT_STATE as COSTS_DEFAULT_STATE } from '../../wallet/costs'
 import { IConstitutionData } from '../constitution'
 import { ICost } from '../../wallet/costs'
 import { SocietyStatsModel,ISocietyStats } from './stats'
-import { IContributorStats, ContributorModel, DEFAULT_STATE as CONTRIBUTOR_DEFAULT_STATE } from './contributor'
+import { IContributorStats, ContributorModel, ContributorCollection } from './contributor'
+import { PubKeyHashFromAddress } from "wallet-util";
 
 export interface ISociety {
     id: number
@@ -23,7 +24,7 @@ export interface ISociety {
     stats: ISocietyStats
     costs: ICost
     constitution: IConstitutionData
-    contributor: IContributorStats
+    contributors: IContributorStats[]
 }
 
 const DEFAULT_STATE: ISociety = {
@@ -36,7 +37,7 @@ const DEFAULT_STATE: ISociety = {
     currency_symbol: '',
     pp: null,
     stats: DEFAULT_SOCIETY_STATS_STATE,
-    contributor: CONTRIBUTOR_DEFAULT_STATE,
+    contributors: [],
     constitution: CONSTITUTION_DEFAULT_STATE,
     costs: COSTS_DEFAULT_STATE
 }
@@ -65,24 +66,24 @@ export class SocietyModel extends Model {
             stats: new SocietyStatsModel(state.stats, this.kids()),
             costs: new Costs(state.costs, this.kids()),
             constitution: new ConstitutionModel(state.constitution, this.kids()),
-            contributor: new ContributorModel(state.contributor, this.kids())
+            contributors: new ContributorCollection(state.contributors, this.kids())
         })
     }
 
-    isContributorFetch = () => this.get().contributor().get().addr() == ''
-
     fetchContributor = async (addr: string) => {
         try {
-            const res = await axios(config.getRootAPIOffChainUrl() + `/society/${this.get().id()}/address/${addr}/stats`, {
+            const res = await axios(config.getRootAPIChainUrl() + `/wallet/${PubKeyHashFromAddress(addr).toString('hex')}`, {
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },
             })
             if (res.status == 200){
-                this.setState({ contributor: new ContributorModel(res.data, this.kids()) })
+                const idx = this.get().contributors().findIndex({ addr: addr })
+                const d = Object.assign({addr, sid: this.get().id()}, res.data)
+                idx == -1 ? this.get().contributors().push(d) : this.get().contributors().updateAt(d, idx)
             }
             return res
-        } catch (e){
+        } catch (e) {
             throw e
         }
     }
@@ -98,14 +99,14 @@ export class SocietyModel extends Model {
         const stats = (): SocietyStatsModel => this.state.stats
         const costs = (): Costs => this.state.costs
         const constitution = (): ConstitutionModel => this.state.constitution
-        const contributor = (): ContributorModel => this.state.contributor
+        const contributors = (): ContributorCollection => this.state.contributors
         const pp = (): string | null => this.state.pp || null
         const formatedMonthYearCreationDate = (): string => moment(created_at()).format('MMMM YYYY')
 
         return {
             id, created_at, name, description,
             domain, currencySymbol, currencyRouteAPI,
-            stats, costs, constitution, contributor,
+            stats, costs, constitution, contributors,
             pp, formatedMonthYearCreationDate
         }
     }

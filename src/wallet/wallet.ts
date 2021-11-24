@@ -11,7 +11,7 @@ import AuthContract from './auth-contract'
 import Fees from './fees'
 import Costs from './costs'
 import Keys from './keys'
-import { RewardSummaryCollection } from './reward-summary'
+import { RewardSummaryCollection } from '../transaction/reward-summary'
 import {RewardPutCollection} from './puts/rewards'
 import { UnserializedPutList } from './puts'
 

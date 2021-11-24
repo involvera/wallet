@@ -4,19 +4,22 @@ import config from '../config';
 import { IsUUID, UUIDToPubKeyHashHex } from 'wallet-util';
 import { IKindLink, KindLinkModel, DEFAULT_STATE as DEFAULT_KIND_LINK_STATE } from './kind-link'
 import { VoteModel, IVote, DEFAULT_STATE as DEFAULT_VOTE_STATE } from '../off-chain/proposal/vote'
+import { IRewardSummary, DEFAULT_STATE as DEFAULT_STATE_REWARDS, RewardSummaryModel } from './reward-summary'
 
 export interface IContentLink { 
-    vote: IVote
+    vote: IVote | null
     index: number
     link: IKindLink
     pubkh_origin: string
+    rewards: IRewardSummary | null
 }
 
 export const DEFAULT_STATE: IContentLink = {
     vote: DEFAULT_VOTE_STATE,
     index: 0,
     link: DEFAULT_KIND_LINK_STATE,
-    pubkh_origin: ''
+    pubkh_origin: '',
+    rewards: DEFAULT_STATE_REWARDS
 }
 
 export class ContentLinkModel extends Model {
@@ -61,9 +64,10 @@ export class ContentLinkModel extends Model {
 
     constructor(initialState: IContentLink = DEFAULT_STATE, options: any){
         super(initialState, options)
-        this.setState({
+        this.setState({            
             link: new KindLinkModel(initialState.link, this.kids()),
-            vote: new VoteModel(initialState.vote, this.kids())
+            vote: new VoteModel(initialState.vote != null ? initialState.vote : undefined , this.kids()),
+            rewards: new RewardSummaryModel(initialState.rewards != null ? initialState.rewards : undefined, this.kids())
         })
     }
     
@@ -82,7 +86,8 @@ export class ContentLinkModel extends Model {
             link: (): KindLinkModel => this.state.link,
             pubKHAuthor: (): string => this.state.pubkh_origin,
             index: (): number => this.state.index,
-            vote: (): VoteModel => this.state.vote
+            vote: (): VoteModel => this.state.vote,
+            rewards: (): RewardSummaryModel => this.state.rewards
         }
     }
 }

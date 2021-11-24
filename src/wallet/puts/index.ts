@@ -1,5 +1,5 @@
 import { Collection, Model } from 'acey'
-import { COIN_UNIT, CYCLE_IN_LUGH, LUGH_AMOUNT } from '../../constant';
+import { COIN_UNIT, CYCLE_IN_LUGH } from '../../constant';
 import { TByte } from 'wallet-script'
 import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, PubKeyHashHexToUUID } from 'wallet-util';
 import axios from 'axios'
@@ -182,30 +182,6 @@ export class UnserializedPutList extends Collection {
 
             return betweenDates(from, to)
         }
-        
-        const totalVotePower = (): BigInt => {
-            let total = BigInt(0)
-
-            this.forEach((p: UnserializedPut) => {
-                if (p.isLughTx()){
-                    total = BigInt(total as any) + BigInt(p.get().value().get().atCreationTime() as any)
-                }
-            })
-            return total
-        }
-
-        const votePowerPercent = (lh: number): number => {
-            const total_vp = totalVotePower()
-            if (total_vp === BigInt(0))
-                return 0
-            const total = Number(BigInt(total_vp as any) / BigInt(10))
-            if (lh >= CYCLE_IN_LUGH){
-                const max = CYCLE_IN_LUGH * (LUGH_AMOUNT / 10)
-                return total / max
-            }
-            const max = lh * (LUGH_AMOUNT/ 10)
-            return (total / max) * 100
-        }
 
         const activity = (pkhHex: string) => {
 
@@ -244,10 +220,9 @@ export class UnserializedPutList extends Collection {
         return {
             inputs, outputs,
             betweenDates,
-            totalVotePower,
             atDay,
-            votePowerPercent,
-            activity, votePowerDistribution
+            activity, 
+            votePowerDistribution
         }
     }
 

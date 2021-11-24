@@ -8,6 +8,6 @@ export { IAlias, AliasCollection, AliasModel, DEFAULT_STATE as ALIAS_DEFAULT_STA
 export { ISociety, SocietyModel } from './society'
 export { ContributorModel, IContributorStats} from './society/contributor'
 export { SocietyStatsModel, ISocietyStats } from './society/stats'
-export { IReward, RewardModel, RewardCollection } from './reward'
+// export { IReward, RewardModel, RewardCollection } from './reward'
 export { IThread, ThreadCollection, ThreadModel } from './thread'
 export { LastCostChangeModel, ILastCostChangeProposal } from './society/stats/last-cost-change'

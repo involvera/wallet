@@ -18,9 +18,13 @@ export class RewardsModel extends Model{
     constructor(state: IRewards = DEFAULT_STATE, options: any){
         super(state, options)
     }
-
+    
     get = () => {
         return {
+            cumulatedReactionCount: (): number => {
+                const { n_reward_0, n_reward_1, n_reward_2, n_upvote } = this.state
+                return n_reward_0 + n_reward_1 + n_reward_2 + n_upvote
+            },
             countUpvote: (): number => this.state.n_upvote,
             countReward0: (): number => this.state.n_reward_0,
             countReward1: (): number => this.state.n_reward_1,
