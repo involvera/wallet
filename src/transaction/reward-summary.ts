@@ -71,12 +71,13 @@ export class RewardSummaryCollection extends Collection {
         }
     }
     
-    fetch = async (afterTime: number, header: IHeaderSignature) => {
+    fetch = async (afterTime: number, pubkeyHash: string) => {
         try {
-            const response = await axios(config.getRootAPIChainUrl() + '/puts/rewards/collection', {
-                headers: Object.assign({}, header, {
-                    from_time: afterTime.toString()
-                })
+            const response = await axios(config.getRootAPIChainUrl() + '/puts/rewards/user/collection', {
+                headers: {
+                    from_time: afterTime.toString(),
+                    pubkey: pubkeyHash
+                }
             })
             if (response.status == 200){
                 this._handleJSONResponse(response.data)
@@ -86,5 +87,4 @@ export class RewardSummaryCollection extends Collection {
             throw new Error(e)
         }
     }
-
 }

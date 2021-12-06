@@ -14,7 +14,7 @@ export interface IThread {
     title: string
     content: string
     public_key_hashed: string
-    rewards?: IRewards
+    reaction_count?: IRewards
     embeds?: string[]
     created_at?: Date
 }
@@ -26,7 +26,7 @@ export const DEFAULT_STATE: IThread = {
     title: '',
     content: '',
     public_key_hashed: "",
-    rewards: DEFAULT_STATE_REWARDS,
+    reaction_count: DEFAULT_STATE_REWARDS,
     embeds: [],
     created_at: new Date()
 }
@@ -60,7 +60,7 @@ export class ThreadModel extends Model {
         this.setState(Object.assign(state, { 
             content_link: new KindLinkModel(state.content_link, this.kids()),
             author: new AliasModel(state.author, this.kids()),
-            rewards: new RewardsModel(state.rewards, this.kids())
+            rewards: new RewardsModel(state.reaction_count, this.kids())
         }))
     }
 

@@ -77,7 +77,7 @@ export class Wallet extends Model {
     }
 
     refreshRewardColletion = async () => {
-        await this.rewardSummary().fetch(this.rewardSummary().get().getLastReactionTime(), this.sign().header())
+        await this.rewardSummary().fetch(this.rewardSummary().get().getLastReactionTime(), this.keys().get().pubHashHex())
     }
 
     refreshPutList = async () => {
@@ -305,7 +305,7 @@ export class Wallet extends Model {
             transaction,
             header: (): IHeaderSignature => {
                 return {
-                    pubkey: this.keys().get().pubHex() as string,
+                    pubkey: this.keys().get().pubHex(),
                     signature: Buffer.from(value(Sha256(B64ToByteArray(this.auth().get().value())))).toString('hex')
                 }
             }
