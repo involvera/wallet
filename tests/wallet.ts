@@ -713,6 +713,7 @@ const main = () => {
             expect(proposal1.get().layer()).to.eq("Economy")
             expect(proposal1.get().costs().proposal).to.eq(BigInt(2000 * COIN_UNIT))
             expect(proposal1.get().costs().thread).to.eq(BigInt(-1))
+            
             expect(proposal1.get().vote().get().closed_at_lh()).to.eq(28)
             expect(proposal1.get().vote().get().approved()).to.eq(-1)
             expect(proposal1.get().embeds().length).to.eq(0)
