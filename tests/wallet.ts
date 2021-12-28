@@ -718,7 +718,7 @@ const main = () => {
             expect(proposal1.get().vote().get().closed_at_lh()).to.eq(28)
             expect(proposal1.get().vote().get().approved()).to.eq(-1)
             expect(proposal1.get().embeds().length).to.eq(0)
-            expect(proposal1.get().end_at()).to.eq(-1)
+            expect(proposal1.get().endAt()).to.eq(28)
             const fullProposal1 = await ProposalModel.FetchByIndex(1, 10)
             if (fullProposal1){
                 const content = fullProposal1.get().content()
@@ -740,7 +740,7 @@ const main = () => {
             expect(proposal2.get().vote().get().closed_at_lh()).to.eq(28)
             expect(proposal2.get().vote().get().approved()).to.eq(-1)
             expect(proposal2.get().embeds().length).to.eq(0)
-            expect(proposal2.get().end_at()).to.eq(-1)
+            expect(proposal2.get().endAt()).to.eq(28)
             const fullProposal2 = await ProposalModel.FetchByIndex(1, 9)
             if (fullProposal2){
                 const content = fullProposal2.get().content()
@@ -759,7 +759,7 @@ const main = () => {
             expect(proposal3.get().vote().get().closed_at_lh()).to.eq(28)
             expect(proposal3.get().vote().get().approved()).to.eq(-1)
             expect(proposal3.get().embeds().length).to.eq(0)
-            expect(proposal3.get().end_at()).to.eq(-1)
+            expect(proposal3.get().endAt()).to.eq(28)
             const fullProposal3 = await ProposalModel.FetchByIndex(1, 8)
             if (fullProposal3){
                 const content = fullProposal3.get().content()

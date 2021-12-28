@@ -116,6 +116,8 @@ export class ProposalModel extends Model {
         const societyID = (): number => this.state.sid
         const embeds = (): string[] => this.state.embeds
 
+        const endAt = () => this.get().vote().get().closed_at_lh()
+
         const costs = () => { 
             const content = contentLink()
             if (content == null)
@@ -178,7 +180,7 @@ export class ProposalModel extends Model {
             author, content, title, layer, created_at, 
             vote, societyID, dataToSign, 
             createdAtAgo, createdAtPretty, pubKH,
-            pubKHOrigin
+            pubKHOrigin, endAt
         }
     }
 }
