@@ -207,6 +207,7 @@ const main = () => {
         expect(res.status).to.eq(201)
     })
 
+
     it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 4/4', async () => {
         const p = ProposalModel.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3", "Content 4"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))

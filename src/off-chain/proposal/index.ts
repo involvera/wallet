@@ -17,11 +17,11 @@ export interface IProposal {
     index: number
     created_at: Date
     public_key_hashed: string
-    end_at: Date | null
     title: string,
     content: string[3]
     author: IAlias
     embeds: string[]
+    pubkh_origin: string
 }
 
 export const DEFAUL_STATE: IProposal = {
@@ -31,11 +31,11 @@ export const DEFAUL_STATE: IProposal = {
     index: 0,
     created_at: new Date(),
     public_key_hashed: '',
-    end_at: null,
     title: '',
     content: ['','',''] as any,
-    author:DEFAULT_ALIAS_STATE,
-    embeds: []
+    author: DEFAULT_ALIAS_STATE,
+    embeds: [],
+    pubkh_origin: ''
 }
 
 export class ProposalModel extends Model {
@@ -95,15 +95,7 @@ export class ProposalModel extends Model {
                         return status >= 200 && status < 500;
                     },
                 })
-                res.status == 201 && this.hydrate(Object.assign({},
-                    res.data,
-                    {
-                        vote: JSON.parse(res.data.vote),
-                        content_link: JSON.parse(res.data.content_link),
-                        content: res.data.content.split('~~~_~~~_~~~_~~~')
-                    }
-                ))
-                
+                res.status == 201 && this.hydrate(res.data)
                 return res
             } catch (e: any){
                 return e.toString()
@@ -111,7 +103,7 @@ export class ProposalModel extends Model {
     }
 
     is2 = () => {
-        const pending = (): boolean => !!this.get().end_at() 
+        const pending = (): boolean => this.get().vote().get().declined() == -1 
         const approved = (): boolean => pending() && this.get().vote().get().approved() > 50
         return {
             pending, approved
@@ -142,7 +134,6 @@ export class ProposalModel extends Model {
         const content = (): string[] => this.state.content 
         const title = (): string => this.state.title
         const created_at = (): number => (this.state.created_at as Date).getTime()
-        const end_at = (): number => !this.state.end_at ? -1 : (this.state.end_at as Date).getTime()
 
         const createdAtAgo = (): string => moment(new Date(created_at())).fromNow()
 
@@ -179,13 +170,15 @@ export class ProposalModel extends Model {
             return 'Application'
         }
         const pubKH = (): string => this.state.public_key_hashed
+        const pubKHOrigin = ():string => this.state.pubkh_origin
 
         return {
             index,
             contentLink, embeds, costs, constitution,
             author, content, title, layer, created_at, 
-            vote, societyID, dataToSign, end_at, 
-            createdAtAgo, createdAtPretty, pubKH
+            vote, societyID, dataToSign, 
+            createdAtAgo, createdAtPretty, pubKH,
+            pubKHOrigin
         }
     }
 }
