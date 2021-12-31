@@ -698,7 +698,7 @@ const main = () => {
     })
 
     it('Fetch Proposal list', async () => {
-        const proposals = await ProposalCollection.FetchLastProposals(1, 0)
+        const proposals = await ProposalCollection.FetchLastProposals(1, 0, wallet.sign().header())
         expect(proposals).not.to.eq(null)
         if (proposals){
             expect(proposals.count()).to.eq(3)
@@ -715,11 +715,11 @@ const main = () => {
             expect(proposal1.get().costs().proposal).to.eq(BigInt(2000 * COIN_UNIT))
             expect(proposal1.get().costs().thread).to.eq(BigInt(-1))
             
-            expect(proposal1.get().vote().get().closed_at_lh()).to.eq(28)
+            expect(proposal1.get().vote().get().closedAtLH()).to.eq(28)
             expect(proposal1.get().vote().get().approved()).to.eq(-1)
             expect(proposal1.get().embeds().length).to.eq(0)
-            expect(proposal1.get().endAt()).to.eq(28)
-            const fullProposal1 = await ProposalModel.FetchByIndex(1, 10)
+            expect(proposal1.get().endAtLH()).to.eq(28)
+            const fullProposal1 = await ProposalModel.FetchByIndex(1, 10, wallet.sign().header())
             if (fullProposal1){
                 const content = fullProposal1.get().content()
                 expect(fullProposal1.get().embeds().length).to.eq(2)
@@ -728,7 +728,6 @@ const main = () => {
                 expect(content[1]).to.eq("Content 2: %[involvera/proposal/8]\n%[proposal/9]")
                 expect(content[2]).to.eq("Content 3: %[https://involvera.com/involvera/proposal/8]\n%[involvera/proposal/9]")
             }
-
             expect(proposal2.get().author().get().address()).eq(wallet.keys().get().address())
             expect(proposal2.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(proposal2.get().title()).to.eq("This is the title of a constitution proposal")
@@ -737,11 +736,11 @@ const main = () => {
             expect(proposal2.get().layer()).to.eq("Constitution")
             expect(proposal2.get().constitution()[0].content).to.eq("Content #0")
             expect(proposal2.get().constitution()[0].title).to.eq("Title #0")
-            expect(proposal2.get().vote().get().closed_at_lh()).to.eq(28)
+            expect(proposal2.get().vote().get().closedAtLH()).to.eq(28)
             expect(proposal2.get().vote().get().approved()).to.eq(-1)
             expect(proposal2.get().embeds().length).to.eq(0)
-            expect(proposal2.get().endAt()).to.eq(28)
-            const fullProposal2 = await ProposalModel.FetchByIndex(1, 9)
+            expect(proposal2.get().endAtLH()).to.eq(28)
+            const fullProposal2 = await ProposalModel.FetchByIndex(1, 9, wallet.sign().header())
             if (fullProposal2){
                 const content = fullProposal2.get().content()
                 expect(fullProposal2.get().embeds().length).to.eq(1)
@@ -756,11 +755,11 @@ const main = () => {
             expect(proposal3.get().pubKH()).to.eq("d9ea8f0f43aa29a263ab036e42203305c48ab33b")
             expect(proposal3.get().index()).to.eq(8)
             expect(proposal3.get().layer()).to.eq("Application")
-            expect(proposal3.get().vote().get().closed_at_lh()).to.eq(28)
+            expect(proposal3.get().vote().get().closedAtLH()).to.eq(28)
             expect(proposal3.get().vote().get().approved()).to.eq(-1)
             expect(proposal3.get().embeds().length).to.eq(0)
-            expect(proposal3.get().endAt()).to.eq(28)
-            const fullProposal3 = await ProposalModel.FetchByIndex(1, 8)
+            expect(proposal3.get().endAtLH()).to.eq(28)
+            const fullProposal3 = await ProposalModel.FetchByIndex(1, 8, wallet.sign().header())
             if (fullProposal3){
                 const content = fullProposal3.get().content()
                 expect(fullProposal3.get().embeds().length).to.eq(0)

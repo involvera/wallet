@@ -7,6 +7,9 @@ import config from "../../config";
 import {  IKindLink, KindLinkModel, DEFAULT_STATE as DEFAULT_LINK_STATE } from '../../transaction/kind-link'
 import { IAlias, AliasModel, DEFAULT_STATE as DEFAULT_ALIAS_STATE } from '../alias'
 import {VoteModel, IVote, DEFAULT_STATE as DEFAULT_VOTE_STATE } from './vote'
+import { UserVoteModel, IUserVote, DEFAULT_STATE as DEFAULT_USER_VOTE_STATE } from './user-vote'
+import { LUGH_EVERY_N_S } from '../../constant';
+import { IHeaderSignature } from '../../wallet';
 
 export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
@@ -22,6 +25,7 @@ export interface IProposal {
     author: IAlias
     embeds: string[]
     pubkh_origin: string
+    user_vote: IUserVote | null
 }
 
 export const DEFAUL_STATE: IProposal = {
@@ -35,15 +39,17 @@ export const DEFAUL_STATE: IProposal = {
     content: ['','',''] as any,
     author: DEFAULT_ALIAS_STATE,
     embeds: [],
-    pubkh_origin: ''
+    pubkh_origin: '',
+    user_vote: DEFAULT_USER_VOTE_STATE
 }
 
 export class ProposalModel extends Model {
 
-    static FetchByIndex = async (societyID: number, index: number) => {
+    static FetchByIndex = async (societyID: number, index: number, headerSig: IHeaderSignature | void) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}/${index}`,  {
                 timeout: 10_000,
+                headers: headerSig || {},
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },
@@ -69,7 +75,8 @@ export class ProposalModel extends Model {
         state && this.setState(Object.assign(state, { 
             content_link: new KindLinkModel(state.content_link, this.kids()),
             vote: new VoteModel(state.vote, this.kids()),
-            author: new AliasModel(state.author, this.kids())
+            author: new AliasModel(state.author, this.kids()),
+            user_vote: state.user_vote ? new UserVoteModel(state.user_vote, this.kids()) : null
         }))
     }
     
@@ -116,7 +123,15 @@ export class ProposalModel extends Model {
         const societyID = (): number => this.state.sid
         const embeds = (): string[] => this.state.embeds
 
-        const endAt = () => this.get().vote().get().closed_at_lh()
+        const estimatedEndAtTime = () => {
+            const begin = this.get().created_at()
+            const beginLH = this.get().contentLink().get().lh()
+            const endLH = this.get().vote().get().closedAtLH()
+
+            return begin + ((endLH - beginLH) * 1000 * LUGH_EVERY_N_S)
+        }
+
+        const endAtLH = () => this.get().vote().get().closedAtLH()
 
         const costs = () => { 
             const content = contentLink()
@@ -174,25 +189,26 @@ export class ProposalModel extends Model {
         const pubKH = (): string => this.state.public_key_hashed
         const pubKHOrigin = ():string => this.state.pubkh_origin
 
+        const userVote = (): UserVoteModel | null => this.state.user_vote
+
         return {
             index,
             contentLink, embeds, costs, constitution,
             author, content, title, layer, created_at, 
             vote, societyID, dataToSign, 
             createdAtAgo, createdAtPretty, pubKH,
-            pubKHOrigin, endAt
+            pubKHOrigin, endAtLH, estimatedEndAtTime,
+            userVote
         }
     }
 }
 
 export class ProposalCollection extends Collection {
 
-    static FetchLastProposals = async (societyID: number, page: number) => {
+    static FetchLastProposals = async (societyID: number, page: number, headerSig: IHeaderSignature | void) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}`, {
-                headers: {
-                    page,
-                },
+                headers: Object.assign({}, {page}, headerSig ? headerSig : {}),
                 timeout: 10_000,
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
