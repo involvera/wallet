@@ -124,7 +124,7 @@ export class ProposalModel extends Model {
         const embeds = (): string[] => this.state.embeds
 
         const estimatedEndAtTime = () => {
-            const begin = this.get().created_at()
+            const begin = this.get().created_at().getTime()
             const beginLH = this.get().contentLink().get().lh()
             const endLH = this.get().vote().get().closedAtLH()
 
@@ -150,9 +150,9 @@ export class ProposalModel extends Model {
         const author = (): AliasModel => this.state.author
         const content = (): string[] => this.state.content 
         const title = (): string => this.state.title
-        const created_at = (): number => (this.state.created_at as Date).getTime()
+        const created_at = (): Date => this.state.created_at
 
-        const createdAtAgo = (): string => moment(new Date(created_at())).fromNow()
+        const createdAtAgo = (): string => moment(created_at()).fromNow()
 
         const createdAtPretty = (): string => {
             const today = new Date()
