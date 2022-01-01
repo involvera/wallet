@@ -76,7 +76,8 @@ export class ProposalModel extends Model {
             content_link: new KindLinkModel(state.content_link, this.kids()),
             vote: new VoteModel(state.vote, this.kids()),
             author: new AliasModel(state.author, this.kids()),
-            user_vote: state.user_vote ? new UserVoteModel(state.user_vote, this.kids()) : null
+            user_vote: state.user_vote ? new UserVoteModel(state.user_vote, this.kids()) : null,
+            created_at: new Date(state.created_at)
         }))
     }
     
@@ -124,7 +125,7 @@ export class ProposalModel extends Model {
         const embeds = (): string[] => this.state.embeds
 
         const estimatedEndAtTime = () => {
-            const begin = this.get().created_at().getTime()
+            const begin = this.get().createdAt().getTime()
             const beginLH = this.get().contentLink().get().lh()
             const endLH = this.get().vote().get().closedAtLH()
 
@@ -150,15 +151,15 @@ export class ProposalModel extends Model {
         const author = (): AliasModel => this.state.author
         const content = (): string[] => this.state.content 
         const title = (): string => this.state.title
-        const created_at = (): Date => this.state.created_at
+        const createdAt = (): Date => this.state.created_at
 
-        const createdAtAgo = (): string => moment(created_at()).fromNow()
+        const createdAtAgo = (): string => moment(createdAt()).fromNow()
 
         const createdAtPretty = (): string => {
             const today = new Date()
             const yesterday = new Date()
             yesterday.setDate(yesterday.getDate()-1)
-            const createDate = new Date(created_at()) 
+            const createDate = new Date(createdAt()) 
 
             const isSameYear = today.getFullYear() === createDate.getFullYear()
             const isToday = (now: Date, creation: Date) => creation.getDate() === now.getDate() && creation.getMonth() === now.getMonth() && creation.getFullYear() === now.getFullYear();
@@ -194,7 +195,7 @@ export class ProposalModel extends Model {
         return {
             index,
             contentLink, embeds, costs, constitution,
-            author, content, title, layer, created_at, 
+            author, content, title, layer, createdAt, 
             vote, societyID, dataToSign, 
             createdAtAgo, createdAtPretty, pubKH,
             pubKHOrigin, endAtLH, estimatedEndAtTime,

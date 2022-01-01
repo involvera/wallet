@@ -60,7 +60,8 @@ export class ThreadModel extends Model {
         this.setState(Object.assign(state, { 
             content_link: new KindLinkModel(state.content_link, this.kids()),
             author: new AliasModel(state.author, this.kids()),
-            rewards: new RewardsModel(state.reaction_count, this.kids())
+            rewards: new RewardsModel(state.reaction_count, this.kids()),
+            created_at: state.created_at ? new Date(state.created_at) : undefined
         }))
     }
 

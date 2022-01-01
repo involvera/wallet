@@ -66,7 +66,8 @@ export class SocietyModel extends Model {
             stats: new SocietyStatsModel(state.stats, this.kids()),
             costs: new Costs(state.costs, this.kids()),
             constitution: new ConstitutionModel(state.constitution, this.kids()),
-            contributors: new ContributorCollection(state.contributors, this.kids())
+            contributors: new ContributorCollection(state.contributors, this.kids()),
+            created_at: new Date(state.created_at)
         })
     }
 
