@@ -9,7 +9,7 @@ import Costs, { DEFAULT_STATE as COSTS_DEFAULT_STATE } from '../../wallet/costs'
 import { IConstitutionData } from '../constitution'
 import { ICost } from '../../wallet/costs'
 import { SocietyStatsModel,ISocietyStats } from './stats'
-import { IContributorStats, ContributorModel, ContributorCollection } from './contributor'
+import { IContributorStats, ContributorCollection } from './contributor'
 import { PubKeyHashFromAddress } from "wallet-util";
 
 export interface ISociety {

@@ -77,7 +77,6 @@ export class ProposalModel extends Model {
             vote: new VoteModel(state.vote, this.kids()),
             author: new AliasModel(state.author, this.kids()),
             user_vote: state.user_vote ? new UserVoteModel(state.user_vote, this.kids()) : null,
-            created_at: new Date(state.created_at)
         }))
     }
     
@@ -151,7 +150,7 @@ export class ProposalModel extends Model {
         const author = (): AliasModel => this.state.author
         const content = (): string[] => this.state.content 
         const title = (): string => this.state.title
-        const createdAt = (): Date => this.state.created_at
+        const createdAt = (): Date => new Date(this.state.created_at)
 
         const createdAtAgo = (): string => moment(createdAt()).fromNow()
 
