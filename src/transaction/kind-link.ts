@@ -19,6 +19,8 @@ export const DEFAULT_STATE: IKindLink = {
 
 export class KindLinkModel extends Model {
 
+    static DefaultState: IKindLink = DEFAULT_STATE
+
     constructor(state: IKindLink = DEFAULT_STATE, options: any){
         super(state, options)
         this.setState({

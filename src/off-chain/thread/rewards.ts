@@ -15,6 +15,9 @@ export const DEFAULT_STATE: IRewards = {
 }
 
 export class RewardsModel extends Model{
+
+    static DefaultState: IRewards = DEFAULT_STATE
+
     constructor(state: IRewards = DEFAULT_STATE, options: any){
         super(state, options)
     }

@@ -20,6 +20,8 @@ export const DEFAULT_STATE: IRewardSummary = {
 
 export class RewardSummaryModel extends Model {
 
+    static DefaultState: IRewardSummary = DEFAULT_STATE
+
     constructor(state: IRewardSummary = DEFAULT_STATE, options: any){
         super(state, options)
         this.setState({

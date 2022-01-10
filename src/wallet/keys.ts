@@ -20,6 +20,8 @@ const DEFAULT_STATE = {
 
 export default class KeysModel extends Model {
 
+    static DefaultState: IKey = DEFAULT_STATE
+    
     private _password: string = ''
 
     constructor(initialState: IKey = DEFAULT_STATE, options: any){

@@ -12,6 +12,8 @@ export const DEFAULT_VALUE: ILink = {
 
 export class LinkModel extends Model {
 
+    static DefaultState: ILink = DEFAULT_VALUE
+
     constructor(state: ILink, options: any){
         super(state, options)
     }

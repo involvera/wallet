@@ -35,6 +35,9 @@ export const DEFAULT_STATE: ITransaction = {
 }
 
 export class Transaction extends Model {
+
+    static DefaultState: ITransaction = DEFAULT_STATE
+
     static FetchTX = async (hashOrUUID: string) => {
 
         let hash = hashOrUUID

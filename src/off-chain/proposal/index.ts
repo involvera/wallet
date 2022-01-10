@@ -28,7 +28,7 @@ export interface IProposal {
     user_vote: IUserVote | null
 }
 
-export const DEFAUL_STATE: IProposal = {
+export const DEFAULT_STATE: IProposal = {
     sid: 0,
     content_link: DEFAULT_LINK_STATE,
     vote: DEFAULT_VOTE_STATE,
@@ -44,6 +44,8 @@ export const DEFAUL_STATE: IProposal = {
 }
 
 export class ProposalModel extends Model {
+
+    static DefaultState: IProposal = DEFAULT_STATE
 
     static FetchByIndex = async (societyID: number, index: number, headerSig: IHeaderSignature | void) => {
         try {

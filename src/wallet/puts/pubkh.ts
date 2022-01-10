@@ -12,6 +12,8 @@ export const DEFAULT_VALUE: IPubKH = {
 
 export class PubKHModel extends Model {
 
+    static DefaultState: IPubKH = DEFAULT_VALUE
+
     constructor(state: IPubKH, options: any){
         super(state, options)
     }

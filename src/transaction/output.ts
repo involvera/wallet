@@ -25,6 +25,8 @@ export const DEFAULT_STATE: IOutput = {
 
 export class OutputModel extends Model {
 
+	static DefaultState: IOutput = DEFAULT_STATE
+
 	static NewOutput = (value: number, InputSrcIdxs: number[], script: string[]) => {
 		if (value > Math.pow(2, 53))
 			throw MAX_IS_2_POW_53

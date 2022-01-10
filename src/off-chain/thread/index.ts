@@ -33,6 +33,8 @@ export const DEFAULT_STATE: IThread = {
 
 export class ThreadModel extends Model {
 
+    static DefaultState: IThread = DEFAULT_STATE
+
     static FetchByPKH = async (societyID: number, pubkh: string) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}/${pubkh}`,  {

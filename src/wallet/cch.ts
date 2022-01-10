@@ -15,6 +15,8 @@ export const DEFAULT_VALUE: ICCH = {
 
 export class CCHModel extends Model {
     
+    static DefaultState: ICCH = DEFAULT_VALUE
+    
     constructor(state: ICCH = DEFAULT_VALUE, options: any){
         super(Object.assign({}, state, {
             list: state.list.join(',')

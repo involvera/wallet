@@ -22,6 +22,8 @@ export const DEFAULT_STATE: IInput = {
 
 export class InputModel extends Model {
 
+    static DefaultState: IInput = DEFAULT_STATE
+
     constructor(input: IInput, options: any) {
         super(input, options)
     }

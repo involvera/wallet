@@ -22,6 +22,8 @@ const DEFAULT_STATE: IInfo = {
 
 export default class InfoModel extends Model {
 
+    static DefaultState: IInfo = DEFAULT_STATE
+
     constructor(initialState = DEFAULT_STATE, options: any){
         super(initialState, options)
     }

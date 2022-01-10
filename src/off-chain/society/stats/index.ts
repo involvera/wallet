@@ -27,6 +27,8 @@ export const DEFAULT_STATE: ISocietyStats  = {
 
 export class SocietyStatsModel extends Model {
     
+    static DefaultState: ISocietyStats = DEFAULT_STATE 
+    
     constructor(state: ISocietyStats = DEFAULT_STATE, options: any){
         super(state, options)
         this.setState({

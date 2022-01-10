@@ -22,6 +22,8 @@ export const DEFAULT_STATE: ICost = {
 
 export default class CostsModel extends Model {
 
+    static DefaultState: ICost = DEFAULT_STATE
+
     constructor(initialState = DEFAULT_STATE, options: any){
         super(initialState, options)
     }

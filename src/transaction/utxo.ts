@@ -19,6 +19,8 @@ export interface IUTXO {
 }
 
 export class UTXOModel extends Model {
+
+    
     constructor(utxo: IUTXO, options: any) {
         super(utxo, options)
         this.setState({

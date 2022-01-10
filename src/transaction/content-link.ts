@@ -24,6 +24,8 @@ export const DEFAULT_STATE: IContentLink = {
 
 export class ContentLinkModel extends Model {
 
+    static DefaultState: IContentLink = DEFAULT_STATE
+    
     static FetchThread = async (hashOrUUID: string) => {
         let hash = hashOrUUID
         if (IsUUID(hashOrUUID)){

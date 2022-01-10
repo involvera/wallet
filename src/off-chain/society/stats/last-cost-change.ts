@@ -17,6 +17,9 @@ export const DEFAULT_STATE: ILastCostChangeProposal = {
 }
 
 export class LastCostChangeModel extends Model{
+
+    static DefaultState: ILastCostChangeProposal = DEFAULT_STATE
+
     constructor(state: ILastCostChangeProposal = DEFAULT_STATE, options: any){
         super(state, options)
     }

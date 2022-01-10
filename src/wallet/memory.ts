@@ -13,6 +13,8 @@ export const DEFAULT_STATE: IMemory = {
 
 export class MemoryModel extends Model {
 
+    static DefaultState: IMemory = DEFAULT_STATE
+
     constructor(state: IMemory = DEFAULT_STATE, options: any){
         super(state, options)
     }

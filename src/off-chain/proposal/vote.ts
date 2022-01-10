@@ -14,6 +14,8 @@ export const DEFAULT_STATE: IVote = {
 
 export class VoteModel extends Model {
 
+    static DefaultState: IVote = DEFAULT_STATE
+
     constructor(state: IVote = DEFAULT_STATE, options: any){
         super(state, options) 
     }

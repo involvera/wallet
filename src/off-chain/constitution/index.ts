@@ -2,7 +2,7 @@ import { Model } from 'acey'
 import axios from 'axios'
 import config from '../../config'
 import { Constitution as C } from 'wallet-script'
-import { DEFAUL_STATE as PROPOSAL_DEFAUL_STATE, IProposal, ProposalModel } from '../proposal'
+import { DEFAULT_STATE as PROPOSAL_DEFAUL_STATE, IProposal, ProposalModel } from '../proposal'
 import { RuleCollection } from './rule'
 
 export interface IConstitutionData {
@@ -16,6 +16,8 @@ export const DEFAULT_STATE: IConstitutionData = {
 }
 
 export class ConstitutionModel extends Model {
+
+    static DefaultState: IConstitutionData = DEFAULT_STATE
 
     private _setNestedModel = (state: IConstitutionData) => {
         if (state){

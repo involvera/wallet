@@ -12,6 +12,8 @@ export const DEFAULT_VALUE: IValue = {
 
 export class ValueModel extends Model {
 
+    static DefaultState: IValue = DEFAULT_VALUE
+
     constructor(state: IValue, options: any){
         super(state, options)
     }

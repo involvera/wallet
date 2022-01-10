@@ -44,6 +44,8 @@ const DEFAULT_STATE: ISociety = {
 
 export class SocietyModel extends Model {
 
+    static DefaultState: ISociety = DEFAULT_STATE 
+
     static fetch = async (id: number): Promise<SocietyModel|null> => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + '/society/' + id.toString(), {

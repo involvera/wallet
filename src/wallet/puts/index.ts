@@ -38,6 +38,8 @@ export const INITIAL_STATE: IUnserializedPut = {
 
 export class UnserializedPut extends Model {
 
+    static DefaultState: IUnserializedPut = INITIAL_STATE
+
     constructor(state: IUnserializedPut = INITIAL_STATE, options: any){
         super(state, options)
         this.setState({

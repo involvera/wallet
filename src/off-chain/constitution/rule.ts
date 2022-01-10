@@ -3,6 +3,8 @@ import { Constitution as C } from 'wallet-script'
 
 export class RuleModel extends Model {
 
+    static DefaultState = {content: '', title: ''}
+
     constructor(state: C.IConstitutionRule, options:any){
         super(state, options)
     }

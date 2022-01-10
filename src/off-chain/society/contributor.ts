@@ -22,6 +22,8 @@ export const DEFAULT_STATE: IContributorStats = {
 
 export class ContributorModel extends Model {
 
+    static DefaultState: IContributorStats = DEFAULT_STATE
+
     constructor(state: IContributorStats = DEFAULT_STATE, options: any){
         super(state, options)
     }
