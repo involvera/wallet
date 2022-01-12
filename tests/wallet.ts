@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import 'mocha';
 import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
+import { Content } from '../'
 
 import { COIN_UNIT, LUGH_AMOUNT, MAX_SUPPLY_AMOUNT } from '../src/constant';
 import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from 'wallet-util';

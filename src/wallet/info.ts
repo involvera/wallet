@@ -1,5 +1,6 @@
 import { Model } from 'acey'
 import axios from 'axios'
+import { formatPercent } from 'wallet-util'
 import config from '../config'
 import { CYCLE_IN_LUGH, LUGH_AMOUNT } from '../constant'
 import { IHeaderSignature } from './wallet'
@@ -36,6 +37,7 @@ export default class InfoModel extends Model {
         const votePowerCount = (): number => this.state.vote_power_count
         const rewardsReceivedLast90D = (): number => this.state.rewards_received_270
         const contributorRank = (): number => this.state.position
+        
         const votePowerPercent = (lh: number): number => {
             const total_vp = Math.min(CYCLE_IN_LUGH, lh) * (LUGH_AMOUNT / 10)
             if (total_vp === 0)
@@ -43,7 +45,15 @@ export default class InfoModel extends Model {
             return ((votePowerCount() / 10) / total_vp) * 100
         }
 
-        return { contentNonce, balance, votePowerCount, contributorRank, rewardsReceivedLast90D, votePowerPercent }
+        const votePowerPercentPretty = (lh: number): string => {
+            return formatPercent(votePowerPercent(lh))
+        }
+
+        return { 
+            contentNonce, balance, votePowerCount, 
+            contributorRank, rewardsReceivedLast90D, votePowerPercent,
+            votePowerPercentPretty
+        }
     }
 
     fetch = async (headerSig: IHeaderSignature) => {

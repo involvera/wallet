@@ -112,11 +112,11 @@ export class ProposalModel extends Model {
     }
 
     is2 = () => {
-        const pending = (): boolean => this.get().vote().get().declined() == -1 
-        const approved = (): boolean => pending() && this.get().vote().get().approved() > 50
-        return {
-            pending, approved
-        }
+        const over = (currentLH: number) => this.get().vote().get().closedAtLH() <= currentLH || (this.get().vote().get().approved() > 0.5 || this.get().vote().get().declined() >= 0.5)
+        const approved = (currentLH: number) => over(currentLH) && this.get().vote().get().approved() > 0.5
+        const declined = (currentLH: number) => over(currentLH) && this.get().vote().get().approved() <= 0.5
+
+        return { over, approved, declined }
     }
 
     get = () => {
