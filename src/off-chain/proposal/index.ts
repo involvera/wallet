@@ -72,7 +72,7 @@ export class ProposalModel extends Model {
         return new ProposalModel({sid, content, title} as any, {})
     }
 
-    constructor(state: IProposal, options: any){
+    constructor(state: undefined | null | IProposal = DEFAULT_STATE, options: any){
         super(state, options) 
         state && this.setState(Object.assign(state, { 
             content_link: new KindLinkModel(state.content_link, this.kids()),

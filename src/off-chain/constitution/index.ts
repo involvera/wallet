@@ -2,7 +2,7 @@ import { Model } from 'acey'
 import axios from 'axios'
 import config from '../../config'
 import { Constitution as C } from 'wallet-script'
-import { DEFAULT_STATE as PROPOSAL_DEFAUL_STATE, IProposal, ProposalModel } from '../proposal'
+import { DEFAULT_STATE as PROPOSAL_DEFAULT_STATE, IProposal, ProposalModel } from '../proposal'
 import { RuleCollection } from './rule'
 
 export interface IConstitutionData {
@@ -11,7 +11,7 @@ export interface IConstitutionData {
 }
 
 export const DEFAULT_STATE: IConstitutionData = {
-    proposal: PROPOSAL_DEFAUL_STATE,
+    proposal: PROPOSAL_DEFAULT_STATE,
     constitution: [] 
 }
 

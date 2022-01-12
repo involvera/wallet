@@ -62,14 +62,14 @@ export class SocietyModel extends Model {
         }
     }
 
-    constructor(state: ISociety = DEFAULT_STATE, options:any) {
+    constructor(state = DEFAULT_STATE, options:any) {
         super(state, options)
         this.setState({
             stats: new SocietyStatsModel(state.stats, this.kids()),
             costs: new Costs(state.costs, this.kids()),
             constitution: new ConstitutionModel(state.constitution, this.kids()),
             contributors: new ContributorCollection(state.contributors, this.kids()),
-            created_at: new Date(state.created_at)
+            created_at: state.created_at ? new Date(state.created_at) : new Date()
         })
     }
 
