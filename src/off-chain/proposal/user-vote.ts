@@ -20,7 +20,7 @@ export class UserVoteModel extends Model {
 
     get = () => {
         return {
-            hasApproved: (): number => this.state.closedAtLH,
+            hasApproved: (): boolean => this.state.has_approved,
             voteLH: (): number => this.state.vote_lh
         }
     }
