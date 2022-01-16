@@ -1,6 +1,6 @@
 {
   "name": "involvera-wallet-js",
-  "version": "1.5.8",
+  "version": "1.5.9",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -25,6 +25,7 @@
     "base-x": "^3.0.8",
     "bip32": "^2.0.6",
     "bip39": "^3.0.3",
+    "community-coin-types": "^1.0.1",
     "create-hash": "^1.2.0",
     "moment": "^2.29.1",
     "tweetnacl": "^1.0.3",
