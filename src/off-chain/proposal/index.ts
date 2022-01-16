@@ -227,4 +227,6 @@ export class ProposalCollection extends Collection {
     constructor(initialState: any, options: any){
         super(initialState, [ProposalModel, ProposalCollection], options)
     }
+
+    sortByIndexDesc = (): ProposalCollection => this.orderBy('index', 'desc') as ProposalCollection
 }

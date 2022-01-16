@@ -52,7 +52,6 @@ export class Wallet extends Model {
         const response = await axios(config.getRootAPIChainUrl() + '/wallet', {
             headers: Object.assign(this.sign().header() as any, {
                 last_cch: this.cch().get().last(),
-                
             }),
             validateStatus: function (status) {
                 return status >= 200 && status < 500;
