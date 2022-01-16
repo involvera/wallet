@@ -2,14 +2,16 @@ import moment from 'moment'
 import axios from 'axios'
 import * as bip32 from 'bip32'
 import { Collection, Model } from "acey";
+import { IConstitutionProposalUnRaw, ICostProposal } from 'community-coin-types'
 import { BuildSignatureHex } from 'wallet-util'
 import config from "../../config";
-import {  IKindLink, KindLinkModel, DEFAULT_STATE as DEFAULT_LINK_STATE } from '../../transaction/kind-link'
+import { IKindLink, KindLinkModel, DEFAULT_STATE as DEFAULT_LINK_STATE } from '../../transaction/kind-link'
 import { IAlias, AliasModel, DEFAULT_STATE as DEFAULT_ALIAS_STATE } from '../alias'
 import {VoteModel, IVote, DEFAULT_STATE as DEFAULT_VOTE_STATE } from './vote'
 import { UserVoteModel, IUserVote, DEFAULT_STATE as DEFAULT_USER_VOTE_STATE } from './user-vote'
 import { LUGH_EVERY_N_S } from '../../constant';
 import { IHeaderSignature } from '../../wallet';
+
 
 export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
@@ -191,6 +193,18 @@ export class ProposalModel extends Model {
         const pubKH = (): string => this.state.public_key_hashed
         const pubKHOrigin = ():string => this.state.pubkh_origin
 
+        const context = (): ICostProposal | IConstitutionProposalUnRaw | null => {
+            if (this.get().content()){
+                switch (this.get().layer()) {
+                    case 'Economy':
+                        return JSON.parse(this.state.context) as ICostProposal
+                    case 'Constitution':
+                        return JSON.parse(this.state.context) as IConstitutionProposalUnRaw
+                }
+            }
+            return null
+        }
+        
         const userVote = (): UserVoteModel | null => this.state.user_vote
 
         return {
@@ -200,7 +214,7 @@ export class ProposalModel extends Model {
             vote, societyID, dataToSign, 
             createdAtAgo, createdAtPretty, pubKH,
             pubKHOrigin, endAtLH, estimatedEndAtTime,
-            userVote
+            userVote, context
         }
     }
 }

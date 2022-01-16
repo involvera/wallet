@@ -15,6 +15,7 @@ import axios from 'axios';
 import conf from '../src/config'
 import { RewardSummaryModel } from '../src/transaction/reward-summary';
 import { RewardPutModel } from '../src/wallet/puts/rewards';
+import { IConstitutionProposalUnRaw, ICostProposal } from 'community-coin-types'
 
 // conf.setRootAPIChainUrl('http://185.212.226.103:8080')
 // conf.setRootAPIOffChainUrl('http://185.212.226.103:3020')
@@ -194,7 +195,6 @@ const main = () => {
         expect(res.status).to.eq(404)
         expect(res.data.error).to.eq("You need to create an alias on your address before adding content.")
     })
-
     it('[OFFCHAIN] Create an alias on Wallet 1', async () => {
         const alias = wallet.keys().get().alias()
         alias.setUsername('fantasim')
@@ -714,13 +714,17 @@ const main = () => {
             expect(proposal1.get().layer()).to.eq("Economy")
             expect(proposal1.get().costs().proposal).to.eq(BigInt(2000 * COIN_UNIT))
             expect(proposal1.get().costs().thread).to.eq(BigInt(-1))
-            
+            expect(proposal1.get().context()).to.eq(null)
             expect(proposal1.get().vote().get().closedAtLH()).to.eq(28)
             expect(proposal1.get().vote().get().approved()).to.eq(-1)
             expect(proposal1.get().embeds().length).to.eq(0)
             expect(proposal1.get().endAtLH()).to.eq(28)
             const fullProposal1 = await ProposalModel.FetchByIndex(1, 10, wallet.sign().header())
             if (fullProposal1){
+                const context = fullProposal1.get().context()
+                expect((context as ICostProposal).proposal).to.eq(500000000000)
+                expect((context as ICostProposal).thread).to.eq(50000000000)
+
                 const content = fullProposal1.get().content()
                 expect(fullProposal1.get().embeds().length).to.eq(2)
                 expect(content.length).to.eq(3)
@@ -736,6 +740,7 @@ const main = () => {
             expect(proposal2.get().layer()).to.eq("Constitution")
             expect(proposal2.get().constitution()[0].content).to.eq("Content #0")
             expect(proposal2.get().constitution()[0].title).to.eq("Title #0")
+            expect(proposal2.get().context()).to.eq(null)
             expect(proposal2.get().vote().get().closedAtLH()).to.eq(28)
             expect(proposal2.get().vote().get().approved()).to.eq(-1)
             expect(proposal2.get().embeds().length).to.eq(0)
@@ -745,6 +750,8 @@ const main = () => {
                 const content = fullProposal2.get().content()
                 expect(fullProposal2.get().embeds().length).to.eq(1)
                 expect(content.length).to.eq(3)
+                const context = fullProposal2.get().context()
+                expect((context as IConstitutionProposalUnRaw).constitution.length).to.eq(10)
                 expect(content[0]).to.eq("Content 1: %[proposal/8]")
                 expect(content[1]).to.eq("Content 2: %[involvera/proposal/8]")
                 expect(content[2]).to.eq("Content 3: %[https://involvera.com/involvera/proposal/8]")
@@ -755,14 +762,16 @@ const main = () => {
             expect(proposal3.get().pubKH()).to.eq("d9ea8f0f43aa29a263ab036e42203305c48ab33b")
             expect(proposal3.get().index()).to.eq(8)
             expect(proposal3.get().layer()).to.eq("Application")
+            expect(proposal3.get().context()).to.eq(null)
             expect(proposal3.get().vote().get().closedAtLH()).to.eq(28)
             expect(proposal3.get().vote().get().approved()).to.eq(-1)
             expect(proposal3.get().embeds().length).to.eq(0)
             expect(proposal3.get().endAtLH()).to.eq(28)
             const fullProposal3 = await ProposalModel.FetchByIndex(1, 8, wallet.sign().header())
             if (fullProposal3){
-                const content = fullProposal3.get().content()
                 expect(fullProposal3.get().embeds().length).to.eq(0)
+                expect(fullProposal3.get().context()).to.eq(null)
+                const content = fullProposal3.get().content()
                 expect(content.length).to.eq(4)
                 expect(content[0]).to.eq("Content 1")
                 expect(content[1]).to.eq("Content 2")
