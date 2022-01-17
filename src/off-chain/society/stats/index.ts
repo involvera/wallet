@@ -6,6 +6,7 @@ import { LastCostChangeModel } from './last-cost-change'
 export interface ISocietyStats {
     last_height: number
     total_contributor: number
+    total_proposal: number
     active_addresses: number
     most_active_addresses: IAlias[]
     circulating_supply: string
@@ -16,6 +17,7 @@ export interface ISocietyStats {
 
 export const DEFAULT_STATE: ISocietyStats  = {
     total_contributor: 0,
+    total_proposal: 0,
     last_height: 0,
     active_addresses: 0,
     most_active_addresses: [] as IAlias[],
@@ -42,6 +44,7 @@ export class SocietyStatsModel extends Model {
         return {
             lastHeight: (): number => this.state.last_height,
             totalContributor: (): number => this.state.total_contributor,
+            totalProposal: (): number => this.state.total_proposal,
             activeAddresses: (): number => this.state.active_addresses,
             mostActiveAddresses: (): AliasCollection => this.state.most_active_addresses,
             circulatingSupply: (): string => this.state.circulating_supply, 
