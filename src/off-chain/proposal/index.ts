@@ -12,7 +12,6 @@ import { UserVoteModel, IUserVote, DEFAULT_STATE as DEFAULT_USER_VOTE_STATE } fr
 import { LUGH_EVERY_N_S } from '../../constant';
 import { IHeaderSignature } from '../../wallet';
 
-
 export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
 export interface IProposal {
@@ -221,6 +220,24 @@ export class ProposalModel extends Model {
 
 export class ProposalCollection extends Collection {
 
+    static FetchLastProposal = async (societyID: number, headerSig: IHeaderSignature | void) => {
+        try {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}/last`,  {
+                timeout: 10_000,
+                headers: headerSig || {},
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (res.status == 200){
+                const { data } = res
+                return new ProposalModel(data, {})
+            }
+        } catch (e: any){
+            throw new Error(e.toString())
+        }
+    }
+
     static FetchLastProposals = async (societyID: number, page: number, headerSig: IHeaderSignature | void) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}`, {
@@ -243,4 +260,16 @@ export class ProposalCollection extends Collection {
     }
 
     sortByIndexDesc = (): ProposalCollection => this.orderBy('index', 'desc') as ProposalCollection
+
+    add = (node: ProposalModel | ProposalCollection) => {        
+        const addNode = (n: ProposalModel) => {
+            const idx = this.findIndex({index: n.get().index()})
+            if (idx == -1)
+                this.push(n.to().plain())
+            else
+                this.updateAt(n.to().plain(), idx)            
+        }
+        node instanceof ProposalModel ? addNode(node) : node.forEach((p: ProposalModel) => addNode(p))
+        return this.action()   
+    }
 }
