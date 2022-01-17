@@ -1,9 +1,5 @@
 import { Model } from "acey";
-
-export interface IUserVote {
-    has_approved: boolean
-    vote_lh: number
-}
+import { IUserVote } from 'community-coin-types'
 
 export const DEFAULT_STATE: IUserVote = {
     has_approved: false,

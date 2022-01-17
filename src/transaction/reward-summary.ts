@@ -85,7 +85,7 @@ export class RewardSummaryCollection extends Collection {
                 this._handleJSONResponse(response.data)
                 return response.status
             }
-        } catch(e) {
+        } catch (e: any) {
             throw new Error(e)
         }
     }

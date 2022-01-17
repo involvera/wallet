@@ -2,13 +2,13 @@ import moment from 'moment'
 import axios from 'axios'
 import * as bip32 from 'bip32'
 import { Collection, Model } from "acey";
-import { IConstitutionProposalUnRaw, ICostProposal } from 'community-coin-types'
+import { IConstitutionProposalUnRaw, ICostProposal, IUserVote, IUserVoteProposal } from 'community-coin-types'
 import { BuildSignatureHex } from 'wallet-util'
 import config from "../../config";
 import { IKindLink, KindLinkModel, DEFAULT_STATE as DEFAULT_LINK_STATE } from '../../transaction/kind-link'
 import { IAlias, AliasModel, DEFAULT_STATE as DEFAULT_ALIAS_STATE } from '../alias'
 import {VoteModel, IVote, DEFAULT_STATE as DEFAULT_VOTE_STATE } from './vote'
-import { UserVoteModel, IUserVote, DEFAULT_STATE as DEFAULT_USER_VOTE_STATE } from './user-vote'
+import { UserVoteModel, DEFAULT_STATE as DEFAULT_USER_VOTE_STATE } from './user-vote'
 import { LUGH_EVERY_N_S } from '../../constant';
 import { IHeaderSignature } from '../../wallet';
 
@@ -247,9 +247,8 @@ export class ProposalCollection extends Collection {
                     return status >= 200 && status < 500;
                 },
             })
-            if (res.status == 200){
+            if (res.status == 200)
                 return new ProposalCollection(res.data, {})
-            }
         } catch (e: any){
             throw new Error(e.toString())
         }
@@ -257,6 +256,26 @@ export class ProposalCollection extends Collection {
 
     constructor(initialState: any, options: any){
         super(initialState, [ProposalModel, ProposalCollection], options)
+    }
+
+    pullUserVotes = async (headerSig: IHeaderSignature) => {
+        const list = this.map((p: ProposalModel) => p.get().pubKH()).join(',')
+        try {
+            const res = await axios(config.getRootAPIChainUrl() + '/proposals/uvote', {
+                headers: Object.assign({ list}, headerSig)
+            })
+            if (res.status == 200){
+                const array = res.data as IUserVoteProposal[]
+                for (const elem of array){
+                    const m = this.find({pubkh: elem.pubkh}) as ProposalModel
+                    m.setState({ user_vote: elem.user_vote })
+                }
+                return this.action()
+            } else 
+                return res.data as string
+        } catch (e: any){
+            throw new Error(e.toString())
+        }
     }
 
     sortByIndexDesc = (): ProposalCollection => this.orderBy('index', 'desc') as ProposalCollection
