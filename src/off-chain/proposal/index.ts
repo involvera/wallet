@@ -259,7 +259,7 @@ export class ProposalCollection extends Collection {
     }
 
     pullUserVotes = async (headerSig: IHeaderSignature) => {
-        const list = this.map((p: ProposalModel) => p.get().pubKH()).join(',')
+        const list = this.filter((p: ProposalModel) => !p.get().userVote()).map((p: ProposalModel) => p.get().pubKH()).join(',')
         try {
             const res = await axios(config.getRootAPIChainUrl() + '/proposals/uvote', {
                 headers: Object.assign({ list}, headerSig)
@@ -267,8 +267,8 @@ export class ProposalCollection extends Collection {
             if (res.status == 200){
                 const array = res.data as IUserVoteProposal[]
                 for (const elem of array){
-                    const m = this.find({pubkh: elem.pubkh}) as ProposalModel
-                    m.setState({ user_vote: elem.user_vote })
+                    const m = this.find({public_key_hashed: elem.pubkh}) as ProposalModel
+                    elem.user_vote && m.setState({ user_vote: new UserVoteModel(elem.user_vote, m.kids()) })
                 }
                 return this.action()
             } else 

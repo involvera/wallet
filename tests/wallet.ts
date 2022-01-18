@@ -16,6 +16,7 @@ import conf from '../src/config'
 import { RewardSummaryModel } from '../src/transaction/reward-summary';
 import { RewardPutModel } from '../src/wallet/puts/rewards';
 import { IConstitutionProposalUnRaw, ICostProposal } from 'community-coin-types'
+import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 
 // conf.setRootAPIChainUrl('http://185.212.226.103:8080')
 // conf.setRootAPIOffChainUrl('http://185.212.226.103:3020')
@@ -701,6 +702,7 @@ const main = () => {
         const proposals = await ProposalCollection.FetchLastProposals(1, 0, wallet.sign().header())
         expect(proposals).not.to.eq(null)
         if (proposals){
+            await proposals.pullUserVotes(wallet.sign().header())
             expect(proposals.count()).to.eq(3)
             const proposal1 = proposals.nodeAt(0) as ProposalModel
             const proposal2 = proposals.nodeAt(1) as ProposalModel
@@ -719,6 +721,9 @@ const main = () => {
             expect(proposal1.get().vote().get().approved()).to.eq(-1)
             expect(proposal1.get().embeds().length).to.eq(0)
             expect(proposal1.get().endAtLH()).to.eq(28)
+            const userVote = proposal1.get().userVote() as UserVoteModel
+            expect(userVote.get().hasApproved()).to.eq(true)
+            expect(userVote.get().voteLH()).to.eq(8)
             const fullProposal1 = await ProposalModel.FetchByIndex(1, 10, wallet.sign().header())
             if (fullProposal1){
                 const context = fullProposal1.get().context()
@@ -745,6 +750,8 @@ const main = () => {
             expect(proposal2.get().vote().get().approved()).to.eq(-1)
             expect(proposal2.get().embeds().length).to.eq(0)
             expect(proposal2.get().endAtLH()).to.eq(28)
+            expect(proposal2.get().userVote()).to.eq(null)
+
             const fullProposal2 = await ProposalModel.FetchByIndex(1, 9, wallet.sign().header())
             if (fullProposal2){
                 const content = fullProposal2.get().content()
@@ -767,6 +774,8 @@ const main = () => {
             expect(proposal3.get().vote().get().approved()).to.eq(-1)
             expect(proposal3.get().embeds().length).to.eq(0)
             expect(proposal3.get().endAtLH()).to.eq(28)
+            expect(proposal3.get().userVote()).to.eq(null)
+
             const fullProposal3 = await ProposalModel.FetchByIndex(1, 8, wallet.sign().header())
             if (fullProposal3){
                 expect(fullProposal3.get().embeds().length).to.eq(0)
