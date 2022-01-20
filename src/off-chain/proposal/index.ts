@@ -1,5 +1,6 @@
 import moment from 'moment'
 import axios from 'axios'
+import { Buffer } from 'buffer'
 import * as bip32 from 'bip32'
 import { Collection, Model } from "acey";
 import { IConstitutionProposalUnRaw, ICostProposal, IUserVote, IUserVoteProposal } from 'community-coin-types'

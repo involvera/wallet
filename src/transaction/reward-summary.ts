@@ -1,6 +1,5 @@
 import { Model, Collection } from 'acey'
 import axios from 'axios'
-import { IHeaderSignature } from '../wallet'
 import config from '../config'
 import { IRewards, DEFAULT_STATE as DEFAULT_STATE_REWARDS, RewardsModel } from '../off-chain/thread/rewards'
 

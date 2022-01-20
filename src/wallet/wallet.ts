@@ -2,7 +2,7 @@ import { Model } from 'acey'
 
 import { B64ToByteArray, PubKeyHashFromAddress, Sha256, BuildSignature } from 'wallet-util'
 import TxBuild from './tx-builder' 
-
+import { Buffer } from 'buffer'
 import axios from 'axios'
 import config from '../config'
 import { InputModel, Transaction, UTXOModel, UTXOCollection } from '../transaction'

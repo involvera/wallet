@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { Model } from 'acey'
-
+import { Buffer } from 'buffer'
 import { IOutput, OutputCollection, OutputModel } from './output'
 import { IInput, InputModel, InputCollection } from './input'
 import { Wallet } from '../wallet/wallet'

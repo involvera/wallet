@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { Collection, Model } from 'acey'
 import { CalculateOutputMeltedValue } from 'wallet-util'
+import { Buffer } from 'buffer'
 import config from '../config'
 
 import { IOutput, OutputModel } from './output'

@@ -1,4 +1,5 @@
 import { Model, Collection } from 'acey'
+import { Buffer } from 'buffer'
 import { MAX_IS_2_POW_53 } from '../constant/errors'
 import { ScriptEngine, Error } from 'wallet-script'
 import { ByteArrayToB64, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeInt64, 

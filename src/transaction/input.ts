@@ -1,5 +1,6 @@
 import { Collection, Model } from 'acey'
 import { ScriptEngine } from 'wallet-script'
+import { Buffer } from 'buffer'
 import { ByteArrayToB64, EncodeInt, CalcTotalLengthDoubleByteArray, ToArrayBufferFromB64 } from 'wallet-util'
 
 export interface IInput {

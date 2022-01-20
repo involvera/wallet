@@ -1,5 +1,6 @@
 import { Collection, Model } from "acey";
 import * as bip32 from 'bip32'
+import { Buffer } from 'buffer'
 import { BuildSignatureHex } from 'wallet-util'
 import axios from 'axios'
 import config from "../config";

@@ -1,6 +1,7 @@
 import { CANT_SEND_0_VALUE, LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
 import { ScriptEngine } from "wallet-script";
-import {  InputCollection, OutputModel, OutputCollection, Transaction, UTXOModel, UTXOCollection, InputModel } from "../transaction"
+import { Buffer } from 'buffer'
+import {  OutputModel, OutputCollection, Transaction, UTXOModel, UTXOCollection } from "../transaction"
 import { PubKeyHashFromAddress, CalculateOutputValueFromMelted } from "wallet-util";
 import { Wallet } from './'
 

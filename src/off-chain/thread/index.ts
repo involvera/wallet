@@ -1,5 +1,6 @@
 import axios from 'axios'
 import * as bip32 from 'bip32'
+import { Buffer } from 'buffer'
 import { Model, Collection } from "acey";
 import { BuildSignatureHex } from 'wallet-util'
 import { IKindLink, KindLinkModel, DEFAULT_STATE_KIND } from "../../transaction";

@@ -3,6 +3,8 @@ import external from 'rollup-plugin-peer-deps-external'
 import url from '@rollup/plugin-url'
 import { uglify } from 'rollup-plugin-uglify';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import nodePolyfills from 'rollup-plugin-node-polyfills';
 import pkg from './package.json'
 
 const config = {
@@ -35,7 +37,11 @@ const config = {
             tsconfigOverride: { compilerOptions: { module: 'es2015' } },
             clean: true
         }),
-        nodeResolve()
+        nodeResolve({
+            preferBuiltins: false
+        }),
+        nodePolyfills(),
+        commonjs(),
     ]
 }
 

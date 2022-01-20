@@ -1,4 +1,5 @@
 import { Collection, Model } from 'acey'
+import { Buffer } from 'buffer'
 import { COIN_UNIT, CYCLE_IN_LUGH } from '../../constant';
 import { TByte } from 'wallet-script'
 import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, PubKeyHashHexToUUID } from 'wallet-util';

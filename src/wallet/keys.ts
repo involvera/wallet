@@ -1,6 +1,7 @@
 import { Model } from 'acey'
 import * as bip39 from 'bip39'
 import * as bip32 from 'bip32'
+import { Buffer } from 'buffer'
 import { GetAddressFromPubKeyHash, ToPubKeyHash, Ripemd160, Sha256 } from 'wallet-util'
 import nacl from 'tweetnacl'
 import naclUtil from 'tweetnacl-util'
