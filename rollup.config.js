@@ -22,7 +22,8 @@ const config = {
                 'bip32': 'bip32',
                 'moment': 'moment',
                 'wallet-util': 'wallet-util',
-                'wallet-script': 'wallet-script'
+                'wallet-script': 'wallet-script',
+                'buffer': 'buffer'
             },
             file: pkg.main,
             format: 'umd',
