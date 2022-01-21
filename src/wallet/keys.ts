@@ -3,8 +3,7 @@ import * as bip39 from 'bip39'
 import * as bip32 from 'bip32'
 import { Buffer } from 'buffer'
 import { GetAddressFromPubKeyHash, ToPubKeyHash, Ripemd160, Sha256 } from 'wallet-util'
-import nacl from 'tweetnacl'
-import naclUtil from 'tweetnacl-util'
+import CryptoJS from 'crypto-js';
 import { AliasModel, IAlias, ALIAS_DEFAULT_STATE } from '../off-chain'
 
 export interface IKey {
@@ -52,14 +51,12 @@ export default class KeysModel extends Model {
     get256BitsPassword = () => Sha256(this.getPassword())
 
     set = (mnemonic: string, pass: string) => {
-        const pair = nacl.box.keyPair.fromSecretKey(Sha256(pass))
-        const nonce = new Uint8Array(nacl.box.nonceLength)
-        const mnemonicEncrypted = nacl.secretbox(Buffer.from(mnemonic), nonce, pair.secretKey)
-
         this.setPassword(pass)
+        const mnemonicEncrypted = CryptoJS.AES.encrypt(mnemonic, this.get256BitsPassword().toString()).toString()
+
         this.setState({ 
             pass_hash: this._hashPass(pass),
-            mnemonic: Buffer.from(mnemonicEncrypted).toString('hex'),
+            mnemonic: mnemonicEncrypted,
         })
         return this.setState({
             alias: new AliasModel(Object.assign(ALIAS_DEFAULT_STATE, {address: this.get().address()}) , this.kids())
@@ -105,11 +102,8 @@ export default class KeysModel extends Model {
             this._triggerPasswordError()
             const { mnemonic } = this.state
 
-            const pair = nacl.box.keyPair.fromSecretKey(this.get256BitsPassword())
-            const nonce = new Uint8Array(nacl.box.nonceLength)
-            const msg2 = nacl.secretbox.open(new Uint8Array(Buffer.from(mnemonic, 'hex')), nonce, pair.secretKey)
-
-            return naclUtil.encodeUTF8(msg2 as Uint8Array)
+            const decrypted = CryptoJS.AES.decrypt(mnemonic, this.get256BitsPassword().toString());
+            return decrypted.toString(CryptoJS.enc.Utf8)
         } 
 
         const derivedPubHash = (index: number): Buffer => ToPubKeyHash(derivedPub(index))

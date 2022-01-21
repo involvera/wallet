@@ -16,14 +16,13 @@ const config = {
                 'acey': 'acey',
                 'axios': 'axios',
                 'create-hash': 'create-hash',
-                'tweetnacl': 'tweetnacl',
-                'tweetnacl-util': 'tweetnacl-util',
                 'bip39': 'bip39',
                 'bip32': 'bip32',
                 'moment': 'moment',
                 'wallet-util': 'wallet-util',
                 'wallet-script': 'wallet-script',
-                'buffer': 'buffer'
+                'buffer': 'buffer',
+                'crypto-js': 'crypto-js'
             },
             file: pkg.main,
             format: 'umd',
