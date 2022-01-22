@@ -9,20 +9,18 @@ import pkg from './package.json'
 
 const config = {
     input: './index.ts',
-    external: [ 'acey', 'axios', 'create-hash', 'tweetnacl', 'tweetnacl-util', 'bip39', 'bip32', 'wallet-util', 'wallet-script', 'moment'],
+    external: [ 'acey', 'axios', 'bip39', 'bip32', 'wallet-util', 'wallet-script', 'moment'],
     output: [
         {
             globals: {
                 'acey': 'acey',
                 'axios': 'axios',
-                'create-hash': 'create-hash',
                 'bip39': 'bip39',
                 'bip32': 'bip32',
                 'moment': 'moment',
                 'wallet-util': 'wallet-util',
                 'wallet-script': 'wallet-script',
                 'buffer': 'buffer',
-                'crypto-js': 'crypto-js'
             },
             file: pkg.main,
             format: 'umd',

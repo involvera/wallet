@@ -1,6 +1,6 @@
 {
   "name": "involvera-wallet-js",
-  "version": "1.6.7",
+  "version": "1.6.8",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -15,29 +15,25 @@
     "cleanf": "npm clean && rm -rf node_modules"
   },
   "dependencies": {
+    "@types/aes-js": "^3.1.1",
     "@types/axios": "^0.14.0",
-    "@types/base-x": "^3.0.6",
-    "@types/chai": "^4.2.15",
-    "@types/create-hash": "^1.2.2",
     "@types/crypto-js": "^4.1.0",
-    "@types/mocha": "^8.2.1",
     "acey": "^1.5.1",
-    "add": "^2.0.6",
+    "aes-js": "^3.1.2",
     "axios": "^0.21.1",
-    "base-x": "^3.0.8",
     "bip32": "^2.0.6",
     "bip39": "^3.0.3",
     "buffer": "^6.0.3",
     "community-coin-types": "^1.0.4",
-    "create-hash": "^1.2.0",
-    "crypto-js": "^4.1.1",
+    "encrypt-with-password": "^1.0.0",
     "moment": "^2.29.1",
     "typescript": "^4.5.4",
     "wallet-script": "^1.0.5",
-    "wallet-util": "^1.0.4",
-    "yarn": "^1.22.17"
+    "wallet-util": "^1.0.4"
   },
   "devDependencies": {
+    "@types/chai": "^4.2.15",
+    "@types/mocha": "^8.2.1",
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^11.2.1",

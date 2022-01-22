@@ -3,7 +3,7 @@ import * as bip39 from 'bip39'
 import * as bip32 from 'bip32'
 import { Buffer } from 'buffer'
 import { GetAddressFromPubKeyHash, ToPubKeyHash, Ripemd160, Sha256 } from 'wallet-util'
-import CryptoJS from 'crypto-js';
+import aes from 'aes-js'
 import { AliasModel, IAlias, ALIAS_DEFAULT_STATE } from '../off-chain'
 
 export interface IKey {
@@ -52,11 +52,15 @@ export default class KeysModel extends Model {
 
     set = (mnemonic: string, pass: string) => {
         this.setPassword(pass)
-        const mnemonicEncrypted = CryptoJS.AES.encrypt(mnemonic, this.get256BitsPassword().toString()).toString()
 
+        var mnemoBytes = aes.utils.utf8.toBytes(mnemonic)
+        var aesCtr = new aes.ModeOfOperation.ctr(this.get256BitsPassword())
+
+        const mnemonicEncrypted = aesCtr.encrypt(mnemoBytes);
+        var encryptedHex = aes.utils.hex.fromBytes(mnemonicEncrypted);
         this.setState({ 
             pass_hash: this._hashPass(pass),
-            mnemonic: mnemonicEncrypted,
+            mnemonic: encryptedHex,
         })
         return this.setState({
             alias: new AliasModel(Object.assign(ALIAS_DEFAULT_STATE, {address: this.get().address()}) , this.kids())
@@ -102,8 +106,10 @@ export default class KeysModel extends Model {
             this._triggerPasswordError()
             const { mnemonic } = this.state
 
-            const decrypted = CryptoJS.AES.decrypt(mnemonic, this.get256BitsPassword().toString());
-            return decrypted.toString(CryptoJS.enc.Utf8)
+            var encryptedBytes = aes.utils.hex.toBytes(mnemonic);
+            var aesCtr = new aes.ModeOfOperation.ctr(this.get256BitsPassword());
+            var decryptedBytes = aesCtr.decrypt(encryptedBytes);
+            return aes.utils.utf8.fromBytes(decryptedBytes);
         } 
 
         const derivedPubHash = (index: number): Buffer => ToPubKeyHash(derivedPub(index))
