@@ -1,6 +1,6 @@
 {
   "name": "involvera-wallet-js",
-  "version": "1.6.8",
+  "version": "1.6.9",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -24,7 +24,7 @@
     "bip32": "^2.0.6",
     "bip39": "^3.0.3",
     "buffer": "^6.0.3",
-    "community-coin-types": "^1.0.4",
+    "community-coin-types": "^1.0.7",
     "encrypt-with-password": "^1.0.0",
     "moment": "^2.29.1",
     "typescript": "^4.5.4",
@@ -32,12 +32,12 @@
     "wallet-util": "^1.0.4"
   },
   "devDependencies": {
-    "@types/chai": "^4.2.15",
-    "@types/mocha": "^8.2.1",
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
     "@rollup/plugin-url": "^6.0.0",
+    "@types/chai": "^4.2.15",
+    "@types/mocha": "^8.2.1",
     "acey-node-store": "^1.0.5",
     "chai": "^4.3.0",
     "mocha": "^8.3.0",

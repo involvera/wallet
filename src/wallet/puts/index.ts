@@ -186,7 +186,7 @@ export class UnserializedPutList extends Collection {
             return betweenDates(from, to)
         }
 
-        const activity = (pkhHex: string) => {
+        const activity = () => {
 
             const atDayActivity = (d: Date) => {
                 let total = BigInt(0)

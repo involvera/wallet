@@ -73,9 +73,9 @@ const main = () => {
         const CCHList = wallet.cch().get().list()
         const utxos = wallet.utxos().get().get()
 
-        expect(utxos.totalMeltedValue(CCHList)).to.equal(11442131552328)
-        expect(wallet.balance()).to.equal(11442131552328)
-        expect(utxos.totalValue()).to.equal(BigInt(11463370988354))
+        expect(utxos.totalMeltedValue(CCHList)).to.equal(11594360380420)
+        expect(wallet.balance()).to.equal(11594360380420)
+        expect(utxos.totalValue()).to.equal(BigInt(11615704225793))
         const list = utxos.requiredList(Number(MAX_SUPPLY_AMOUNT), CCHList)
         expect(list.count()).to.equal(7)
         expect(utxos.listUnFetchedTxHash().length).to.eq(7)
@@ -108,8 +108,8 @@ const main = () => {
 
     it('[ONCHAIN] Wallet1 -> Fetch and check Puts: ', () => {
         expect(wallet.puts().count()).to.eq(5)
-        expect(wallet.info().get().votePowerCount()).to.eq(11611604044790)
-        expect(wallet.info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('14.515')
+        expect(wallet.info().get().votePowerCount()).to.eq(11763937282229)
+        expect(wallet.info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('14.705')
         const now = new Date()
         now.setTime(now.getTime() - (1000 * 86400 * 90))
     })
@@ -138,7 +138,7 @@ const main = () => {
             expect(response.status).to.eq(201)
             await wallet2.synchronize()
             expect(wallet2.balance()).to.eq(total)
-            expect(wallet.balance()).to.eq(balanceBefore-total-tx.get().fees(wallet.fees().get().feePerByte())-2)
+            expect(wallet.balance()).to.eq(balanceBefore-total-tx.get().fees(wallet.fees().get().feePerByte())-1)
             expect(wallet.puts().count()).to.eq(6)
             expect(wallet2.puts().count()).to.eq(1)
 
@@ -175,7 +175,7 @@ const main = () => {
             expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte())-1)
             expect(wallet.puts().count()).to.eq(7)
             const lastPut = wallet.puts().sortByTime().first() as UnserializedPut
-            expect(Number(lastPut.get().value().get().atCreationTime())-2).to.eq(wallet.costs().get().proposal())
+            expect(Number(lastPut.get().value().get().atCreationTime())).to.eq(wallet.costs().get().proposal())
             expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
             expect(lastPut.isProposal()).to.eq(true)
             expect(lastPut.isApplicationProposal() ).to.eq(true)
@@ -196,6 +196,7 @@ const main = () => {
         expect(res.status).to.eq(404)
         expect(res.data.error).to.eq("You need to create an alias on your address before adding content.")
     })
+
     it('[OFFCHAIN] Create an alias on Wallet 1', async () => {
         const alias = wallet.keys().get().alias()
         alias.setUsername('fantasim')
@@ -227,10 +228,10 @@ const main = () => {
         if (tx){
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
-            expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte())-2)
+            expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte())-1)
             expect(wallet.puts().count()).to.eq(8)
             const lastPut = wallet.puts().sortByTime().first() as UnserializedPut
-            expect(lastPut.get().value().get().atCreationTime()).to.eq(wallet.costs().get().proposal())
+            expect(lastPut.get().value().get().atCreationTime()).to.eq(wallet.costs().get().proposal()+2)
             expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
             expect(lastPut.isProposal()).to.eq(true)
             expect(lastPut.isConstitutionProposal() ).to.eq(true)
@@ -261,7 +262,7 @@ const main = () => {
             expect(response.status).to.eq(201)
             const out = tx.get().outputs().nodeAt(0) as OutputModel
             uuidContent = out.get().contentUUID()
-            expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte())-1)
+            expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte()) - 2)
             expect(wallet.puts().count()).to.eq(9)
             const lastPut = wallet.puts().sortByTime().first() as UnserializedPut
             expect(lastPut.get().value().get().atCreationTime()).to.eq(wallet.costs().get().proposal())
@@ -294,7 +295,7 @@ const main = () => {
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
             expect(wallet.puts().count()).to.eq(10)
-            expect(wallet.balance()).to.eq(balance-1-tx.get().fees(wallet.fees().get().feePerByte())-2)
+            expect(wallet.balance()).to.eq(balance-1-tx.get().fees(wallet.fees().get().feePerByte())-1)
             const lastPut = wallet.puts().sortByTime().first() as UnserializedPut
             expect(lastPut.get().value().get().atCreationTime()).to.eq(1)
             expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
@@ -317,7 +318,7 @@ const main = () => {
             pkhContent0 = out.get().contentPKH().toString('hex')
             expect(response.status).to.eq(201)
             expect(wallet.puts().count()).to.eq(11)
-            expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte())-1)
+            expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte())-2)
             const lastPut = wallet.puts().sortByTime().first() as UnserializedPut
             expect(lastPut.get().value().get().atCreationTime()).to.eq(wallet.costs().get().thread())
             expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
@@ -450,8 +451,8 @@ const main = () => {
 
     it('[ONCHAIN] Wallet1 -> Check puts:', () => {
         expect(wallet.puts().count()).to.eq(12)
-        expect(wallet.info().get().votePowerCount()).to.eq(11611604044790)
-        expect(wallet.info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('14.515')
+        expect(wallet.info().get().votePowerCount()).to.eq(11763937282229)
+        expect(wallet.info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('14.705')
         const now = new Date()
         now.setTime(now.getTime() - (1000 * 86400 * 90))
         // expect(wallet.puts().get().totalReceivedDonationSince(now, wallet.keys().get().pubHashHex())).to.eq(BigInt(4050000006))
@@ -586,12 +587,12 @@ const main = () => {
             expect(society.get().domain()).to.eq("involvera.com")
 
             const lThreadChange = society.get().stats().get().lastThreadCostChange()
-            expect(lThreadChange.get().index()).to.eq(4)
-            expect(lThreadChange.get().price()).to.eq(LUGH_AMOUNT / 200)
+            expect(lThreadChange.get().proposalIndex()).to.eq(4)
+            expect(lThreadChange.get().threadCost()).to.eq(LUGH_AMOUNT / 200)
 
             const lProposalChange = society.get().stats().get().lastProposalCostChange()
-            expect(lProposalChange.get().index()).to.eq(3)
-            expect(lProposalChange.get().price()).to.eq(LUGH_AMOUNT / 20)
+            expect(lProposalChange.get().proposalIndex()).to.eq(3)
+            expect(lProposalChange.get().proposalCost()).to.eq(LUGH_AMOUNT / 20)
 
             const costs = society.get().costs()
             const consti = society.get().constitution()
