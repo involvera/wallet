@@ -1,8 +1,7 @@
 import { Model } from 'acey'
-import { CostHistory } from 'community-coin-types'
+import { ICostHistory } from 'community-coin-types'
 
-
-export const DEFAULT_STATE: CostHistory = {
+export const DEFAULT_STATE: ICostHistory = {
     proposal_index: 0,
     from_lh: 0,
     validated_at: 0,
@@ -12,9 +11,9 @@ export const DEFAULT_STATE: CostHistory = {
 
 export class LastCostChangeModel extends Model{
 
-    static DefaultState: CostHistory = DEFAULT_STATE
+    static DefaultState: ICostHistory = DEFAULT_STATE
 
-    constructor(state: CostHistory = DEFAULT_STATE, options: any){
+    constructor(state: ICostHistory = DEFAULT_STATE, options: any){
         super(state, options)
     }
 
