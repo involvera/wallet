@@ -10,7 +10,7 @@ export interface IContributorStats {
     sid: number
 }
 
-export const DEFAULT_STATE: IContributorStats = {
+const DEFAULT_STATE: IContributorStats = {
     content_nonce: 0,
     balance: 0,
     vote_power_count: 0,

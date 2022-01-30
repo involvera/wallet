@@ -1,21 +1,10 @@
 import { Collection, Model } from 'acey'
+import { IInputRaw, IInputUnRaw } from 'community-coin-types'
 import { ScriptEngine } from 'wallet-script'
 import { Buffer } from 'buffer'
 import { ByteArrayToB64, EncodeInt, CalcTotalLengthDoubleByteArray, ToArrayBufferFromB64 } from 'wallet-util'
 
-export interface IInput {
-    prev_transaction_hash: string
-    vout: number
-    script_sig: string[]
-}
-
-export interface IInputRaw {
-    prev_transaction_hash: Buffer
-    vout: Buffer
-    script_sig: Buffer[]
-}
-
-export const DEFAULT_STATE: IInput = {
+const DEFAULT_STATE: IInputUnRaw = {
 	prev_transaction_hash: '',
 	vout: -2,
 	script_sig: []
@@ -23,9 +12,9 @@ export const DEFAULT_STATE: IInput = {
 
 export class InputModel extends Model {
 
-    static DefaultState: IInput = DEFAULT_STATE
+    static DefaultState: IInputUnRaw = DEFAULT_STATE
 
-    constructor(input: IInput, options: any) {
+    constructor(input: IInputUnRaw, options: any) {
         super(input, options)
     }
 

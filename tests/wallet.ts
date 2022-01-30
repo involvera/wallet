@@ -106,12 +106,18 @@ const main = () => {
     })
 
 
-    it('[ONCHAIN] Wallet1 -> Fetch and check Puts: ', () => {
+    it('[ONCHAIN] Wallet1 -> Check Puts/Info: ', () => {
         expect(wallet.puts().count()).to.eq(5)
         expect(wallet.info().get().votePowerCount()).to.eq(11763937282229)
         expect(wallet.info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('14.705')
-        const now = new Date()
-        now.setTime(now.getTime() - (1000 * 86400 * 90))
+        expect(wallet.info().get().activity().get().lastLughHeight()).to.eq(7)
+        const activity = wallet.info().get().activity().get().activity()
+        expect(activity.length).to.eq(3) 
+        expect(activity[0]).to.eq(0) 
+        expect(activity[1]).to.eq(3) 
+        expect(activity[2]).to.eq(0)
+        expect(wallet.info().get().rewardsReceivedLast90D()).to.eq(1800000004)
+        expect(wallet.info().get().contributorRank()).to.eq(1)
     })
 
     it('[OFFCHAIN] Wallet1 -> create a thread failed 1/3', async () => {
@@ -453,9 +459,6 @@ const main = () => {
         expect(wallet.puts().count()).to.eq(12)
         expect(wallet.info().get().votePowerCount()).to.eq(11763937282229)
         expect(wallet.info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('14.705')
-        const now = new Date()
-        now.setTime(now.getTime() - (1000 * 86400 * 90))
-        // expect(wallet.puts().get().totalReceivedDonationSince(now, wallet.keys().get().pubHashHex())).to.eq(BigInt(4050000006))
     })
 
     it('[ONCHAIN] Wallet1 -> Check Vote power distribution on Puts.', () => {

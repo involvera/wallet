@@ -1,5 +1,5 @@
 import { Model } from 'acey'
-import { DEFAULT_STATE as DEFAULT_LAST_COST_CHANGE_STATE, LastCostChangeModel } from './last-cost-change'
+import { LastCostChangeModel } from './last-cost-change'
 import { IAlias, AliasCollection } from '../../alias'
 import { ICostHistory } from 'community-coin-types'
 
@@ -15,7 +15,7 @@ export interface ISocietyStats {
     last_proposal_cost_change: ICostHistory
 }
 
-export const DEFAULT_STATE: ISocietyStats  = {
+const DEFAULT_STATE: ISocietyStats  = {
     total_contributor: 0,
     total_proposal: 0,
     last_height: 0,
@@ -23,8 +23,8 @@ export const DEFAULT_STATE: ISocietyStats  = {
     most_active_addresses: [] as IAlias[],
     circulating_supply:  '',
     circulating_vp_supply : '',
-    last_thread_cost_change: DEFAULT_LAST_COST_CHANGE_STATE,
-    last_proposal_cost_change: DEFAULT_LAST_COST_CHANGE_STATE
+    last_thread_cost_change: LastCostChangeModel.DefaultState,
+    last_proposal_cost_change: LastCostChangeModel.DefaultState
 }
 
 export class SocietyStatsModel extends Model {

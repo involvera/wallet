@@ -1,18 +1,20 @@
 import AuthContract from './auth-contract'
 import Costs from './costs'
 import Fees from './fees'
-import Info from './info'
 import Keys from './keys'
 
-import { ILink, LinkModel} from './puts/link'
-import { IPubKH, PubKHModel} from './puts/pubkh'
-import { IValue, ValueModel} from './puts/value'
+import { LinkModel} from './puts/link'
+import { PubKHModel} from './puts/pubkh'
+import { ValueModel} from './puts/value'
 
 import {
     IUnserializedPut,
     UnserializedPut
 } from './puts'
 
+import { UserActivityModel } from './info/activity'
+
+import { InfoModel as Info}  from './info'
 import { 
     IHeaderSignature,
     Wallet
@@ -28,13 +30,11 @@ export {
     UnserializedPut,
     PubKHModel,
     ValueModel,
-    LinkModel
+    LinkModel,
+    UserActivityModel
 }
 
 export type {
     IHeaderSignature,
-    ILink,
-    IPubKH,
-    IValue,
     IUnserializedPut
 }

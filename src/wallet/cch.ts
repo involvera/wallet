@@ -1,23 +1,19 @@
 import { Model } from 'acey'
+import { ICCHList } from 'community-coin-types'
 import { Wallet } from '.'
 import axios from 'axios'
 import config from '../config'
 
-export interface ICCH {
-    list: string[]
-    last_height: number    
-}
-
-export const DEFAULT_VALUE: ICCH = {
+const DEFAULT_VALUE: ICCHList = {
     list: [],
     last_height: 0
 }
 
 export class CCHModel extends Model {
     
-    static DefaultState: ICCH = DEFAULT_VALUE
+    static DefaultState: ICCHList = DEFAULT_VALUE
     
-    constructor(state: ICCH = DEFAULT_VALUE, options: any){
+    constructor(state: ICCHList = DEFAULT_VALUE, options: any){
         super(Object.assign({}, state, {
             list: state.list.join(',')
         }), options)

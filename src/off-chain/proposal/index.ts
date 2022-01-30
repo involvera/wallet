@@ -3,13 +3,13 @@ import axios from 'axios'
 import { Buffer } from 'buffer'
 import * as bip32 from 'bip32'
 import { Collection, Model } from "acey";
-import { IConstitutionProposalUnRaw, ICostProposal, IUserVote, IUserVoteProposal } from 'community-coin-types'
+import { IConstitutionProposalUnRaw, ICostProposal, IUserVote, IUserVoteProposal, IKindLinkUnRaw,IVoteSummary } from 'community-coin-types'
 import { BuildSignatureHex } from 'wallet-util'
 import config from "../../config";
-import { IKindLink, KindLinkModel, DEFAULT_STATE as DEFAULT_LINK_STATE } from '../../transaction/kind-link'
-import { IAlias, AliasModel, DEFAULT_STATE as DEFAULT_ALIAS_STATE } from '../alias'
-import {VoteModel, IVote, DEFAULT_STATE as DEFAULT_VOTE_STATE } from './vote'
-import { UserVoteModel, DEFAULT_STATE as DEFAULT_USER_VOTE_STATE } from './user-vote'
+import { KindLinkModel } from '../../transaction/kind-link'
+import { IAlias, AliasModel  } from '../alias'
+import {VoteModel, } from './vote'
+import { UserVoteModel } from './user-vote'
 import { LUGH_EVERY_N_S } from '../../constant';
 import { IHeaderSignature } from '../../wallet';
 
@@ -17,8 +17,8 @@ export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
 export interface IProposal {
     sid: number
-    content_link: IKindLink
-    vote: IVote
+    content_link: IKindLinkUnRaw
+    vote: IVoteSummary
     index: number
     created_at: Date
     public_key_hashed: string
@@ -30,19 +30,19 @@ export interface IProposal {
     user_vote: IUserVote | null
 }
 
-export const DEFAULT_STATE: IProposal = {
+const DEFAULT_STATE: IProposal = {
     sid: 0,
-    content_link: DEFAULT_LINK_STATE,
-    vote: DEFAULT_VOTE_STATE,
+    content_link: KindLinkModel.DefaultState,
+    vote: VoteModel.DefaultState,
     index: 0,
     created_at: new Date(),
     public_key_hashed: '',
     title: '',
     content: ['','',''] as any,
-    author: DEFAULT_ALIAS_STATE,
+    author: AliasModel.DefaultState,
     embeds: [],
     pubkh_origin: '',
-    user_vote: DEFAULT_USER_VOTE_STATE
+    user_vote: UserVoteModel.DefaultState
 }
 
 export class ProposalModel extends Model {

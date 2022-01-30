@@ -1,13 +1,12 @@
 import { Model, Collection } from "acey";
+import { ICostProposal } from 'community-coin-types'
 import axios from 'axios'
 import moment from "moment";
 
 import config from "../../config";
-import { DEFAULT_STATE as DEFAULT_SOCIETY_STATS_STATE  } from './stats'
-import {ConstitutionModel,  DEFAULT_STATE as CONSTITUTION_DEFAULT_STATE } from '../constitution'
-import Costs, { DEFAULT_STATE as COSTS_DEFAULT_STATE } from '../../wallet/costs'
+import {ConstitutionModel  } from '../constitution'
+import Costs from '../../wallet/costs'
 import { IConstitutionData } from '../constitution'
-import { ICost } from '../../wallet/costs'
 import { SocietyStatsModel,ISocietyStats } from './stats'
 import { IContributorStats, ContributorCollection } from './contributor'
 import { PubKeyHashFromAddress } from "wallet-util";
@@ -22,7 +21,7 @@ export interface ISociety {
     currency_route_api: string
     pp: null
     stats: ISocietyStats
-    costs: ICost
+    costs: ICostProposal
     constitution: IConstitutionData
     contributors: IContributorStats[]
 }
@@ -36,10 +35,10 @@ const DEFAULT_STATE: ISociety = {
     currency_route_api: '',
     currency_symbol: '',
     pp: null,
-    stats: DEFAULT_SOCIETY_STATS_STATE,
+    stats: SocietyStatsModel.DefaultState,
     contributors: [],
-    constitution: CONSTITUTION_DEFAULT_STATE,
-    costs: COSTS_DEFAULT_STATE
+    constitution: ConstitutionModel.DefaultState,
+    costs: Costs.DefaultState
 }
 
 export class SocietyModel extends Model {

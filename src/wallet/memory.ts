@@ -6,7 +6,7 @@ export interface IMemory {
 
 }
 
-export const DEFAULT_STATE: IMemory = {
+const DEFAULT_STATE: IMemory = {
     last_put_fetch_height: 0,
     is_recovered_wallet: false
 }

@@ -1,26 +1,26 @@
 import axios from 'axios'
+import { ITransactionUnRaw, IOutputUnRaw } from 'community-coin-types'
 import { Collection, Model } from 'acey'
 import { CalculateOutputMeltedValue } from 'wallet-util'
 import { Buffer } from 'buffer'
 import config from '../config'
 
-import { IOutput, OutputModel } from './output'
+import { OutputModel } from './output'
 import { CYCLE_IN_LUGH } from '../constant'
-import { ITransaction, Transaction } from './transaction'
+import { Transaction } from './transaction'
 import { IHeaderSignature } from '../wallet/wallet'
 import { InputModel, InputCollection } from './input'
  
 export interface IUTXO {
     tx_id: string
     idx: number
-    output: IOutput
-    tx: null | ITransaction 
+    output: IOutputUnRaw
+    tx: null | ITransactionUnRaw 
     mr: number
     cch: string
 }
 
 export class UTXOModel extends Model {
-
     
     constructor(utxo: IUTXO, options: any) {
         super(utxo, options)

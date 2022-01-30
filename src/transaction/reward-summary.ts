@@ -1,18 +1,12 @@
 import { Model, Collection } from 'acey'
+import { IRewardSummary } from 'community-coin-types'
 import axios from 'axios'
 import config from '../config'
-import { IRewards, DEFAULT_STATE as DEFAULT_STATE_REWARDS, RewardsModel } from '../off-chain/thread/rewards'
+import { RewardsModel } from '../off-chain/thread/rewards'
 
-export interface IRewardSummary {
-    value: number
-    reaction_count: IRewards
-    last_at: number
-    thread_pkh: string
-}
-
-export const DEFAULT_STATE: IRewardSummary = {
+const DEFAULT_STATE: IRewardSummary = {
     value: 0,
-    reaction_count: DEFAULT_STATE_REWARDS,
+    reaction_count: RewardsModel.DefaultState,
     last_at: 0,
     thread_pkh: ''
 }

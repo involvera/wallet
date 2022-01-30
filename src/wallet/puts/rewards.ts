@@ -1,5 +1,5 @@
 import { Model, Collection } from 'acey'
-import { IUnserializedPut, INITIAL_STATE } from '.'
+import { IUnserializedPut, UnserializedPut } from '.'
 import { PubKeyHashHexToUUID } from 'wallet-util';
 import { LinkModel } from './link'
 import { PubKHModel } from './pubkh'
@@ -12,7 +12,7 @@ const LIMIT = 20
 
 export class RewardPutModel extends Model {
 
-    constructor(state: IUnserializedPut = INITIAL_STATE, options: any){
+    constructor(state: IUnserializedPut = UnserializedPut.DefaultState, options: any){
         super(state,options)
         this.setState({
             link: new LinkModel(state.link, this.kids()),

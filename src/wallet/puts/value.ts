@@ -1,11 +1,7 @@
 import { Model } from 'acey' 
+import { IValue } from 'community-coin-types'
 
-export interface IValue {
-    at_time: number
-    now: number
-}
-
-export const DEFAULT_VALUE: IValue = {
+const DEFAULT_VALUE: IValue = {
     at_time: 0,
     now: 0
 }

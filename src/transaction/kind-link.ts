@@ -1,27 +1,20 @@
 import { Model } from 'acey'
-import { IOutput, OutputModel, DEFAULT_STATE as DEFAULT_STATE_OUTPUT } from './output';
+import { IKindLinkUnRaw } from 'community-coin-types'
+import { OutputModel } from './output';
 
-export interface IKindLink {
-    tx_id: string
-    lh: number
-    vout: number
-    output: IOutput
-    target_content: string
-}
-
-export const DEFAULT_STATE: IKindLink = {
+const DEFAULT_STATE: IKindLinkUnRaw = {
     tx_id: '',
     lh: 0,
     vout: 0,
-    output: DEFAULT_STATE_OUTPUT,
+    output: OutputModel.DefaultState,
     target_content: ''
 }
 
 export class KindLinkModel extends Model {
 
-    static DefaultState: IKindLink = DEFAULT_STATE
+    static DefaultState: IKindLinkUnRaw = DEFAULT_STATE
 
-    constructor(state: IKindLink = DEFAULT_STATE, options: any){
+    constructor(state: IKindLinkUnRaw = DEFAULT_STATE, options: any){
         super(state, options)
         this.setState({
             output: new OutputModel(state.output, this.kids())

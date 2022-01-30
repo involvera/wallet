@@ -1,11 +1,9 @@
 import axios from 'axios'
+import { ITransactionUnRaw, ITransactionRaw, IOutputRaw, IInputRaw } from 'community-coin-types'
 import { Model } from 'acey'
-import { Buffer } from 'buffer'
-import { IOutput, OutputCollection, OutputModel } from './output'
-import { IInput, InputModel, InputCollection } from './input'
+import { OutputCollection, OutputModel } from './output'
+import { InputModel, InputCollection } from './input'
 import { Wallet } from '../wallet/wallet'
-import { IInputRaw } from './input'
-import { IOutputRaw } from './output'
 
 import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256, UUIDToPubKeyHashHex } from 'wallet-util'
 import { BILLED_SIGNATURE_LENGTH, TXID_LENGTH } from '../constant'
@@ -13,21 +11,7 @@ import { Constant } from 'wallet-script'
 
 import config from '../config'
 
-export interface ITransaction {
-    lh:      number
-	t:       number
-	inputs:  IInput[]
-	outputs: IOutput[] 
-}
-
-export interface ITransactionRaw {
-    lh:      Buffer
-	t:       Buffer
-	inputs:  IInputRaw[]
-	outputs: IOutputRaw[] 
-}
-
-export const DEFAULT_STATE: ITransaction = {
+const DEFAULT_STATE: ITransactionUnRaw = {
     lh: 0,
     t: 0,
     inputs: [],
@@ -36,7 +20,7 @@ export const DEFAULT_STATE: ITransaction = {
 
 export class Transaction extends Model {
 
-    static DefaultState: ITransaction = DEFAULT_STATE
+    static DefaultState: ITransactionUnRaw = DEFAULT_STATE
 
     static FetchTX = async (hashOrUUID: string) => {
 
@@ -57,7 +41,7 @@ export class Transaction extends Model {
         throw new Error(response.data)
     }
 
-    constructor(tx: ITransaction = DEFAULT_STATE, options: any) {
+    constructor(tx: ITransactionUnRaw = DEFAULT_STATE, options: any) {
         super(tx, options)
         this.setState({
             inputs: new InputCollection(this.state.inputs, this.kids()),

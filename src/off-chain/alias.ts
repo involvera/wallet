@@ -1,7 +1,8 @@
 import { Collection, Model } from "acey";
+import { InfoModel as WalletInfoModel } from '../wallet/info'
 import * as bip32 from 'bip32'
 import { Buffer } from 'buffer'
-import { BuildSignatureHex } from 'wallet-util'
+import { BuildSignatureHex, PubKeyHashFromAddress } from 'wallet-util'
 import axios from 'axios'
 import config from "../config";
 
@@ -11,7 +12,7 @@ export interface IAlias {
     address: string
 }
 
-export const DEFAULT_STATE: IAlias = {
+const DEFAULT_STATE: IAlias = {
     pp: null,
     username: '',
     address: ''
@@ -20,6 +21,8 @@ export const DEFAULT_STATE: IAlias = {
 export class AliasModel extends Model {
 
     static DefaultState: IAlias = DEFAULT_STATE
+
+    _walletInfo: WalletInfoModel | null = null
 
     static fetch = async (address: string): Promise<AliasModel|null> => {
         try {
@@ -40,6 +43,8 @@ export class AliasModel extends Model {
         super(state, options) 
     }
 
+    getWalletInfo = () => this._walletInfo
+
     sign = (wallet: bip32.BIP32Interface) => {
         if (this.get().username().length == 0)
             throw new Error("No username set.")
@@ -48,6 +53,17 @@ export class AliasModel extends Model {
         return {
             public_key: sig.public_key_hex,
             signature: sig.signature_hex
+        }
+    }
+
+    fetchWalletInfo = async () => {
+        try {
+            const wi = await WalletInfoModel.fetch( PubKeyHashFromAddress(this.get().address()).toString('hex'))
+            if (wi)
+                this._walletInfo = wi
+            return wi
+        } catch (e: any){
+            throw new Error(e)
         }
     }
 

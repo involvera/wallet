@@ -1,7 +1,7 @@
 import { Model } from 'acey'
 import { ICostHistory } from 'community-coin-types'
 
-export const DEFAULT_STATE: ICostHistory = {
+const DEFAULT_STATE: ICostHistory = {
     proposal_index: 0,
     from_lh: 0,
     validated_at: 0,

@@ -1,11 +1,7 @@
 import { Model } from 'acey' 
+import { ILink } from 'community-coin-types'
 
-export interface ILink {
-    from: string
-    to: string
-}
-
-export const DEFAULT_VALUE: ILink = {
+const DEFAULT_VALUE: ILink = {
     from: '',
     to: ''
 }

@@ -1,12 +1,8 @@
 import { Model } from "acey";
+import { IVoteSummary } from 'community-coin-types'
 import { formatPercent } from 'wallet-util'
-export interface IVote {
-    approved: number
-    declined: number
-    closed_at_lh: number
-}
 
-export const DEFAULT_STATE: IVote = {
+const DEFAULT_STATE: IVoteSummary = {
     approved: -1,
     declined: -1,
     closed_at_lh: 0
@@ -14,9 +10,9 @@ export const DEFAULT_STATE: IVote = {
 
 export class VoteModel extends Model {
 
-    static DefaultState: IVote = DEFAULT_STATE
+    static DefaultState: IVoteSummary = DEFAULT_STATE
 
-    constructor(state: IVote = DEFAULT_STATE, options: any){
+    constructor(state: IVoteSummary = DEFAULT_STATE, options: any){
         super(state, options) 
     }
 

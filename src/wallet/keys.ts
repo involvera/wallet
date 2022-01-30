@@ -4,7 +4,7 @@ import * as bip32 from 'bip32'
 import { Buffer } from 'buffer'
 import { GetAddressFromPubKeyHash, ToPubKeyHash, Ripemd160, Sha256 } from 'wallet-util'
 import aes from 'aes-js'
-import { AliasModel, IAlias, ALIAS_DEFAULT_STATE } from '../off-chain'
+import { AliasModel, IAlias } from '../off-chain'
 
 export interface IKey {
     pass_hash: string
@@ -15,7 +15,7 @@ export interface IKey {
 const DEFAULT_STATE = {
     pass_hash: '',
     mnemonic: '',
-    alias: ALIAS_DEFAULT_STATE
+    alias: AliasModel.DefaultState
 }
 
 export default class KeysModel extends Model {
@@ -63,7 +63,7 @@ export default class KeysModel extends Model {
             mnemonic: encryptedHex,
         })
         return this.setState({
-            alias: new AliasModel(Object.assign(ALIAS_DEFAULT_STATE, {address: this.get().address()}) , this.kids())
+            alias: new AliasModel(Object.assign(AliasModel.DefaultState, {address: this.get().address()}) , this.kids())
         })
     }
 

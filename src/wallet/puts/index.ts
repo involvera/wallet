@@ -1,5 +1,6 @@
 import { Collection, Model } from 'acey'
 import { Buffer } from 'buffer'
+import { ILink, IPubKH, IValue  } from 'community-coin-types'
 import { COIN_UNIT, CYCLE_IN_LUGH } from '../../constant';
 import { TByte } from 'wallet-script'
 import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, PubKeyHashHexToUUID } from 'wallet-util';
@@ -7,9 +8,9 @@ import axios from 'axios'
 import config from '../../config'
 import { IHeaderSignature } from '../wallet';
 
-import { ILink, LinkModel, DEFAULT_VALUE as LINK_DEFAULT_VALUE } from './link'
-import { IPubKH, PubKHModel, DEFAULT_VALUE as PUBKH_DEFAULT_VALUE } from './pubkh'
-import { IValue, ValueModel, DEFAULT_VALUE as VALUE_DEFAULT_VALUE } from './value'
+import { LinkModel } from './link'
+import { PubKHModel } from './pubkh'
+import { ValueModel } from './value'
 
 export interface IUnserializedPut {
     time: number
@@ -24,15 +25,15 @@ export interface IUnserializedPut {
     fetched_at_cch: string   
 }
 
-export const INITIAL_STATE: IUnserializedPut = {
+const INITIAL_STATE: IUnserializedPut = {
     time: 0,
     kind: 0,
     lh: 0,
     tx_id: "",
     put_index: -1,
-    pubkh: PUBKH_DEFAULT_VALUE,
-    link: LINK_DEFAULT_VALUE,
-    value: VALUE_DEFAULT_VALUE,
+    pubkh: PubKHModel.DefaultState,
+    link: LinkModel.DefaultState,
+    value: ValueModel.DefaultState,
     extra_data: "",
     fetched_at_cch: "",
 }

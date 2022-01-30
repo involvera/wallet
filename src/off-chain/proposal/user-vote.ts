@@ -2,7 +2,7 @@ import { Model } from "acey";
 import { IUserVote } from 'community-coin-types'
 import moment from 'moment'
 
-export const DEFAULT_STATE: IUserVote = {
+const DEFAULT_STATE: IUserVote = {
     has_approved: false,
     vote_lh: -1
 }

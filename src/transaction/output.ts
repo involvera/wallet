@@ -1,4 +1,5 @@
 import { Model, Collection } from 'acey'
+import {IOutputUnRaw, IOutputRaw } from 'community-coin-types'
 import { Buffer } from 'buffer'
 import { MAX_IS_2_POW_53 } from '../constant/errors'
 import { ScriptEngine, Error } from 'wallet-script'
@@ -6,19 +7,7 @@ import { ByteArrayToB64, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeInt64,
 	CalcTotalLengthDoubleByteArray, ToArrayBufferFromB64, PubKeyHashHexToUUID
 } from 'wallet-util'
 
-export interface IOutput {
-	input_src_idxs: number[]
-	value:        number
-	script:				string[]
-}
-
-export interface IOutputRaw {
-	input_src_idxs: Buffer[]
-	value:        Buffer
-	script:				Buffer[]
-}
-
-export const DEFAULT_STATE: IOutput = {
+const DEFAULT_STATE: IOutputUnRaw = {
 	input_src_idxs: [],
 	value: 0,
 	script: []
@@ -26,13 +15,13 @@ export const DEFAULT_STATE: IOutput = {
 
 export class OutputModel extends Model {
 
-	static DefaultState: IOutput = DEFAULT_STATE
+	static DefaultState: IOutputUnRaw = DEFAULT_STATE
 
 	static NewOutput = (value: number, InputSrcIdxs: number[], script: string[]) => {
 		if (value > Math.pow(2, 53))
 			throw MAX_IS_2_POW_53
 		
-		const out: IOutput = {
+		const out: IOutputUnRaw = {
 			input_src_idxs: InputSrcIdxs,
 			value,
 			script
@@ -40,7 +29,7 @@ export class OutputModel extends Model {
 		return new OutputModel(out, {})
 	}
 	
-    constructor(output: IOutput = DEFAULT_STATE, options: any) {
+    constructor(output: IOutputUnRaw = DEFAULT_STATE, options: any) {
 		super(output, options)
 		output && !output.input_src_idxs && this.setState({ input_src_idxs: [] })
 		output && !output.script && this.setState({ ta: [] })

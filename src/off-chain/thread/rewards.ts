@@ -1,13 +1,7 @@
 import { Model } from 'acey'
+import { IReactionCount } from 'community-coin-types'
 
-export interface IRewards {
-    n_upvote: number
-    n_reward_0: number 
-    n_reward_1: number
-    n_reward_2: number
-}
-
-export const DEFAULT_STATE: IRewards = {
+const DEFAULT_STATE: IReactionCount = {
     n_upvote: 0, 
     n_reward_0: 0, 
     n_reward_1: 0,
@@ -16,9 +10,9 @@ export const DEFAULT_STATE: IRewards = {
 
 export class RewardsModel extends Model{
 
-    static DefaultState: IRewards = DEFAULT_STATE
+    static DefaultState: IReactionCount = DEFAULT_STATE
 
-    constructor(state: IRewards = DEFAULT_STATE, options: any){
+    constructor(state: IReactionCount = DEFAULT_STATE, options: any){
         super(state, options)
     }
     

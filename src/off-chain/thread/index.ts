@@ -1,33 +1,34 @@
 import axios from 'axios'
+import { IKindLinkUnRaw, IReactionCount  } from 'community-coin-types'
 import * as bip32 from 'bip32'
 import { Buffer } from 'buffer'
 import { Model, Collection } from "acey";
 import { BuildSignatureHex } from 'wallet-util'
-import { IKindLink, KindLinkModel, DEFAULT_STATE_KIND } from "../../transaction";
+import { KindLinkModel } from "../../transaction";
 import config from '../../config'
-import { AliasModel, IAlias, DEFAULT_STATE as DEFAULT_ALIAS_STATE } from '../alias';
-import { IRewards, RewardsModel, DEFAULT_STATE as DEFAULT_STATE_REWARDS} from './rewards'
+import { AliasModel, IAlias } from '../alias';
+import { RewardsModel } from './rewards'
 
 export interface IThread {
     sid: number
-    content_link?: IKindLink
+    content_link?: IKindLinkUnRaw
     author?: IAlias
     title: string
     content: string
     public_key_hashed: string
-    reaction_count?: IRewards
+    reaction_count?: IReactionCount
     embeds?: string[]
     created_at?: Date
 }
 
-export const DEFAULT_STATE: IThread = {
+const DEFAULT_STATE: IThread = {
     sid: 0,
-    content_link: DEFAULT_STATE_KIND,
-    author: DEFAULT_ALIAS_STATE,
+    content_link: KindLinkModel.DefaultState,
+    author: AliasModel.DefaultState,
     title: '',
     content: '',
     public_key_hashed: "",
-    reaction_count: DEFAULT_STATE_REWARDS,
+    reaction_count: RewardsModel.DefaultState,
     embeds: [],
     created_at: new Date()
 }

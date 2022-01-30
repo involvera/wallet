@@ -1,17 +1,10 @@
-import { Model } from 'acey'
+
 import axios from 'axios'
+import { ICostProposal }  from 'community-coin-types'
+import { Model } from 'acey'
 import config from '../config'
 
-export interface ICost {
-    thread: number
-    proposal: number
-    upvote: number
-    reaction_0: number
-    reaction_1: number
-    reaction_2: number
-}
-
-export const DEFAULT_STATE: ICost = {
+const DEFAULT_STATE: ICostProposal = {
     thread: 0, 
     proposal: 0, 
     upvote: 0, 
@@ -22,7 +15,7 @@ export const DEFAULT_STATE: ICost = {
 
 export default class CostsModel extends Model {
 
-    static DefaultState: ICost = DEFAULT_STATE
+    static DefaultState: ICostProposal = DEFAULT_STATE
 
     constructor(initialState = DEFAULT_STATE, options: any){
         super(initialState, options)

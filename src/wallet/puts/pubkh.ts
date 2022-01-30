@@ -1,11 +1,7 @@
 import { Model } from 'acey' 
+import { IPubKH } from 'community-coin-types'
 
-export interface IPubKH {
-    sender: string
-    recipient: string
-}
-
-export const DEFAULT_VALUE: IPubKH = {
+const DEFAULT_VALUE: IPubKH = {
     sender: '',
     recipient: ''
 }

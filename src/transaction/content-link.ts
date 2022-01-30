@@ -1,25 +1,26 @@
 import axios from 'axios'
+import { IKindLinkUnRaw, IRewardSummary, IVoteSummary} from 'community-coin-types'
 import { Collection, Model } from 'acey'
 import config from '../config';
 import { IsUUID, UUIDToPubKeyHashHex } from 'wallet-util';
-import { IKindLink, KindLinkModel, DEFAULT_STATE as DEFAULT_KIND_LINK_STATE } from './kind-link'
-import { VoteModel, IVote, DEFAULT_STATE as DEFAULT_VOTE_STATE } from '../off-chain/proposal/vote'
-import { IRewardSummary, DEFAULT_STATE as DEFAULT_STATE_REWARDS, RewardSummaryModel } from './reward-summary'
+import { KindLinkModel } from './kind-link'
+import { VoteModel } from '../off-chain/proposal/vote'
+import { RewardSummaryModel } from './reward-summary'
 
 export interface IContentLink { 
-    vote: IVote | null
+    vote: IVoteSummary | null
     index: number
-    link: IKindLink
+    link: IKindLinkUnRaw
     pubkh_origin: string
     rewards: IRewardSummary | null
 }
 
 export const DEFAULT_STATE: IContentLink = {
-    vote: DEFAULT_VOTE_STATE,
+    vote: VoteModel.DefaultState,
     index: 0,
-    link: DEFAULT_KIND_LINK_STATE,
+    link: KindLinkModel.DefaultState,
     pubkh_origin: '',
-    rewards: DEFAULT_STATE_REWARDS
+    rewards: RewardSummaryModel.DefaultState
 }
 
 export class ContentLinkModel extends Model {

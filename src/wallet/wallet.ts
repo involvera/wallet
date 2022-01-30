@@ -15,7 +15,7 @@ import { RewardSummaryCollection } from '../transaction/reward-summary'
 import {RewardPutCollection} from './puts/rewards'
 import { UnserializedPutList } from './puts'
 
-import Info from './info'
+import { InfoModel }  from './info'
 import { BURNING_RATIO } from '../constant'
 import { Constitution, ScriptEngine } from 'wallet-script'
 import { ContentLinkModel } from '../transaction/content-link'
@@ -39,7 +39,7 @@ export class Wallet extends Model {
             cch: new CCHModel(initialState.cch, this.kids()),
             contract: new AuthContract(initialState.contract, this.kids()),
             fees: new Fees(initialState.fees, this.kids()),
-            info: new Info(initialState.info, this.kids()),
+            info: new InfoModel(initialState.info, this.kids()),
             costs: new Costs(initialState.costs, this.kids()),
             memory: new MemoryModel(initialState.memory, this.kids()),
             reward_summary: new RewardSummaryCollection(initialState.reward_summary, this.kids()),
@@ -61,7 +61,7 @@ export class Wallet extends Model {
         if (response.status == 200){
             const json = response.data
             
-            this.info().setState(json.info)
+            this.setState({ info: new InfoModel(json.info, this.kids()) })
             this.cch().assignJSONResponse(json.cch)
             this.auth().setState(json.contract)
             this.fees().setState(json.fees)
@@ -97,7 +97,7 @@ export class Wallet extends Model {
     public auth = (): AuthContract => this.state.contract
     public fees = (): Fees => this.state.fees
     public costs = (): Costs => this.state.costs
-    public info = (): Info => this.state.info
+    public info = (): InfoModel => this.state.info
     public puts = (): UnserializedPutList => this.state.puts
     public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
     public memory = (): MemoryModel => this.state.memory
