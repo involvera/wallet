@@ -83,6 +83,12 @@ export class ProposalModel extends Model {
             user_vote: state.user_vote ? new UserVoteModel(state.user_vote, this.kids()) : null,
         }))
     }
+
+    setUserVote = (uVote: IUserVote) => {
+        return this.setState({
+            user_vote: new UserVoteModel(uVote, this.kids())
+        })
+    }
     
     sign = (wallet: bip32.BIP32Interface) => {
         const sig = BuildSignatureHex(wallet, Buffer.from(this.get().dataToSign()))
