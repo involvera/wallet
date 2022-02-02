@@ -3,7 +3,7 @@ import { ITransactionUnRaw, ITransactionRaw, IOutputRaw, IInputRaw } from 'commu
 import { Model } from 'acey'
 import { OutputCollection, OutputModel } from './output'
 import { InputModel, InputCollection } from './input'
-import { Wallet } from '../wallet/wallet'
+import WalletModel from '../wallet/wallet'
 
 import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256, UUIDToPubKeyHashHex } from 'wallet-util'
 import { BILLED_SIGNATURE_LENGTH, TXID_LENGTH } from '../constant'
@@ -58,7 +58,7 @@ export class Transaction extends Model {
         return size
     }
 
-    broadcast = async (wallet: Wallet) => {
+    broadcast = async (wallet: WalletModel) => {
         try {
             const response = await axios(config.getRootAPIChainUrl() + '/transaction', {
                 method: 'POST',

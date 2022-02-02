@@ -6,7 +6,7 @@ const DEFAULT_VALUE: IUserActivity = {
     last_lugh_height: 0
 }
 
-export class UserActivityModel extends Model {
+export default class UserActivityModel extends Model {
 
     static DefaultState: IUserActivity = DEFAULT_VALUE
 

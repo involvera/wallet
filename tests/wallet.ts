@@ -6,8 +6,8 @@ import { Content } from '../'
 
 import { COIN_UNIT, LUGH_AMOUNT, MAX_SUPPLY_AMOUNT } from '../src/constant';
 import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from 'wallet-util';
-import { Wallet } from '../src/wallet'
-import { UnserializedPut } from '../src/wallet/puts';
+import { WalletModel } from '../src/wallet'
+import { UnserializedPutModel } from '../src/wallet/puts';
 import { Constitution } from 'wallet-script';
 import { ContentLinkModel, OutputModel } from '../src/transaction';
 import { ThreadModel, ProposalModel, SocietyModel, RuleModel, ThreadCollection, ProposalCollection } from '../src/off-chain';
@@ -18,14 +18,14 @@ import { RewardPutModel } from '../src/wallet/puts/rewards';
 import { IConstitutionProposalUnRaw, ICostProposal } from 'community-coin-types'
 import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 
-// conf.setRootAPIChainUrl('http://185.212.226.103:8080')
-// conf.setRootAPIOffChainUrl('http://185.212.226.103:3020')
+// conf.setRootAPIChainUrl('http://134.122.16.30:8080')
+// conf.setRootAPIOffChainUrl('http://134.122.16.30:3020')
 
 const ADMIN_KEY = '2f72e55b962b6cd66ea70e8b6bd8657d1c87a23a65769213d76dcb5da6abf6b5'
 
-const wallet = new Wallet({}, { key: 'wallet', connected: true })
-const wallet2 = new Wallet({}, {key: 'wallet2', connected: true })
-const wallet3 =  new Wallet({}, {key: 'wallet3', connected: true })
+const wallet = new WalletModel({}, { key: 'wallet', connected: true })
+const wallet2 = new WalletModel({}, {key: 'wallet2', connected: true })
+const wallet3 =  new WalletModel({}, {key: 'wallet3', connected: true })
 
 const initWallets = () => {
     wallet.keys().set("film dirt damage apart carry horse enroll carry power prison flush bulb", "coucou").store()
@@ -105,7 +105,6 @@ const main = () => {
         expect(wallet.costs().get().proposal()).to.eq(LUGH_AMOUNT / 20)
     })
 
-
     it('[ONCHAIN] Wallet1 -> Check Puts/Info: ', () => {
         expect(wallet.puts().count()).to.eq(5)
         expect(wallet.info().get().votePowerCount()).to.eq(11763937282229)
@@ -148,14 +147,14 @@ const main = () => {
             expect(wallet.puts().count()).to.eq(6)
             expect(wallet2.puts().count()).to.eq(1)
 
-            const lastPut1 = wallet.puts().sortByTime().first() as UnserializedPut
+            const lastPut1 = wallet.puts().sortByTime().first() as UnserializedPutModel
             expect(lastPut1.get().value().get().atCreationTime()).to.eq(total)
             expect(lastPut1.get().currentValue(wallet.cch().get().list())).to.eq(total)
             expect(lastPut1.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
             expect(lastPut1.get().pkh().get().recipient()).to.eq(wallet2.keys().get().pubHashHex())
             expect(lastPut1.get().txID()).to.eq(tx.get().hashHex())
             
-            const lastPut2 = wallet2.puts().first() as UnserializedPut
+            const lastPut2 = wallet2.puts().first() as UnserializedPutModel
             expect(lastPut2.get().value().get().atCreationTime()).to.eq(total)
             expect(lastPut2.get().currentValue(wallet2.cch().get().list())).to.eq(total)
             expect(lastPut2.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
@@ -180,7 +179,7 @@ const main = () => {
             expect(response.status).to.eq(201)
             expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte())-1)
             expect(wallet.puts().count()).to.eq(7)
-            const lastPut = wallet.puts().sortByTime().first() as UnserializedPut
+            const lastPut = wallet.puts().sortByTime().first() as UnserializedPutModel
             expect(Number(lastPut.get().value().get().atCreationTime())).to.eq(wallet.costs().get().proposal())
             expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
             expect(lastPut.isProposal()).to.eq(true)
@@ -236,7 +235,7 @@ const main = () => {
             expect(response.status).to.eq(201)
             expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte())-1)
             expect(wallet.puts().count()).to.eq(8)
-            const lastPut = wallet.puts().sortByTime().first() as UnserializedPut
+            const lastPut = wallet.puts().sortByTime().first() as UnserializedPutModel
             expect(lastPut.get().value().get().atCreationTime()).to.eq(wallet.costs().get().proposal()+2)
             expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
             expect(lastPut.isProposal()).to.eq(true)
@@ -270,7 +269,7 @@ const main = () => {
             uuidContent = out.get().contentUUID()
             expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte()) - 2)
             expect(wallet.puts().count()).to.eq(9)
-            const lastPut = wallet.puts().sortByTime().first() as UnserializedPut
+            const lastPut = wallet.puts().sortByTime().first() as UnserializedPutModel
             expect(lastPut.get().value().get().atCreationTime()).to.eq(wallet.costs().get().proposal())
             expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
             expect(lastPut.isProposal()).to.eq(true)
@@ -302,7 +301,7 @@ const main = () => {
             expect(response.status).to.eq(201)
             expect(wallet.puts().count()).to.eq(10)
             expect(wallet.balance()).to.eq(balance-1-tx.get().fees(wallet.fees().get().feePerByte())-1)
-            const lastPut = wallet.puts().sortByTime().first() as UnserializedPut
+            const lastPut = wallet.puts().sortByTime().first() as UnserializedPutModel
             expect(lastPut.get().value().get().atCreationTime()).to.eq(1)
             expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
             expect(lastPut.isVote()).to.eq(true)
@@ -325,7 +324,7 @@ const main = () => {
             expect(response.status).to.eq(201)
             expect(wallet.puts().count()).to.eq(11)
             expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte())-2)
-            const lastPut = wallet.puts().sortByTime().first() as UnserializedPut
+            const lastPut = wallet.puts().sortByTime().first() as UnserializedPutModel
             expect(lastPut.get().value().get().atCreationTime()).to.eq(wallet.costs().get().thread())
             expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
             expect(lastPut.isThread()).to.eq(true)
@@ -355,7 +354,7 @@ const main = () => {
             expect(response.status).to.eq(201)
             expect(wallet.puts().count()).to.eq(12)
             expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte())-1)
-            const lastPut = wallet.puts().sortByTime().first() as UnserializedPut
+            const lastPut = wallet.puts().sortByTime().first() as UnserializedPutModel
             expect(lastPut.get().value().get().atCreationTime()).to.eq(wallet.costs().get().thread())
             expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
             expect(lastPut.isThread()).to.eq(true)

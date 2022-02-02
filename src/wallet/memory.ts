@@ -11,7 +11,7 @@ const DEFAULT_STATE: IMemory = {
     is_recovered_wallet: false
 }
 
-export class MemoryModel extends Model {
+export default class MemoryModel extends Model {
 
     static DefaultState: IMemory = DEFAULT_STATE
 

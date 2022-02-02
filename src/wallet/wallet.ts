@@ -1,46 +1,46 @@
 import { Model } from 'acey'
-
 import { B64ToByteArray, PubKeyHashFromAddress, Sha256, BuildSignature } from 'wallet-util'
-import TxBuild from './tx-builder' 
+import { Constitution, ScriptEngine } from 'wallet-script'
 import { Buffer } from 'buffer'
 import axios from 'axios'
-import config from '../config'
-import { InputModel, Transaction, UTXOModel, UTXOCollection } from '../transaction'
 
 import AuthContract from './auth-contract'
-import Fees from './fees'
-import Costs from './costs'
-import Keys from './keys'
+import FeesModel from './fees'
+import CostsModel from './costs'
+import KeysModel from './keys'
+import CCHModel from './cch'
+import MemoryModel from './memory'
+import InfoModel from './info'
+import { ContentLinkModel } from '../transaction/content-link'
+
 import { RewardSummaryCollection } from '../transaction/reward-summary'
 import {RewardPutCollection} from './puts/rewards'
-import { UnserializedPutList } from './puts'
+import { UnserializedPutCollection } from './puts'
+import { InputModel, Transaction, UTXOModel, UTXOCollection } from '../transaction'
 
-import { InfoModel }  from './info'
+import config from '../config'
+import TxBuild from './tx-builder' 
+
 import { BURNING_RATIO } from '../constant'
-import { Constitution, ScriptEngine } from 'wallet-script'
-import { ContentLinkModel } from '../transaction/content-link'
-import { CCHModel } from './cch'
-
-import { MemoryModel } from './memory'
 
 export interface IHeaderSignature {
     pubkey: string
     signature: string
 }
 
-export class Wallet extends Model {
+export default class Wallet extends Model {
 
     constructor(initialState: any, options: any){
         super(initialState, options)
         this.setState({
-            seed: new Keys(initialState.seed, this.kids()),
+            seed: new KeysModel(initialState.seed, this.kids()),
             utxos: new UTXOCollection(initialState.utxos || [], this.kids()),
-            puts: new UnserializedPutList(initialState.puts || [], this.kids()), 
+            puts: new UnserializedPutCollection(initialState.puts || [], this.kids()), 
             cch: new CCHModel(initialState.cch, this.kids()),
             contract: new AuthContract(initialState.contract, this.kids()),
-            fees: new Fees(initialState.fees, this.kids()),
+            fees: new FeesModel(initialState.fees, this.kids()),
             info: new InfoModel(initialState.info, this.kids()),
-            costs: new Costs(initialState.costs, this.kids()),
+            costs: new CostsModel(initialState.costs, this.kids()),
             memory: new MemoryModel(initialState.memory, this.kids()),
             reward_summary: new RewardSummaryCollection(initialState.reward_summary, this.kids()),
             my_rewards: new RewardPutCollection(initialState.my_rewards, this.kids())
@@ -93,12 +93,12 @@ export class Wallet extends Model {
         }
     }
 
-    public keys = (): Keys => this.state.seed
+    public keys = (): KeysModel => this.state.seed
     public auth = (): AuthContract => this.state.contract
-    public fees = (): Fees => this.state.fees
-    public costs = (): Costs => this.state.costs
+    public fees = (): FeesModel => this.state.fees
+    public costs = (): CostsModel => this.state.costs
     public info = (): InfoModel => this.state.info
-    public puts = (): UnserializedPutList => this.state.puts
+    public puts = (): UnserializedPutCollection => this.state.puts
     public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
     public memory = (): MemoryModel => this.state.memory
     public cch = (): CCHModel => this.state.cch

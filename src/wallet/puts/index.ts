@@ -10,7 +10,7 @@ import { IHeaderSignature } from '../wallet';
 
 import { LinkModel } from './link'
 import { PubKHModel } from './pubkh'
-import { ValueModel } from './value'
+import ValueModel from './value'
 
 export interface IUnserializedPut {
     time: number
@@ -38,7 +38,7 @@ const INITIAL_STATE: IUnserializedPut = {
     fetched_at_cch: "",
 }
 
-export class UnserializedPut extends Model {
+export class UnserializedPutModel extends Model {
 
     static DefaultState: IUnserializedPut = INITIAL_STATE
 
@@ -155,22 +155,22 @@ export class UnserializedPut extends Model {
     }
 }
 
-export class UnserializedPutList extends Collection {
+export class UnserializedPutCollection extends Collection {
 
     constructor(list: IUnserializedPut[] = [], options: any){
-        super(list, [UnserializedPut, UnserializedPutList], options)
+        super(list, [UnserializedPutModel, UnserializedPutCollection], options)
     }
 
-    sortByTime = () => this.orderBy('time', 'desc') as UnserializedPutList
+    sortByTime = () => this.orderBy('time', 'desc') as UnserializedPutCollection
 
     get = () => {
-        const inputs = (pkhHex: string): UnserializedPutList => this.filter((p: UnserializedPut) => p.get().pkh().get().sender() == pkhHex) as UnserializedPutList
-        const outputs = (pkhHex: string): UnserializedPutList => this.filter((p: UnserializedPut) => p.get().pkh().get().recipient() == pkhHex) as UnserializedPutList
-        const betweenDates = (from: Date, to: Date) => this.filter((p: UnserializedPut) => from <= p.get().createdAt() && to >= p.get().createdAt()) as UnserializedPutList
+        const inputs = (pkhHex: string): UnserializedPutCollection => this.filter((p: UnserializedPutModel) => p.get().pkh().get().sender() == pkhHex) as UnserializedPutCollection
+        const outputs = (pkhHex: string): UnserializedPutCollection => this.filter((p: UnserializedPutModel) => p.get().pkh().get().recipient() == pkhHex) as UnserializedPutCollection
+        const betweenDates = (from: Date, to: Date) => this.filter((p: UnserializedPutModel) => from <= p.get().createdAt() && to >= p.get().createdAt()) as UnserializedPutCollection
        
-        const votePowerDistribution = (): UnserializedPutList => this.filter((p: UnserializedPut) => p.isLughTx()) as UnserializedPutList
+        const votePowerDistribution = (): UnserializedPutCollection => this.filter((p: UnserializedPutModel) => p.isLughTx()) as UnserializedPutCollection
 
-        const atDay = (dayDate: Date): UnserializedPutList => {
+        const atDay = (dayDate: Date): UnserializedPutCollection => {
             const from = new Date(dayDate)
             const to = new Date(dayDate)
 
@@ -191,7 +191,7 @@ export class UnserializedPutList extends Collection {
 
             const atDayActivity = (d: Date) => {
                 let total = BigInt(0)
-                atDay(d).forEach((p: UnserializedPut) => {
+                atDay(d).forEach((p: UnserializedPutModel) => {
                     if (p.isVote() || p.isThread() || p.isRethread() || p.isProposal()){
                         total = BigInt(total as any) + BigInt(p.get().value().get().atCreationTime() as any)
                     }

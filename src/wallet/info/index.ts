@@ -1,5 +1,5 @@
 import { Model } from 'acey'
-import { UserActivityModel } from './activity'
+import UserActivityModel from './activity'
 import axios from 'axios'
 import { IWalletInfo } from 'community-coin-types'
 import { formatPercent } from 'wallet-util'
@@ -15,7 +15,7 @@ const DEFAULT_STATE: IWalletInfo = {
     activity: UserActivityModel.DefaultState
 }
 
-export class InfoModel extends Model {
+export default class InfoModel extends Model {
 
     static DefaultState: IWalletInfo = DEFAULT_STATE
 

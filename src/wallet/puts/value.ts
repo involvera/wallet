@@ -6,7 +6,7 @@ const DEFAULT_VALUE: IValue = {
     now: 0
 }
 
-export class ValueModel extends Model {
+export default class ValueModel extends Model {
 
     static DefaultState: IValue = DEFAULT_VALUE
 

@@ -3,10 +3,10 @@ import { ScriptEngine } from "wallet-script";
 import { Buffer } from 'buffer'
 import {  OutputModel, OutputCollection, Transaction, UTXOModel, UTXOCollection } from "../transaction"
 import { PubKeyHashFromAddress, CalculateOutputValueFromMelted } from "wallet-util";
-import { Wallet } from './'
+import WalletModel from './wallet'
 
 export interface ITXBuild {
-    wallet:         Wallet
+    wallet:         WalletModel
 	amount_required: number[]
 	scripts:             Buffer[][]
 }
@@ -15,7 +15,7 @@ export default class TxBuild {
 
     private amount_required: number[]
     private scripts:             Buffer[][]
-    private wallet: Wallet
+    private wallet: WalletModel
 
     constructor(txb: ITXBuild){
         this.amount_required = txb.amount_required
@@ -63,8 +63,6 @@ export default class TxBuild {
             this._removeLastOutput()
             return this._makeTxWithFees(tx)
         }
-
-
 
         return utxos
     }

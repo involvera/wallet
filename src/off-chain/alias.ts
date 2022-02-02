@@ -1,5 +1,5 @@
 import { Collection, Model } from "acey";
-import { InfoModel as WalletInfoModel } from '../wallet/info'
+import WalletInfoModel from '../wallet/info'
 import * as bip32 from 'bip32'
 import { Buffer } from 'buffer'
 import { BuildSignatureHex, PubKeyHashFromAddress } from 'wallet-util'

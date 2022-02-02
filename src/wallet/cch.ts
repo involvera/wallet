@@ -1,6 +1,6 @@
 import { Model } from 'acey'
 import { ICCHList } from 'community-coin-types'
-import { Wallet } from '.'
+import WalletModel from './wallet'
 import axios from 'axios'
 import config from '../config'
 
@@ -9,7 +9,7 @@ const DEFAULT_VALUE: ICCHList = {
     last_height: 0
 }
 
-export class CCHModel extends Model {
+export default class CCHModel extends Model {
     
     static DefaultState: ICCHList = DEFAULT_VALUE
     
@@ -19,7 +19,7 @@ export class CCHModel extends Model {
         }), options)
     }
 
-    fetch = async (wallet: Wallet) => {
+    fetch = async (wallet: WalletModel) => {
         if (wallet.utxos().get().count() > 0){
             await wallet.auth().refresh()
             try {
