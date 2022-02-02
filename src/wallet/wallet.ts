@@ -183,11 +183,10 @@ export default class Wallet extends Model {
             return await builder.newTx()
         }
 
-        const rethread = async (content: ContentLinkModel) => {
+        const rethread = async (targetPKH: Buffer) => {
             await this.synchronize()
             const contentNonce = this.info().get().contentNonce() + 1
             const contentPKH = this.keys().get().derivedPubHash(contentNonce)
-            const targetPKH = content.get().link().get().output().get().contentPKH()
 
             const script = new ScriptEngine([]).append().rethreadScript(contentNonce, contentPKH, targetPKH)
 
@@ -220,10 +219,8 @@ export default class Wallet extends Model {
             return await builder.newTx()
         }
 
-        const vote = async (proposal: ContentLinkModel, accept: boolean) => {
+        const vote = async (targetPKH: Buffer, accept: boolean) => {
             await this.synchronize()
-            const targetPKH = proposal.get().link().get().output().get().contentPKH()
-
             const script = new ScriptEngine([]).append().voteScript(targetPKH, accept)
 
             const builder = new TxBuild({ 

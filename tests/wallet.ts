@@ -293,7 +293,7 @@ const main = () => {
 
     it('[ONCHAIN] Wallet1 -> create a vote', async () => {
         const proposal = await ContentLinkModel.FetchProposal(uuidContent)
-        const tx = await wallet.buildTX().vote(proposal, true)
+        const tx = await wallet.buildTX().vote(proposal.get().link().get().output().get().contentPKH(), true)
         const balance = wallet.balance()
         expect(tx).not.eq(null)
         if (tx){
@@ -344,7 +344,7 @@ const main = () => {
     let pkhContent2 = ""
     it('[ONCHAIN] Wallet1 -> create a rethread', async () => {
         const thread = await ContentLinkModel.FetchThread(uuidContent)
-        const tx = await wallet.buildTX().rethread(thread)
+        const tx = await wallet.buildTX().rethread(thread.get().link().get().output().get().contentPKH())
         const balance = wallet.balance()
         expect(tx).not.eq(null)
         if (tx){
