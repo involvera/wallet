@@ -1,8 +1,13 @@
 import { Collection, Model } from 'acey'
+import config from '../config'
 import { IInputRaw, IInputUnRaw } from 'community-coin-types'
 import { ScriptEngine } from 'wallet-script'
 import { Buffer } from 'buffer'
 import { ByteArrayToB64, EncodeInt, CalcTotalLengthDoubleByteArray, ToArrayBufferFromB64 } from 'wallet-util'
+import { IHeaderSignature } from '../wallet'
+import { UTXOCollection, UTXOModel } from './utxo'
+import axios from 'axios'
+import Transaction from './transaction'
 
 const DEFAULT_STATE: IInputUnRaw = {
 	prev_transaction_hash: '',
@@ -77,4 +82,45 @@ export class InputCollection extends Collection {
 		return size + this.count()
 	}
 
+    prevTxIDndVoutList = (): {tx_id: string, vout: number}[] => {
+        return this.map((i: InputModel) => {
+            return {
+                tx_id: i.get().prevTxHash(),
+                vout: i.get().vout()
+            }
+        })
+    }
+
+    fetchPrevTxList = async (headerSignature: IHeaderSignature, userTxList: UTXOCollection) => {
+        const utxos: UTXOModel[] = []
+        for (let {tx_id, vout} of this.prevTxIDndVoutList()){
+            const u = userTxList.get().UTXOByTxHashAndVout(tx_id, vout)
+            if (u && !u.get().tx()){
+                utxos.push(u)
+            }
+        }
+        if (utxos.length == 0)
+            return 0
+        try { 
+                const listTxIDs = utxos.map((u) => u.get().txID())
+                const response = await axios(config.getRootAPIChainUrl() + '/transactions/list', {
+                    headers: Object.assign({}, headerSignature as any, {list: listTxIDs.join(',') }),
+                    timeout: 10000,
+                    validateStatus: function (status) {
+                        return status >= 200 && status < 500;
+                    },
+                })
+                if (response.status == 200){
+                    let list = response.data
+                    list = list || []
+                    utxos.forEach((utxo, i) => {
+                        utxo.setState({ tx: new Transaction(list[i], this.kids()) })
+                    })
+                    return list.length
+                }
+            return 0
+        } catch (e: any){
+            throw new Error(e)
+        }
+    }
 }

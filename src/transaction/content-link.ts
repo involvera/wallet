@@ -15,7 +15,7 @@ export interface IContentLink {
     rewards: IRewardSummary | null
 }
 
-export const DEFAULT_STATE: IContentLink = {
+const DEFAULT_STATE: IContentLink = {
     vote: VoteModel.DefaultState,
     index: 0,
     link: KindLinkModel.DefaultState,

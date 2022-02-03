@@ -267,32 +267,21 @@ export default class Wallet extends Model {
         const value = (val: Buffer) => BuildSignature(this.keys().get().priv(), val)
 
         const transaction = async (tx: Transaction) => {
-            
-            const UTXOs = new UTXOCollection([], undefined)
-            tx.get().inputs().forEach((i: InputModel) => {
-                const exist = this.utxos().get().get().UTXOByTxHashAndVout(i.get().prevTxHash(), i.get().vout())
-                exist && UTXOs.push(exist)
-            })
-            await UTXOs.fetchPrevTxList(this.sign().header())
 
-            const inputs = tx.get().inputs()
+            const n = await tx.get().inputs().fetchPrevTxList(this.sign().header(), this.utxos().get())
+            n > 0 && this.utxos().get().action().store()
 
-            for (let i = 0; i < inputs.count(); i++){
-                const prevTx = (UTXOs.nodeAt(i) as UTXOModel).get().tx() as Transaction
-                const input = inputs.nodeAt(i) as InputModel
+            tx.get().inputs().forEach((input: InputModel) => {
+                const utxo = this.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash(), input.get().vout())
+                if (!utxo)
+                    throw new Error("Unfound UTXO")
+                const prevTx = utxo.get().tx() as Transaction
                 
-                let signature: Buffer = Buffer.from([])
-                let pubkey: Buffer = Buffer.from([])
-
-                const exist = this.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash(), input.get().vout())
-                if (exist){
-                    signature = Buffer.from(this.sign().value(prevTx.get().hash()))
-                    pubkey = this.keys().get().pub()
-                }
-
-                input.setState({ script_sig: new ScriptEngine([]).append().unlockScript(signature, pubkey ).base64()  })
-            }
-
+                input.setState({ script_sig: new ScriptEngine([]).append().unlockScript(
+                    Buffer.from(this.sign().value(prevTx.get().hash())), 
+                    this.keys().get().pub() 
+                ).base64()  })                
+            })
             return true
         }
         

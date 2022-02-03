@@ -7,7 +7,7 @@ import config from '../config'
 
 import { OutputModel } from './output'
 import { CYCLE_IN_LUGH } from '../constant'
-import { Transaction } from './transaction'
+import Transaction from './transaction'
 import { IHeaderSignature } from '../wallet/wallet'
 import { InputModel, InputCollection } from './input'
  
@@ -93,7 +93,6 @@ export class UTXOCollection extends Collection {
         const listUnFetchedTxHash = this.get().listUnFetchedTxHash()
         if (listUnFetchedTxHash.length == 0)
             return 
-
         try { 
             const response = await axios(config.getRootAPIChainUrl() + '/transactions/list', {
                 headers: Object.assign({}, headerSignature as any, {list: listUnFetchedTxHash.join(',') }),
@@ -102,43 +101,28 @@ export class UTXOCollection extends Collection {
                     return status >= 200 && status < 500;
                 },
             })
-            if (response.status == 200){
-                let list = response.data
-                list = list || []
-                for (let i = 0; i < listUnFetchedTxHash.length; i++){
-                    const UTXOs = this.get().UTXOByTxHash(listUnFetchedTxHash[i])
-                    if (UTXOs){
-                        UTXOs.forEach((u: UTXOModel) => {
-                            u?.setState({ tx: new Transaction(list[i], this.kids())}).store()
-                        })
-
-                    }
-                }
-            }
-            return response.status
+            const { status, data } = response
+            return {status, data}
         } catch (e: any){
             throw new Error(e)
         }
     }
 
     get = () => {
-        const listUnFetchedTxHash = () => {
-            const ret: string[] = []
-            for (let i = 0; i < this.count(); i++){
-                const utxo = this.nodeAt(i) as UTXOModel
-                !utxo.get().tx() && ret.push(utxo.get().txID())
-            }
-            return ret
+        const listUnFetchedTxHash = (): string[] => {
+            return this.map((u: UTXOModel) => {
+                if (!u.get().tx())
+                    return u.get().txID()
+                return null
+            }).filter(e => !!e)
         }
 
-        const UTXOByTxHash = (txHashHex: string): UTXOCollection | undefined => {
-            const u = this.filter((utxo: UTXOModel) => utxo.get().txID() === txHashHex)
-            return u ? u as UTXOCollection : undefined
+        const UTXOByTxHash = (txHashHex: string) => {
+            return this.filter((utxo: UTXOModel) => utxo.get().txID() === txHashHex) as UTXOCollection
         }
 
         const UTXOByTxHashAndVout = (txHashHex: string, vout: number): UTXOModel | undefined => {
-            const u = UTXOByTxHash(txHashHex)?.find((utxo: UTXOModel) => utxo.get().idx() === vout)
-            return u ? u as UTXOModel : undefined
+            return UTXOByTxHash(txHashHex)?.find((utxo: UTXOModel) => utxo.get().idx() === vout) as UTXOModel
         }
 
         const requiredList = (amountRequired: number, CCHList: string[]): UTXOCollection => {

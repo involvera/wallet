@@ -18,7 +18,7 @@ const DEFAULT_STATE: ITransactionUnRaw = {
     outputs: []
 }
 
-export class Transaction extends Model {
+export default class Transaction extends Model {
 
     static DefaultState: ITransactionUnRaw = DEFAULT_STATE
 
