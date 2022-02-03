@@ -1,6 +1,6 @@
 {
   "name": "involvera-wallet-js",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -48,6 +48,6 @@
     "ts-node": "^10.4.0"
   },
   "peerDependencies": {
-    "acey": "^1.5.3"
+    "acey": "^1.5.4"
   }
 }
