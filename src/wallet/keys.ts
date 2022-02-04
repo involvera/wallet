@@ -71,18 +71,19 @@ export default class KeysModel extends Model {
     isSet = () => this.state.mnemonic.length > 0
 
     fetch = () => {
-        const aliasIfNotSet = async () => {
-            if (this.get().alias() == null){
-                await alias()
-            }
-        }
-
         const alias = async () => {
             const alias = await AliasModel.fetch(this.get().address())
             if (alias){
                 this.setState({ alias: new AliasModel(alias.to().plain(), this.kids()) }).save().store()
             }
         }
+
+        const aliasIfNotSet = async () => {
+            if (this.get().alias() == null || this.get().alias().get().username() == ''){
+                await alias()
+            }
+        }
+
         return {
             alias,
             aliasIfNotSet

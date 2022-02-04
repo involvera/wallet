@@ -296,6 +296,6 @@ export class ProposalCollection extends Collection {
                 this.updateAt(n.to().plain(), idx)            
         }
         node instanceof ProposalModel ? addNode(node) : node.forEach((p: ProposalModel) => addNode(p))
-        return this.action()   
+        return this.action()  
     }
 }

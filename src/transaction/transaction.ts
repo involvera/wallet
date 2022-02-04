@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { ITransactionUnRaw, ITransactionRaw, IOutputRaw, IInputRaw } from 'community-coin-types'
-import { Model } from 'acey'
+import { Collection, Model } from 'acey'
 import { OutputCollection, OutputModel } from './output'
 import { InputModel, InputCollection } from './input'
 import WalletModel from '../wallet/wallet'
@@ -18,7 +18,7 @@ const DEFAULT_STATE: ITransactionUnRaw = {
     outputs: []
 }
 
-export default class Transaction extends Model {
+export class TransactionModel extends Model {
 
     static DefaultState: ITransactionUnRaw = DEFAULT_STATE
 
@@ -36,7 +36,7 @@ export default class Transaction extends Model {
         })
         if (response.status == 200){
             const json = response.data
-            return new Transaction(json, {})
+            return new TransactionModel(json, {})
         }
         throw new Error(response.data)
     }
@@ -175,3 +175,10 @@ export default class Transaction extends Model {
 
 }
 
+export class TransactionCollection extends Collection {
+
+    constructor(initialState: any, options: any){
+        super(initialState, [TransactionModel, TransactionCollection], options)
+    }
+
+}

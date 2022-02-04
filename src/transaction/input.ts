@@ -7,7 +7,7 @@ import { ByteArrayToB64, EncodeInt, CalcTotalLengthDoubleByteArray, ToArrayBuffe
 import { IHeaderSignature } from '../wallet'
 import { UTXOCollection, UTXOModel } from './utxo'
 import axios from 'axios'
-import Transaction from './transaction'
+import { TransactionModel } from './transaction'
 
 const DEFAULT_STATE: IInputUnRaw = {
 	prev_transaction_hash: '',
@@ -114,7 +114,7 @@ export class InputCollection extends Collection {
                     let list = response.data
                     list = list || []
                     utxos.forEach((utxo, i) => {
-                        utxo.setState({ tx: new Transaction(list[i], this.kids()) })
+                        utxo.setState({ tx: new TransactionModel(list[i], this.kids()) })
                     })
                     return list.length
                 }

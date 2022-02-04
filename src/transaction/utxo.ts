@@ -7,7 +7,7 @@ import config from '../config'
 
 import { OutputModel } from './output'
 import { CYCLE_IN_LUGH } from '../constant'
-import Transaction from './transaction'
+import {TransactionModel} from './transaction'
 import { IHeaderSignature } from '../wallet/wallet'
 import { InputModel, InputCollection } from './input'
  
@@ -26,7 +26,7 @@ export class UTXOModel extends Model {
         super(utxo, options)
         this.setState({
             output: new OutputModel(this.state.output, this.kids()),
-            tx: utxo && utxo.tx ? new Transaction(utxo.tx, this.kids()) : null
+            tx: utxo && utxo.tx ? new TransactionModel(utxo.tx, this.kids()) : null
         })
     }
 
@@ -36,7 +36,7 @@ export class UTXOModel extends Model {
         const output = (): OutputModel => this.state.output
         const MR = (): number => this.state.mr
         const CCH = (): string => this.state.cch
-        const tx = (): Transaction | null => this.state.tx
+        const tx = (): TransactionModel | null => this.state.tx
     
         const meltedValueRatio = (CCHList: string[]) => {
             let count = 0

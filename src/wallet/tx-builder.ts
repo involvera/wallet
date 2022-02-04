@@ -1,7 +1,7 @@
 import { CANT_SEND_0_VALUE, LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
 import { ScriptEngine } from "wallet-script";
 import { Buffer } from 'buffer'
-import {  OutputModel, OutputCollection, Transaction, UTXOModel, UTXOCollection } from "../transaction"
+import {  OutputModel, OutputCollection, TransactionModel, UTXOModel, UTXOCollection } from "../transaction"
 import { PubKeyHashFromAddress, CalculateOutputValueFromMelted } from "wallet-util";
 import WalletModel from './wallet'
 
@@ -46,7 +46,7 @@ export default class TxBuild {
         this.amount_required.pop()
     }
 
-    private _makeTxWithFees = (tx: Transaction): UTXOCollection => {
+    private _makeTxWithFees = (tx: TransactionModel): UTXOCollection => {
         const fees = tx.get().billedSize() * this.wallet.fees().get().feePerByte()
         
         this._addTXFeesToBuild(fees)
@@ -83,7 +83,7 @@ export default class TxBuild {
         if (!lastCCH)
             throw LAST_CCH_NOT_FOUND_ERROR
         
-        let tx = new Transaction({
+        let tx = new TransactionModel({
             lh: this.wallet.cch().get().lastHeight(),
             t: Date.now(),
             inputs: utxos.toInputs().to().plain(), 

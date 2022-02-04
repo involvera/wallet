@@ -16,7 +16,7 @@ import { ContentLinkModel } from '../transaction/content-link'
 import { RewardSummaryCollection } from '../transaction/reward-summary'
 import {RewardPutCollection} from './puts/rewards'
 import { UnserializedPutCollection } from './puts'
-import { InputModel, Transaction, UTXOModel, UTXOCollection } from '../transaction'
+import { InputModel, TransactionModel, UTXOCollection } from '../transaction'
 
 import config from '../config'
 import TxBuild from './tx-builder' 
@@ -154,7 +154,7 @@ export default class Wallet extends Model {
             return { constitution, application, cost }
         }
 
-        const toAddress = async (address: string, amount: number): Promise<Transaction | null> => {
+        const toAddress = async (address: string, amount: number): Promise<TransactionModel | null> => {
             await this.synchronize()
 
             const script = new ScriptEngine([]).append().lockScript(PubKeyHashFromAddress(address))
@@ -266,7 +266,7 @@ export default class Wallet extends Model {
     sign = () => {
         const value = (val: Buffer) => BuildSignature(this.keys().get().priv(), val)
 
-        const transaction = async (tx: Transaction) => {
+        const transaction = async (tx: TransactionModel) => {
 
             const n = await tx.get().inputs().fetchPrevTxList(this.sign().header(), this.utxos().get())
             n > 0 && this.utxos().get().action().store()
@@ -275,7 +275,7 @@ export default class Wallet extends Model {
                 const utxo = this.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash(), input.get().vout())
                 if (!utxo)
                     throw new Error("Unfound UTXO")
-                const prevTx = utxo.get().tx() as Transaction
+                const prevTx = utxo.get().tx() as TransactionModel
                 
                 input.setState({ script_sig: new ScriptEngine([]).append().unlockScript(
                     Buffer.from(this.sign().value(prevTx.get().hash())), 
