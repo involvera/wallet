@@ -233,8 +233,13 @@ export class UnserializedPutCollection extends Collection {
     assignJSONResponse = (json: any) => {
         json.list = json.list || []
         let countAdded = 0 
+        const copy = new UnserializedPutCollection(this.to().plain(), {})
+        copy.forEach((u: UnserializedPutModel) => {
+            u.get().value().setState({ now: null })
+            u.setState({ fetched_at_cch: null })
+        })
         for (const put of json.list){
-            if (this.indexOf(put) == -1) {
+            if (copy.indexOf(Object.assign({}, put, {fetched_at_cch: null, value: { at_time: put.value.at_time, now: null } })) == -1) {
                 this.push(Object.assign({}, put, { fetched_at_cch: json.fetched_at_cch }))
                 countAdded++
             }

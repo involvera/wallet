@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import 'mocha';
 import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
-import { Content } from '../'
 
 import { COIN_UNIT, LUGH_AMOUNT, MAX_SUPPLY_AMOUNT } from '../src/constant';
 import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from 'wallet-util';
@@ -792,6 +791,25 @@ const main = () => {
             }
         }
     })
+
+    it('[ONCHAIN] Trigger lugh transaction', async () => {
+        await wallet.synchronize()
+        expect(wallet.balance()).to.eq(8640842342371)
+        expect(wallet.cch().get().list().length).to.eq(8)
+        expect(wallet.utxos().get().count()).to.eq(5)
+        expect(wallet.puts().count()).to.eq(13)
+        const res = await axios(`${conf.getRootAPIChainUrl()}/lugh`, {
+            method: 'POST',
+        })
+        expect(res.status).to.eq(200)
+        await wallet.synchronize()
+        expect(wallet.balance()).to.eq(18634907698295)
+        expect(wallet.cch().get().list().length).to.eq(9)
+        expect(wallet.utxos().get().count()).to.eq(7)
+        expect(wallet.puts().count()).to.eq(15)
+    })
+
+
 }
 
 const timeout = (ms: number) => {

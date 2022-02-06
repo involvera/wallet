@@ -42,7 +42,7 @@ export default class CCHModel extends Model {
         let { list, last_height} = json
         list = list || []
         return this.setState({ 
-            list: this.get().list().concat(list.filter((elem: string) => elem != '')) .join(','), 
+            list: list.filter((elem: string) => elem != '').concat(this.get().list()).join(','), 
             last_height
         })
     }
