@@ -808,8 +808,6 @@ const main = () => {
         expect(wallet.utxos().get().count()).to.eq(7)
         expect(wallet.puts().count()).to.eq(15)
     })
-
-
 }
 
 const timeout = (ms: number) => {
