@@ -289,4 +289,7 @@ export class UnserializedPutCollection extends Collection {
 
         return { fromTX, all }
     }
+
+    sortByCreationDate = () => this.orderBy('time', 'desc') as UnserializedPutCollection
+    
 }
