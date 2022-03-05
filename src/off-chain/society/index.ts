@@ -14,6 +14,7 @@ import { PubKeyHashFromAddress } from "wallet-util";
 export interface ISociety {
     id: number
     name: string
+    path_name: string
     created_at: Date
     currency_symbol: string
     description: string
@@ -30,6 +31,7 @@ const DEFAULT_STATE: ISociety = {
     id: 0,
     created_at: new Date(),
     name: '',
+    path_name: '',
     description: '',
     domain: '',
     currency_route_api: '',
@@ -94,6 +96,7 @@ export class SocietyModel extends Model {
         const id = (): number => this.state.id
         const created_at = (): Date => this.state.created_at
         const name = (): string => this.state.name
+        const pathName = (): string => this.state.path_name
         const description = (): string => this.state.description
         const domain = (): string => this.state.domain
         const currencySymbol = (): string => this.state.currency_symbol
@@ -106,7 +109,7 @@ export class SocietyModel extends Model {
         const formatedMonthYearCreationDate = (): string => moment(created_at()).format('MMMM YYYY')
 
         return {
-            id, created_at, name, description,
+            id, created_at, name,pathName, description,
             domain, currencySymbol, currencyRouteAPI,
             stats, costs, constitution, contributors,
             pp, formatedMonthYearCreationDate
