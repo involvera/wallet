@@ -9,7 +9,8 @@ import ValueModel from './puts/value'
 
 import {
     IUnserializedPut,
-    UnserializedPutModel
+    UnserializedPutModel,
+    UnserializedPutCollection
 } from './puts'
 
 import UserActivityModel from './info/activity'
@@ -30,7 +31,8 @@ export {
     PubKHModel,
     ValueModel,
     LinkModel,
-    UserActivityModel
+    UserActivityModel,
+    UnserializedPutCollection
 }
 
 export type {
