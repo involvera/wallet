@@ -3,7 +3,7 @@ import { Buffer } from 'buffer'
 import { ILink, IPubKH, IValue  } from 'community-coin-types'
 import { COIN_UNIT, CYCLE_IN_LUGH } from '../../constant';
 import { TByte } from 'wallet-script'
-import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash, PubKeyHashHexToUUID } from 'wallet-util';
+import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash } from 'wallet-util';
 import axios from 'axios'
 import config from '../../config'
 import { IHeaderSignature } from '../wallet';
@@ -69,7 +69,7 @@ export class UnserializedPutModel extends Model {
     pretty = (pkh: string) => {
         let action = ''
         let from = ''
-        let to = ''
+        let to: string | number = ''
         const amount = `${this.get().pkh().get().sender() == pkh ? '-' : '+'}${parseFloat((Number(this.get().value().get().atCreationTime()) / COIN_UNIT).toFixed(2)).toLocaleString('en')}`
 
         if (this.isRegularTx()){
@@ -84,18 +84,18 @@ export class UnserializedPutModel extends Model {
             if (this.isVote()){
                 from = 'You'
                 action = 'voted to'
-                to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))
+                to = this.get().indexProposalTargeted()
             } else if (this.isThread()){
                 from = ''
                 action = 'New thread created : '
-                to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKH(), 'hex'))
+                to = this.get().contentPKH(), 'hex'
             } else if (this.isRethread()){
                 from = 'You'
                 action = 'replied to'
-                to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKHTargeted(), 'hex'))
+                to = this.get().contentPKHTargeted()
             } else if (this.isProposal()){
                 action = `New ${this.get().extraData()} proposal`
-                to = GetAddressFromPubKeyHash(Buffer.from(this.get().contentPKH(), 'hex'))
+                to = this.get().indexProposalTargeted()
             }
         }
 
@@ -134,8 +134,20 @@ export class UnserializedPutModel extends Model {
         }
         
         const contentPKH = (): string => link().get().from()
-        const contentPKHTargeted = (): string => link().get().to()
-
+        
+        const contentPKHTargeted = (): string => {
+            if (!this.isProposal() && !this.isVote())
+                return link().get().to()
+            return ""
+        }
+        
+        const indexProposalTargeted = (): number => {
+            if (this.isProposal() || this.isVote()) {
+                return parseInt(link().get().to())
+            }
+            return -1
+        }
+ 
         const currentValue = (CCHList: string[]) => CalculateOutputMeltedValue(BigInt(value().get().atCreationTime()), meltedValueRatio(CCHList))
      
         return {
@@ -145,10 +157,9 @@ export class UnserializedPutModel extends Model {
             txID: (): string => this.state.tx_id,
             createdAt: () => new Date(this.state.time),
             height: (): number => this.state.lh,
-            contentUUID: (): string => PubKeyHashHexToUUID(contentPKH()),
-            contentTargetedUUID: (): string => PubKeyHashHexToUUID(contentPKHTargeted()),
             contentPKH,
             contentPKHTargeted,
+            indexProposalTargeted,
             extraData: (): string => this.state.extra_data,
             currentValue,
         }

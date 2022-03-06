@@ -306,7 +306,8 @@ const main = () => {
             expect(lastPut.isVote()).to.eq(true)
             expect(lastPut.isAcceptedVote()).to.eq(true)
             expect(lastPut.get().contentPKH()).to.eq("")
-            expect(lastPut.get().contentPKHTargeted()).to.eq(proposal.get().link().get().output().get().contentPKH().toString('hex'))
+            expect(lastPut.get().indexProposalTargeted()).to.eq(proposal.get().index())
+            expect(lastPut.get().contentPKHTargeted()).to.eq("")
         }
     })
 
@@ -328,7 +329,6 @@ const main = () => {
             expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
             expect(lastPut.isThread()).to.eq(true)
             expect(lastPut.isRethread()).to.eq(false)
-            expect(lastPut.get().contentUUID()).to.eq(uuidContent)
             expect(lastPut.get().contentPKHTargeted()).to.eq("")
         }
     })
