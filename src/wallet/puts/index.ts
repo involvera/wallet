@@ -74,7 +74,8 @@ export class UnserializedPutModel extends Model {
 
         if (this.isRegularTx()){
             if (this.isLughTx()){
-                from = 'Involvera : Lugh'
+                const lStr = this.get().height().toString()
+                from = 'L'+'000000'.slice(0, 6 - lStr.length) + lStr
             } else {
                 from = this.get().pkh().get().sender() === pkh ? 'You' : GetAddressFromPubKeyHash(Buffer.from(this.get().pkh().get().sender(), 'hex'))
                 to = this.get().pkh().get().recipient() === pkh ? 'you' : GetAddressFromPubKeyHash(Buffer.from(this.get().pkh().get().recipient(), 'hex'))
@@ -88,7 +89,7 @@ export class UnserializedPutModel extends Model {
             } else if (this.isThread()){
                 from = ''
                 action = 'New thread created : '
-                to = this.get().contentPKH(), 'hex'
+                to = this.get().contentPKH()
             } else if (this.isRethread()){
                 from = 'You'
                 action = 'replied to'
@@ -142,9 +143,10 @@ export class UnserializedPutModel extends Model {
         }
         
         const indexProposalTargeted = (): number => {
-            if (this.isProposal() || this.isVote()) {
+            if (this.isProposal())
+                return parseInt(link().get().from())
+            if (this.isVote())
                 return parseInt(link().get().to())
-            }
             return -1
         }
  

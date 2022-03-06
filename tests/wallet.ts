@@ -184,6 +184,7 @@ const main = () => {
             expect(lastPut.isProposal()).to.eq(true)
             expect(lastPut.isApplicationProposal() ).to.eq(true)
             expect(lastPut.get().contentPKH()).to.not.eq("")
+            expect(lastPut.get().indexProposalTargeted()).to.be.greaterThan(0)
         }
     })
 
@@ -240,6 +241,7 @@ const main = () => {
             expect(lastPut.isProposal()).to.eq(true)
             expect(lastPut.isConstitutionProposal() ).to.eq(true)
             expect(lastPut.get().contentPKH()).to.not.eq("")
+            expect(lastPut.get().indexProposalTargeted()).to.be.greaterThan(0)
         }
     })
 
@@ -274,6 +276,7 @@ const main = () => {
             expect(lastPut.isProposal()).to.eq(true)
             expect(lastPut.isCostProposal() ).to.eq(true)
             expect(lastPut.get().contentPKH()).to.not.eq("")
+            expect(lastPut.get().indexProposalTargeted()).to.be.greaterThan(0)
         }
     })
 
@@ -330,6 +333,8 @@ const main = () => {
             expect(lastPut.isThread()).to.eq(true)
             expect(lastPut.isRethread()).to.eq(false)
             expect(lastPut.get().contentPKHTargeted()).to.eq("")
+            expect(lastPut.get().indexProposalTargeted()).to.eq(-1)
+
         }
     })
 
@@ -360,6 +365,8 @@ const main = () => {
             expect(lastPut.isRethread()).to.eq(true)
             expect(lastPut.get().contentPKH()).to.eq(pkhContent2)
             expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().link().get().output().get().contentPKH().toString('hex'))
+            expect(lastPut.get().indexProposalTargeted()).to.eq(-1)
+            
         }
     })
 
