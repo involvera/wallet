@@ -8,7 +8,6 @@ import { PubKHModel} from './puts/pubkh'
 import ValueModel from './puts/value'
 
 import {
-    IUnserializedPut,
     UnserializedPutModel,
     UnserializedPutCollection
 } from './puts'
@@ -37,5 +36,4 @@ export {
 
 export type {
     IHeaderSignature,
-    IUnserializedPut
 }

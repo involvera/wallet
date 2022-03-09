@@ -14,8 +14,6 @@ import InfoModel from './info'
 import { ContentLinkModel } from '../transaction/content-link'
 
 import { RewardSummaryCollection } from '../transaction/reward-summary'
-import {RewardPutCollection} from './puts/rewards'
-import { UnserializedPutCollection } from './puts'
 import { InputModel, TransactionModel, UTXOCollection } from '../transaction'
 
 import config from '../config'
@@ -35,7 +33,6 @@ export default class Wallet extends Model {
         this.setState({
             seed: new KeysModel(initialState.seed, this.kids()),
             utxos: new UTXOCollection(initialState.utxos || [], this.kids()),
-            puts: new UnserializedPutCollection(initialState.puts || [], this.kids()), 
             cch: new CCHModel(initialState.cch, this.kids()),
             contract: new AuthContract(initialState.contract, this.kids()),
             fees: new FeesModel(initialState.fees, this.kids()),
@@ -43,7 +40,6 @@ export default class Wallet extends Model {
             costs: new CostsModel(initialState.costs, this.kids()),
             memory: new MemoryModel(initialState.memory, this.kids()),
             reward_summary: new RewardSummaryCollection(initialState.reward_summary, this.kids()),
-            my_rewards: new RewardPutCollection(initialState.my_rewards, this.kids())
         })
     }
 
@@ -67,10 +63,8 @@ export default class Wallet extends Model {
             this.fees().setState(json.fees)
             this.utxos().get().setState(json.utxos || [])
             this.costs().setState(json.costs)
-            this.myRewards().assignJSONResponse(json.last_rewards) == 20 ? this.myRewards().cleanUpStorage() : null
             this.action().store()
             await this.keys().fetch().aliasIfNotSet()
-            await this.refreshPutList()
             await this.refreshRewardColletion()
         }
     }
@@ -79,31 +73,15 @@ export default class Wallet extends Model {
         await this.rewardSummary().fetch(this.rewardSummary().get().getLastReactionTime(), this.keys().get().pubHashHex())
     }
 
-    refreshPutList = async () => {
-        const CONFIG_LUGH_INTERVAL = 10
-        const lastPutFetchHeight = this.memory().get().lastPutFetchHeight()
-        const currentHeight = this.cch().get().lastHeight()
-
-        const status = await this.puts().fetch().all(lastPutFetchHeight + CONFIG_LUGH_INTERVAL, this.sign().header())
-        if (status == 200){
-            this.memory().setLastPutFetchHeight(Math.min(currentHeight, lastPutFetchHeight + CONFIG_LUGH_INTERVAL)).store()
-            if (this.memory().get().lastPutFetchHeight() < currentHeight){
-                await this.refreshPutList()
-            }
-        }
-    }
-
     public keys = (): KeysModel => this.state.seed
     public auth = (): AuthContract => this.state.contract
     public fees = (): FeesModel => this.state.fees
     public costs = (): CostsModel => this.state.costs
     public info = (): InfoModel => this.state.info
-    public puts = (): UnserializedPutCollection => this.state.puts
     public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
     public memory = (): MemoryModel => this.state.memory
     public cch = (): CCHModel => this.state.cch
     public rewardSummary = (): RewardSummaryCollection => this.state.reward_summary
-    public myRewards = (): RewardPutCollection => this.state.my_rewards
 
     buildTX = () => {
 

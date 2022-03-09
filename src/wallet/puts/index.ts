@@ -1,6 +1,6 @@
 import { Collection, Model } from 'acey'
 import { Buffer } from 'buffer'
-import { ILink, IPubKH, IValue  } from 'community-coin-types'
+import { ILink, IPubKH, IValue, IUnSerializedPut } from 'community-coin-types'
 import { COIN_UNIT, CYCLE_IN_LUGH } from '../../constant';
 import { TByte } from 'wallet-script'
 import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash } from 'wallet-util';
@@ -12,37 +12,23 @@ import { LinkModel } from './link'
 import { PubKHModel } from './pubkh'
 import ValueModel from './value'
 
-export interface IUnserializedPut {
-    time: number
-    kind: TByte
-    lh: number
-    tx_id: string
-    link: ILink
-    put_index: number
-    pubkh: IPubKH
-    value: IValue
-    extra_data: string
-    fetched_at_cch: string   
-}
-
-const INITIAL_STATE: IUnserializedPut = {
+const INITIAL_STATE: IUnSerializedPut = {
     time: 0,
     kind: 0,
     lh: 0,
     tx_id: "",
-    put_index: -1,
+    put_idx: -1,
     pubkh: PubKHModel.DefaultState,
     link: LinkModel.DefaultState,
     value: ValueModel.DefaultState,
     extra_data: "",
-    fetched_at_cch: "",
 }
 
 export class UnserializedPutModel extends Model {
 
-    static DefaultState: IUnserializedPut = INITIAL_STATE
+    static DefaultState: IUnSerializedPut = INITIAL_STATE
 
-    constructor(state: IUnserializedPut = INITIAL_STATE, options: any){
+    constructor(state: IUnSerializedPut = INITIAL_STATE, options: any){
         super(state, options)
         this.setState({
             link: new LinkModel(state.link, this.kids()),
@@ -59,6 +45,7 @@ export class UnserializedPutModel extends Model {
     isConstitutionProposal = () => this.get().extraData() === "constitution"
 
     isProposal = () => this.isConstitutionProposal() || this.isCostProposal() || this.isApplicationProposal()
+
     isVote = () => this.isAcceptedVote() || this.isDeclinedVote()
     isThread = () => this.get().extraData() === "" && this.get().contentPKH() != ""
     isRethread = () => this.get().extraData() === "" && this.get().contentPKH() != "" && this.get().contentPKHTargeted() != ""
@@ -70,7 +57,7 @@ export class UnserializedPutModel extends Model {
         let action = ''
         let from = ''
         let to: string | number = ''
-        const amount = `${this.get().pkh().get().sender() == pkh ? '-' : '+'}${parseFloat((Number(this.get().value().get().atCreationTime()) / COIN_UNIT).toFixed(2)).toLocaleString('en')}`
+        const amount = `${this.get().pkh().get().sender() == pkh ? '-' : '+'}${parseFloat((Number(this.get().value()) / COIN_UNIT).toFixed(2)).toLocaleString('en')}`
 
         if (this.isRegularTx()){
             if (this.isLughTx()){
@@ -114,6 +101,8 @@ export class UnserializedPutModel extends Model {
         const link = (): LinkModel => this.state.link
         const value = (): ValueModel => this.state.value
 
+        const index = (): number => this.state.put_idx
+
         const CCH = (): string => this.state.fetched_at_cch
         const MR = () => Number(value().get().now() / value().get().atCreationTime() )
 
@@ -150,12 +139,13 @@ export class UnserializedPutModel extends Model {
             return -1
         }
  
-        const currentValue = (CCHList: string[]) => CalculateOutputMeltedValue(BigInt(value().get().atCreationTime()), meltedValueRatio(CCHList))
+        // const currentValue = (CCHList: string[]) => CalculateOutputMeltedValue(BigInt(value().get().atCreationTime()), meltedValueRatio(CCHList))
      
         return {
             pkh,
             link,
-            value,
+            index,
+            value: (): number => (this.state.value as ValueModel).get().atCreationTime(),
             txID: (): string => this.state.tx_id,
             createdAt: () => new Date(this.state.time),
             height: (): number => this.state.lh,
@@ -163,14 +153,26 @@ export class UnserializedPutModel extends Model {
             contentPKHTargeted,
             indexProposalTargeted,
             extraData: (): string => this.state.extra_data,
-            currentValue,
+            // currentValue,
         }
     }
 }
 
 export class UnserializedPutCollection extends Collection {
 
-    constructor(list: IUnserializedPut[] = [], options: any){
+    _pageFetched = {
+        all: 0,
+        lugh: 0,
+        non_lugh: 0
+    }
+    
+    _maxReached = {
+        all: false,
+        lugh: false,
+        non_lugh: false
+    }
+
+    constructor(list: IUnSerializedPut[] = [], options: any){
         super(list, [UnserializedPutModel, UnserializedPutCollection], options)
     }
 
@@ -200,109 +202,65 @@ export class UnserializedPutCollection extends Collection {
             return betweenDates(from, to)
         }
 
-        const activity = () => {
-
-            const atDayActivity = (d: Date) => {
-                let total = BigInt(0)
-                atDay(d).forEach((p: UnserializedPutModel) => {
-                    if (p.isVote() || p.isThread() || p.isRethread() || p.isProposal()){
-                        total = BigInt(total as any) + BigInt(p.get().value().get().atCreationTime() as any)
-                    }
-                })
-                return total
-            }
-
-            const onLastNDays = (n: Number) => {
-                if (n > (CYCLE_IN_LUGH-1) / 3)
-                    n = (CYCLE_IN_LUGH-1) / 3
-                
-                let i = 0;
-                const ret: BigInt[] = []
-                while (i <= n){
-                    const d = new Date()
-                    d.setTime(d.getTime() - ((24 * 3_600 * 1_000) * i))
-                    const score = atDayActivity(d)
-                    ret.push(score)
-                    i++
-                }
-                return ret
-            }
-
-            return {
-                onLastNDays, 
-                atDayActivity
-            }
-        }
-
         return {
             inputs, outputs,
             betweenDates,
             atDay,
-            activity, 
             votePowerDistribution
         }
     }
 
-    assignJSONResponse = (json: any) => {
-        json.list = json.list || []
-        let countAdded = 0 
-        const copy = new UnserializedPutCollection(this.to().plain(), {})
-        copy.forEach((u: UnserializedPutModel) => {
-            u.get().value().setState({ now: null })
-            u.setState({ fetched_at_cch: null })
-        })
-        for (const put of json.list){
-            if (copy.indexOf(Object.assign({}, put, {fetched_at_cch: null, value: { at_time: put.value.at_time, now: null } })) == -1) {
-                this.push(Object.assign({}, put, { fetched_at_cch: json.fetched_at_cch }))
-                countAdded++
-            }
+    assignJSONResponse = (list: IUnSerializedPut[]) => {
+        for (const e of list){
+            !this.find(e) && this.push(e)
         }
-        countAdded > 0 && this.action().store()
     }
 
-    fetch = () => {
-        const fromTX = async (txHashHex: string, headerSignature: IHeaderSignature) => {
-            try { 
-                const response = await axios(config.getRootAPIChainUrl() + '/puts/' + txHashHex, {
-                    headers: headerSignature as any,
-                    timeout: 10000,
-                    validateStatus: function (status) {
-                        return status >= 200 && status < 500;
-                    },
-                })
-                if (response.status == 200){
-                    const json = response.data
-                    this.assignJSONResponse(json)
-                }
-                return response.status
-            } catch (e: any){
-                throw new Error(e)
-            }
+    private _fetch = async (headerSignature: IHeaderSignature, filter: 'all' | 'lugh' | 'non_lugh', disablePageSystem: void | boolean) => {
+        const MAX_PER_PAGE = 10
+
+        if (this._maxReached[filter] == true && disablePageSystem != true){
+            return 200
         }
 
-        const all = async (lastHeight: number, headerSignature: IHeaderSignature) => {
-            try { 
-                const response = await axios(config.getRootAPIChainUrl() + '/puts/list', {
-                    method: 'GET',
-                    headers: Object.assign({}, headerSignature as any, {last_lh: lastHeight }),
-                    timeout: 10000,
-                    validateStatus: function (status) {
-                        return status >= 200 && status < 500;
-                    },
-                })
-                if (response.status == 200){
-                    const json = response.data
-                    this.assignJSONResponse(json)
+        try { 
+            const response = await axios(config.getRootAPIChainUrl() + '/puts/list', {
+                method: 'GET',
+                headers: Object.assign({}, headerSignature as any, {
+                    offset: disablePageSystem == true ? 0 : this._pageFetched[filter] * MAX_PER_PAGE,
+                    filter: {all: 0, lugh: 1, non_lugh: 2}[filter],
+                }),
+                timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (response.status == 200){
+                const list = response.data || []
+                if (disablePageSystem != true){
+                    if (list.length < MAX_PER_PAGE)
+                        this._maxReached[filter] = true
+                    this._pageFetched[filter] += 1
                 }
-                return response.status
-            } catch (e: any){
-                throw new Error(e)
+                this.assignJSONResponse(list)
             }
+            return response.status
+        } catch (e: any){
+            throw new Error(e)
         }
-
-        return { fromTX, all }
     }
+
+    fetch = (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
+        return {
+            all: () => this._fetch(headerSignature, 'all', disablePageSystem),
+            lughPuts: () => this._fetch(headerSignature, 'lugh', disablePageSystem),
+            nonLughPuts: () => this._fetch(headerSignature, 'non_lugh', disablePageSystem)
+        }
+    }
+
+
+
+
 
     sortByCreationDate = () => this.orderBy('time', 'desc') as UnserializedPutCollection
-    
 }

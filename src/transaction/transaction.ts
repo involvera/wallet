@@ -70,13 +70,11 @@ export class TransactionModel extends Model {
                 },
             })
             if (response.status === 201){
-                const { transaction: {lh, t}, puts, utxos, rewards } = response.data
+                const { transaction: {lh, t}, utxos } = response.data
                 this.setState({lh, t})
                 wallet.info().iterateTotalContent(this.get().outputs().countContent())
                 wallet.utxos().get().removeUTXOsFromInputs(this.get().inputs())
                 wallet.utxos().get().append(utxos || []).store()
-                wallet.puts().assignJSONResponse(puts)
-                wallet.myRewards().assignJSONResponse(rewards || [])
             }
             return response
         } catch (e: any){
