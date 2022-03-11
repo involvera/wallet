@@ -214,6 +214,7 @@ export class UnserializedPutCollection extends Collection {
         for (const e of list){
             !this.find(e) && this.push(e)
         }
+        this.save()
     }
 
     private _fetch = async (headerSignature: IHeaderSignature, filter: 'all' | 'lugh' | 'non_lugh', disablePageSystem: void | boolean) => {
@@ -257,10 +258,6 @@ export class UnserializedPutCollection extends Collection {
             nonLughPuts: () => this._fetch(headerSignature, 'non_lugh', disablePageSystem)
         }
     }
-
-
-
-
 
     sortByCreationDate = () => this.orderBy('time', 'desc') as UnserializedPutCollection
 }
