@@ -13,7 +13,7 @@ import ValueModel from './value'
 import { SocietyModel } from '../';
 import { AliasModel, IAlias } from '../alias';
 
-interface IUnSerializedPut {
+export interface IUnSerializedPut {
     time: number,
     kind: number,
     lh: number,
@@ -223,10 +223,10 @@ export class UnserializedPutCollection extends Collection {
 
     setSociety = (s: SocietyModel) => this._currentSociety = s
 
-    filterLughOnly = () => this.filter((p: UnserializedPutModel) => p.isLughTx())
-    filterNonLughOnly = () => this.filter((p: UnserializedPutModel) => !p.isLughTx())
-    filterReactionOnly = () => this.filter((p: UnserializedPutModel) => p.isReaction())
-    filterNonReaction = () => this.filter((p: UnserializedPutModel) => !p.isReaction())
+    filterLughOnly = ()  => this.filter((p: UnserializedPutModel) => p.isLughTx()) as UnserializedPutCollection
+    filterNonLughOnly = () => this.filter((p: UnserializedPutModel) => !p.isLughTx()) as UnserializedPutCollection
+    filterReactionOnly = () => this.filter((p: UnserializedPutModel) => p.isReaction()) as UnserializedPutCollection
+    filterNonReaction = () => this.filter((p: UnserializedPutModel) => !p.isReaction()) as UnserializedPutCollection
 
 
     get = () => {
