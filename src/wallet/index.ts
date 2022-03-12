@@ -3,14 +3,14 @@ import CostsModel from './costs'
 import FeesModel from './fees'
 import KeysModel from './keys'
 
-import { LinkModel} from './puts/link'
-import { PubKHModel} from './puts/pubkh'
-import ValueModel from './puts/value'
+import { LinkModel} from '../off-chain/puts/link'
+import { PubKHModel} from '../off-chain/puts/pubkh'
+import ValueModel from '../off-chain/puts/value'
 
 import {
     UnserializedPutModel,
     UnserializedPutCollection
-} from './puts'
+} from '../off-chain/puts'
 
 import UserActivityModel from './info/activity'
 import InfoModel from './info'

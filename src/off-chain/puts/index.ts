@@ -1,16 +1,30 @@
 import { Collection, Model } from 'acey'
 import { Buffer } from 'buffer'
-import { ILink, IPubKH, IValue, IUnSerializedPut } from 'community-coin-types'
-import { COIN_UNIT, CYCLE_IN_LUGH } from '../../constant';
-import { TByte } from 'wallet-script'
-import { CalculateOutputMeltedValue, GetAddressFromPubKeyHash } from 'wallet-util';
+import { IPubKH, ILink, IValue } from 'community-coin-types'
+import { COIN_UNIT, /* CYCLE_IN_LUGH */ } from '../../constant';
+import { /* CalculateOutputMeltedValue,*/ GetAddressFromPubKeyHash } from 'wallet-util';
 import axios from 'axios'
 import config from '../../config'
-import { IHeaderSignature } from '../wallet';
+import { IHeaderSignature } from '../../wallet/wallet';
 
 import { LinkModel } from './link'
 import { PubKHModel } from './pubkh'
 import ValueModel from './value'
+import { SocietyModel } from '../';
+import { AliasModel, IAlias } from '../alias';
+
+interface IUnSerializedPut {
+    time: number,
+    kind: number,
+    lh: number,
+    tx_id: string,
+    put_idx: number,
+    pubkh: IPubKH
+    link: ILink
+    value: IValue,
+    extra_data: string,
+    alias: IAlias | null
+}
 
 const INITIAL_STATE: IUnSerializedPut = {
     time: 0,
@@ -22,6 +36,7 @@ const INITIAL_STATE: IUnSerializedPut = {
     link: LinkModel.DefaultState,
     value: ValueModel.DefaultState,
     extra_data: "",
+    alias: null
 }
 
 export class UnserializedPutModel extends Model {
@@ -34,8 +49,16 @@ export class UnserializedPutModel extends Model {
             link: new LinkModel(state.link, this.kids()),
             pubkh: new PubKHModel(state.pubkh, this.kids()),
             value: new ValueModel(state.value, this.kids()),
+            alias: state.alias ? new AliasModel(undefined, this.kids()) : null
         })
     }
+
+    isReaction = () => this.isUpvote() || this.isReaction0() || this.isReaction1() || this.isReaction2()
+
+    isUpvote = () => this.get().extraData() === "upvote"
+    isReaction0 = () => this.get().extraData() === "reaction_0"
+    isReaction1 = () => this.get().extraData() === "reaction_1"
+    isReaction2 = () => this.get().extraData() === "reaction_2"
 
     isAcceptedVote = () => this.get().extraData() === "accepted"
     isDeclinedVote = () => this.get().extraData() === "declined"
@@ -64,8 +87,19 @@ export class UnserializedPutModel extends Model {
                 const lStr = this.get().height().toString()
                 from = 'L'+'000000'.slice(0, 6 - lStr.length) + lStr
             } else {
-                from = this.get().pkh().get().sender() === pkh ? 'You' : GetAddressFromPubKeyHash(Buffer.from(this.get().pkh().get().sender(), 'hex'))
-                to = this.get().pkh().get().recipient() === pkh ? 'you' : GetAddressFromPubKeyHash(Buffer.from(this.get().pkh().get().recipient(), 'hex'))
+                const amIFrom = this.get().pkh().get().sender() === pkh
+
+                const toAddr = (hexPKH: string) => {
+                    const addr = GetAddressFromPubKeyHash(Buffer.from(hexPKH, 'hex'))
+                    if (!this.get().otherPartyAlias())
+                        return addr
+
+                    const a = this.get().otherPartyAlias() as AliasModel
+                    return a.get().username() || addr
+                }
+
+                from = amIFrom ? 'You' : toAddr(this.get().pkh().get().sender())
+                to = !amIFrom ? 'you' : toAddr(this.get().pkh().get().recipient())
                 action = 'sent to'
             }
         } else {
@@ -84,7 +118,11 @@ export class UnserializedPutModel extends Model {
             } else if (this.isProposal()){
                 action = `New ${this.get().extraData()} proposal`
                 to = this.get().indexProposalTargeted()
-            }
+            } else if (this.isReaction()){
+                from = 'You'
+                action = this.isUpvote() ? 'upvoted' : 'rewarded'
+                to = this.get().contentPKHTargeted()
+            } 
         }
 
         return {
@@ -97,6 +135,8 @@ export class UnserializedPutModel extends Model {
 
     get = () => {
 
+        const otherPartyAlias = (): AliasModel | null => this.state.alias
+
         const pkh = (): PubKHModel => this.state.pubkh
         const link = (): LinkModel => this.state.link
         const value = (): ValueModel => this.state.value
@@ -106,6 +146,7 @@ export class UnserializedPutModel extends Model {
         const CCH = (): string => this.state.fetched_at_cch
         const MR = () => Number(value().get().now() / value().get().atCreationTime() )
 
+        /*
         const meltedValueRatio = (CCHList: string[]) => {
             let count = 0
             for (const cch of CCHList){
@@ -122,7 +163,8 @@ export class UnserializedPutModel extends Model {
     
             return r
         }
-        
+        */
+
         const contentPKH = (): string => link().get().from()
         
         const contentPKHTargeted = (): string => {
@@ -138,7 +180,7 @@ export class UnserializedPutModel extends Model {
                 return parseInt(link().get().to())
             return -1
         }
- 
+        
         // const currentValue = (CCHList: string[]) => CalculateOutputMeltedValue(BigInt(value().get().atCreationTime()), meltedValueRatio(CCHList))
      
         return {
@@ -152,6 +194,7 @@ export class UnserializedPutModel extends Model {
             contentPKH,
             contentPKHTargeted,
             indexProposalTargeted,
+            otherPartyAlias,
             extraData: (): string => this.state.extra_data,
             // currentValue,
         }
@@ -160,59 +203,45 @@ export class UnserializedPutModel extends Model {
 
 export class UnserializedPutCollection extends Collection {
 
-    _pageFetched = {
+    private _pageFetched = {
         all: 0,
         lugh: 0,
         non_lugh: 0
     }
     
-    _maxReached = {
+    private _maxReached = {
         all: false,
         lugh: false,
         non_lugh: false
     }
 
+    private _currentSociety: SocietyModel | null = null
+
     constructor(list: IUnSerializedPut[] = [], options: any){
         super(list, [UnserializedPutModel, UnserializedPutCollection], options)
     }
 
-    sortByTime = () => this.orderBy('time', 'desc') as UnserializedPutCollection
+    setSociety = (s: SocietyModel) => this._currentSociety = s
+
+    filterLughOnly = () => this.filter((p: UnserializedPutModel) => p.isLughTx())
+    filterNonLughOnly = () => this.filter((p: UnserializedPutModel) => !p.isLughTx())
+    filterReactionOnly = () => this.filter((p: UnserializedPutModel) => p.isReaction())
+    filterNonReaction = () => this.filter((p: UnserializedPutModel) => !p.isReaction())
+
 
     get = () => {
         const inputs = (pkhHex: string): UnserializedPutCollection => this.filter((p: UnserializedPutModel) => p.get().pkh().get().sender() == pkhHex) as UnserializedPutCollection
         const outputs = (pkhHex: string): UnserializedPutCollection => this.filter((p: UnserializedPutModel) => p.get().pkh().get().recipient() == pkhHex) as UnserializedPutCollection
-        const betweenDates = (from: Date, to: Date) => this.filter((p: UnserializedPutModel) => from <= p.get().createdAt() && to >= p.get().createdAt()) as UnserializedPutCollection
-       
-        const votePowerDistribution = (): UnserializedPutCollection => this.filter((p: UnserializedPutModel) => p.isLughTx()) as UnserializedPutCollection
-
-        const atDay = (dayDate: Date): UnserializedPutCollection => {
-            const from = new Date(dayDate)
-            const to = new Date(dayDate)
-
-            from.setSeconds(0)
-            from.setMilliseconds(0)
-            from.setMinutes(0)
-            from.setHours(0)
-
-            to.setMilliseconds(999)
-            to.setSeconds(59)
-            to.setMinutes(59)
-            to.setHours(23)
-
-            return betweenDates(from, to)
-        }
-
         return {
             inputs, outputs,
-            betweenDates,
-            atDay,
-            votePowerDistribution
         }
     }
 
-    assignJSONResponse = (list: IUnSerializedPut[]) => {
+    private _assignJSONResponse = (list: IUnSerializedPut[]) => {
         for (const e of list){
-            !this.find(e) && this.push(e)
+            const { tx_id, time, kind, lh, pubkh, put_idx, value, extra_data, link } = e
+            const o = {tx_id, time, kind, lh, pubkh, put_idx, value, extra_data, link }
+            !this.find(o) && this.push(e)
         }
         this.save()
     }
@@ -224,8 +253,12 @@ export class UnserializedPutCollection extends Collection {
             return 200
         }
 
+        if (!this._currentSociety){
+            throw new Error("You need to set the current used Society through the method 'setSociety' first.")
+        }
+
         try { 
-            const response = await axios(config.getRootAPIChainUrl() + '/puts/list', {
+            const response = await axios(config.getRootAPIOffChainUrl() + '/puts/list/' + this._currentSociety.get().id(), {
                 method: 'GET',
                 headers: Object.assign({}, headerSignature as any, {
                     offset: disablePageSystem == true ? 0 : this._pageFetched[filter] * MAX_PER_PAGE,
@@ -243,7 +276,7 @@ export class UnserializedPutCollection extends Collection {
                         this._maxReached[filter] = true
                     this._pageFetched[filter] += 1
                 }
-                this.assignJSONResponse(list)
+                this._assignJSONResponse(list)
             }
             return response.status
         } catch (e: any){
@@ -259,5 +292,5 @@ export class UnserializedPutCollection extends Collection {
         }
     }
 
-    sortByCreationDate = () => this.orderBy('time', 'desc') as UnserializedPutCollection
+    sortByCreationDateDesc = () => this.orderBy('time', 'desc') as UnserializedPutCollection
 }
