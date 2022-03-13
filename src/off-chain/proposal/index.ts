@@ -236,7 +236,9 @@ export class ProposalCollection extends Collection {
         super(initialState, [ProposalModel, ProposalCollection], options)
     }
 
-    setSociety = (s: SocietyModel) => this._currentSociety = s
+    setSociety = (s: SocietyModel) => {
+        this._currentSociety = s
+    }
 
     fetch = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
         const MAX_PER_PAGE = 5
@@ -249,7 +251,7 @@ export class ProposalCollection extends Collection {
             throw new Error("You need to set the current used Society through the method 'setSociety' first.")
         }
 
-        try { 
+        try {
             const response = await axios(config.getRootAPIOffChainUrl() + `/proposal/${this._currentSociety.get().id()}`, {
                 method: 'GET',
                 headers: Object.assign({}, headerSignature as any, {
