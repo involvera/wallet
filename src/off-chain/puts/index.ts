@@ -272,8 +272,9 @@ export class UnserializedPutCollection extends Collection {
             if (response.status == 200){
                 const list = response.data || []
                 if (disablePageSystem != true){
-                    if (list.length < MAX_PER_PAGE)
+                    if (list.length < MAX_PER_PAGE){
                         this._maxReached[filter] = true
+                    }
                     this._pageFetched[filter] += 1
                 }
                 this._assignJSONResponse(list)

@@ -1,4 +1,3 @@
-rm -rf dist
-yarn add acey --peer 
-./node_modules/.bin/rollup -c
-rm -rf node_modules/acey
+rm -rf ~/involvera/app/node_modules/involvera-wallet-js/dist
+yarn build
+cp -rf dist ~/involvera/app/node_modules/involvera-wallet-js/
