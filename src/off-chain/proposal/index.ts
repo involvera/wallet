@@ -265,6 +265,7 @@ export class ProposalCollection extends Collection {
         super(initialState, [ProposalModel, ProposalCollection], options)
     }
 
+    /*
     pullUserVotes = async (headerSig: IHeaderSignature) => {
         const list = this.filter((p: ProposalModel) => !p.get().userVote()).map((p: ProposalModel) => p.get().pubKH()).join(',')
         try {
@@ -284,6 +285,7 @@ export class ProposalCollection extends Collection {
             throw new Error(e.toString())
         }
     }
+    */
 
     sortByIndexDesc = (): ProposalCollection => this.orderBy('index', 'desc') as ProposalCollection
 

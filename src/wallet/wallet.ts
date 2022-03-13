@@ -20,6 +20,7 @@ import config from '../config'
 import TxBuild from './tx-builder' 
 
 import { BURNING_RATIO } from '../constant'
+import { MAX_CONSTITUTION_RULE } from 'wallet-script/dist/src/constant'
 
 export interface IHeaderSignature {
     pubkey: string
