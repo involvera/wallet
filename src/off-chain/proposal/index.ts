@@ -12,6 +12,7 @@ import {VoteModel, } from './vote'
 import { UserVoteModel } from './user-vote'
 import { LUGH_EVERY_N_S } from '../../constant';
 import { IHeaderSignature } from '../../wallet';
+import { SocietyModel } from '../society';
 
 export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
@@ -227,42 +228,52 @@ export class ProposalModel extends Model {
 
 export class ProposalCollection extends Collection {
 
-    static FetchLastProposal = async (societyID: number, headerSig: IHeaderSignature | void) => {
-        try {
-            const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}/last`,  {
-                timeout: 10_000,
-                headers: headerSig || {},
-                validateStatus: function (status) {
-                    return status >= 200 && status < 500;
-                },
-            })
-            if (res.status == 200){
-                const { data } = res
-                return new ProposalModel(data, {})
-            }
-        } catch (e: any){
-            throw new Error(e.toString())
-        }
-    }
-
-    static FetchLastProposals = async (societyID: number, page: number, headerSig: IHeaderSignature | void) => {
-        try {
-            const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}`, {
-                headers: Object.assign({}, {page}, headerSig ? headerSig : {}),
-                timeout: 10_000,
-                validateStatus: function (status) {
-                    return status >= 200 && status < 500;
-                },
-            })
-            if (res.status == 200)
-                return new ProposalCollection(res.data, {})
-        } catch (e: any){
-            throw new Error(e.toString())
-        }
-    }
+    private _currentSociety: SocietyModel | null = null
+    private _pageFetched = 0    
+    private _maxReached = false
 
     constructor(initialState: any, options: any){
         super(initialState, [ProposalModel, ProposalCollection], options)
+    }
+
+    setSociety = (s: SocietyModel) => this._currentSociety = s
+
+    fetch = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
+        const MAX_PER_PAGE = 5
+
+        if (this._maxReached == true && disablePageSystem != true){
+            return 200
+        }
+
+        if (!this._currentSociety){
+            throw new Error("You need to set the current used Society through the method 'setSociety' first.")
+        }
+
+        try { 
+            const response = await axios(config.getRootAPIOffChainUrl() + `/proposal/${this._currentSociety.get().id()}`, {
+                method: 'GET',
+                headers: Object.assign({}, headerSignature as any, {
+                    offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE
+                }),
+                timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (response.status == 200){
+                const list = response.data || []
+                if (disablePageSystem != true){
+                    if (list.length < MAX_PER_PAGE){
+                        this._maxReached = true
+                    }
+                    this._pageFetched += 1
+                }
+                this.add(new ProposalCollection(list, {}))
+            }
+            return response.status
+        } catch (e: any){
+            throw new Error(e)
+        }
     }
 
     /*

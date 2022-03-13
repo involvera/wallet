@@ -676,10 +676,12 @@ const main = () => {
     })
 
     it('Fetch Proposal list', async () => {
-        const proposals = await ProposalCollection.FetchLastProposals(1, 0, wallet.sign().header())
+        society = await SocietyModel.fetch(1)
+        const proposals = new ProposalCollection([],{})
+        proposals.setSociety(society as SocietyModel)
+        await proposals.fetch(wallet.sign().header(), true)
         expect(proposals).not.to.eq(null)
         if (proposals){
-            await proposals.pullUserVotes(wallet.sign().header())
             expect(proposals.count()).to.eq(3)
             const proposal1 = proposals.nodeAt(0) as ProposalModel
             const proposal2 = proposals.nodeAt(1) as ProposalModel
