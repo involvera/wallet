@@ -18,9 +18,8 @@ export class UserVoteModel extends Model {
     get = () => {
         return {
             hasApproved: (): boolean => this.state.has_approved,
-            vote_time: (): number => this.state.vote_time,
-            
-            createdAtPretty: () => moment(new Date(this.get().vote_time())).fromNow()
+            voteTime: (): number => this.state.vote_time,
+            createdAtPretty: () => moment(new Date(this.get().voteTime() * 1000)).fromNow()
         }
     }
 }
