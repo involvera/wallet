@@ -4,7 +4,7 @@ import moment from 'moment'
 
 const DEFAULT_STATE: IUserVote = {
     has_approved: false,
-    vote_lh: -1
+    vote_time: -1
 }
 
 export class UserVoteModel extends Model {
@@ -12,24 +12,15 @@ export class UserVoteModel extends Model {
     static DefaultState: IUserVote = DEFAULT_STATE
 
     constructor(state: IUserVote = DEFAULT_STATE, options: any){
-        super(state, options) 
+        super(state, options)
     }
 
     get = () => {
         return {
             hasApproved: (): boolean => this.state.has_approved,
-            voteLH: (): number => this.state.vote_lh,
-            createdAtPretty: (currentLH: number): string =>{
-                const vlh = this.get().voteLH()
-                const diffLH = currentLH - vlh
-                if (diffLH < 3)
-                    return 'newly'
-                if (diffLH < 6)
-                    return 'recently'
-                let d = new Date().getTime()
-                d -= (Math.ceil(diffLH / 3) * 24 * 60 * 60 * 1000)
-                return moment(d).fromNow()
-            }
+            vote_time: (): number => this.state.vote_time,
+            
+            createdAtPretty: () => moment(new Date(this.get().vote_time())).fromNow()
         }
     }
 }
