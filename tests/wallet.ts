@@ -575,6 +575,7 @@ const main = () => {
             expect(costs.get().thread()).to.eq(LUGH_AMOUNT / 200)
             expect(costs.get().proposal()).to.eq(LUGH_AMOUNT / 20)
             expect(consti.get().constitution().count()).to.eq(10)
+            expect(consti.get().proposal()).to.eq(null)
             const constitution = consti.get().constitution()
             expect((constitution.nodeAt(0) as RuleModel).get().title() == 'This is the new rule #1 for my constitution')
             expect((constitution.nodeAt(0) as RuleModel).get().content() == "Let's write some guidelines to respect to make this community the best.")
