@@ -344,7 +344,7 @@ const main = () => {
     })
 
     let pkhContent2 = ""
-    it('[ONCHAIN] Wallet1 -> create a rethread', async () => {
+    it('[ONCHAIN] Wallet1 -> create a rethread on Thread', async () => {
         const thread = await ContentLinkModel.FetchThread(uuidContent)
         const tx = await wallet.buildTX().rethread(thread.get().link().get().output().get().contentPKH())
         const balance = wallet.balance()
@@ -369,7 +369,7 @@ const main = () => {
         }
     })
 
-    it('[OFFCHAIN] Wallet1 -> create a rethread', async () => {
+    it('[OFFCHAIN] Wallet1 -> create a rethread on Thread', async () => {
         const p = ThreadModel.NewContent(1, "This is a title.", `Here my favorite Thread: %[thread/${pkhContent0}] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]`)
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
@@ -829,6 +829,67 @@ const main = () => {
         expect(wallet.cch().get().list().length).to.eq(9)
         expect(wallet.utxos().get().count()).to.eq(6)
         expect(walletPuts.count()).to.eq(13)
+    })
+
+    it('[ONCHAIN] Wallet1 -> create a rethread on Proposal', async () => {
+        const proposal = await ProposalModel.FetchByIndex(1, 10)
+        expect(proposal).not.eq(undefined)
+        const tx = await wallet.buildTX().rethread(proposal?.get().contentLink().get().output().get().contentPKH() as Buffer)
+        const balance = wallet.balance()
+        expect(tx).not.eq(null)
+        if (tx){
+            const response = await tx.broadcast(wallet)
+            const out = tx.get().outputs().nodeAt(0) as OutputModel
+            pkhContent2 = out.get().contentPKH().toString('hex')
+            expect(response.status).to.eq(201)
+            await walletPuts.fetch(wallet.sign().header(), true).all()
+            expect(walletPuts.count()).to.eq(14)
+            expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte()))
+            const lastPut = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
+            expect(lastPut.get().value()).to.eq(wallet.costs().get().thread())
+            expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
+            expect(lastPut.isThread()).to.eq(true)
+            expect(lastPut.isRethread()).to.eq(true)
+            expect(lastPut.get().contentPKH()).to.eq(pkhContent2)
+            expect(lastPut.get().contentPKHTargeted()).to.eq(proposal?.get().contentLink().get().output().get().contentPKH().toString('hex'))
+            expect(lastPut.get().indexProposalTargeted()).to.eq(-1)
+        }
+    })
+
+    it('[OFFCHAIN] Wallet1 -> create a rethread on Proposal', async () => {
+        const p = ThreadModel.NewContent(1, '', `Im making my first thread about a proposal.`)
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(201)
+    })
+
+    it('Fetch Thread list 2', async () => {
+        const society = await SocietyModel.fetch(1)
+        const threads = new ThreadCollection([],{})
+        threads.setSociety(society as SocietyModel)
+        await threads.fetch(wallet.sign().header(), true)    
+
+        expect(threads).not.to.eq(null)
+        if (threads){
+            expect(threads.count()).to.eq(3)
+            const thread1 = threads.nodeAt(0) as ThreadModel
+
+            expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
+            expect(thread1.get().title()).to.eq('')
+            expect(thread1.get().pubKH()).to.eq("4f54e8c7d99764e70622675889e3ee81d2638c6e")
+            expect(() => thread1.get().contentLink()).to.throw(Error)
+            expect(thread1.get().rewards().get().countUpvote()).to.eq(0)
+            expect(thread1.get().rewards().get().countReward0()).to.eq(0)
+            expect(thread1.get().rewards().get().countReward1()).to.eq(0)
+            expect(thread1.get().rewards().get().countReward2()).to.eq(0)
+            const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
+            if (fullThread1){
+                expect(fullThread1.get().content()).to.eq("Im making my first thread about a proposal.")
+                expect(fullThread1.get().embeds().length).to.eq(0)
+                expect(fullThread1.get().contentLink().get().targetContent()).to.eq("ee8a1440725029994a56a1d7d7ecb28140fb4fb0")
+                expect(fullThread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
+            }
+        }
     })
 
 }
