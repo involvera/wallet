@@ -3,8 +3,14 @@ import axios from 'axios'
 import { Buffer } from 'buffer'
 import * as bip32 from 'bip32'
 import { Collection, Model } from "acey";
-import { IConstitutionProposalUnRaw, ICostProposal, IUserVote, IUserVoteProposal, IKindLinkUnRaw,IVoteSummary } from 'community-coin-types'
 import { BuildSignatureHex } from 'wallet-util'
+import { 
+    IConstitutionProposalUnRaw, ICostProposal, IUserVote, 
+    IKindLinkUnRaw,IVoteSummary 
+} from 'community-coin-types'
+import { StringToParsedPreview } from 'involvera-content-embedding'
+import { TProposalType } from 'wallet-script'
+
 import config from "../../config";
 import { KindLinkModel } from '../../transaction/kind-link'
 import { IAlias, AliasModel  } from '../alias'
@@ -15,6 +21,12 @@ import { IHeaderSignature } from '../../wallet';
 import { SocietyModel } from '../society';
 
 export type TLayer = 'Economy' | 'Application' | 'Constitution'
+
+export interface IPreviewProposal {
+    preview_code: string
+    user_vote: IUserVote
+    vote: IVoteSummary
+}
 
 export interface IProposal {
     sid: number
@@ -78,10 +90,11 @@ export class ProposalModel extends Model {
     constructor(state: undefined | null | IProposal = DEFAULT_STATE, options: any){
         super(state, options) 
         state && this.setState(Object.assign(state, { 
-            content_link: new KindLinkModel(state.content_link, this.kids()),
-            vote: new VoteModel(state.vote, this.kids()),
-            author: new AliasModel(state.author, this.kids()),
+            content_link: state.content_link ? new KindLinkModel(state.content_link, this.kids()) : null,
+            vote: state.vote ? new VoteModel(state.vote, this.kids()) : null, 
+            author: state.author ? new AliasModel(state.author, this.kids()) : null,
             user_vote: state.user_vote ? new UserVoteModel(state.user_vote, this.kids()) : null,
+            created_at: state.created_at ? new Date(state.created_at) : undefined
         }))
     }
 
@@ -93,27 +106,36 @@ export class ProposalModel extends Model {
     
     sign = (wallet: bip32.BIP32Interface) => {
         const sig = BuildSignatureHex(wallet, Buffer.from(this.get().dataToSign()))
-        this.setState({
+        return {
             public_key: sig.public_key_hex,
             signature: sig.signature_hex
-        })
+        }
     }
 
     broadcast = async (wallet: bip32.BIP32Interface) => {
-            this.sign(wallet)
-            const json = this.to().plain()
-            json.content = this.get().dataToSign()
+            const body = Object.assign({
+                title: this.get().title(),
+                content:  this.get().dataToSign(),
+                sid: this.get().societyID(),
+            }, this.sign(wallet))
+
             try {
                 const res = await axios(`${config.getRootAPIOffChainUrl()}/proposal`, {
                     method: 'post',
                     headers: { 'Content-Type': 'application/json' },
-                    data: JSON.stringify(json),
+                    data: JSON.stringify(body),
                     timeout: 10_000,
                     validateStatus: function (status) {
                         return status >= 200 && status < 500;
                     },
                 })
-                res.status == 201 && this.hydrate(res.data)
+                const state = res.data
+                res.status == 201 && this.setState(Object.assign(state, {
+                    content_link: new KindLinkModel(state.content_link, this.kids()),
+                    vote: new VoteModel(state.vote, this.kids()), 
+                    author: new AliasModel(state.author, this.kids()),
+                    created_at: new Date(state.created_at)
+                }))
                 return res
             } catch (e: any){
                 return e.toString()
@@ -130,9 +152,13 @@ export class ProposalModel extends Model {
 
     get = () => {
         const index = (): number => this.state.index
-        const contentLink = (): KindLinkModel => this.state.content_link
+        const contentLink = (): KindLinkModel => {
+            if (this.state.content_link == null)
+                throw new Error("content_link is null")
+            return this.state.content_link
+        }
         const societyID = (): number => this.state.sid
-        const embeds = (): string[] => this.state.embeds
+        const embeds = (): string[] => this.state.embeds || []
 
         const estimatedEndAtTime = () => {
             const begin = this.get().createdAt().getTime()
@@ -146,20 +172,21 @@ export class ProposalModel extends Model {
 
         const costs = () => { 
             const content = contentLink()
-            if (content == null)
-                throw new Error("content_link is null")
             return content.get().output().get().script().parse().proposalCosts()
         }
 
         const constitution = () => {
             const content = contentLink()
-            if (content == null)
-                throw new Error("content_link is null")
             return content.get().output().get().script().parse().constitution()
         }
 
-        const author = (): AliasModel => this.state.author
-        const content = (): string[] => this.state.content 
+        const author = (): AliasModel => {
+            if (!this.state.author)
+                throw new Error("author is null")
+            return this.state.author
+        }
+
+        const content = (): string[] => this.state.content
         const title = (): string => this.state.title
         const createdAt = (): Date => new Date(this.state.created_at)
 
@@ -187,21 +214,31 @@ export class ProposalModel extends Model {
         const dataToSign = (): string => this.get().content().join('~~~_~~~_~~~_~~~')
 
         const layer = (): TLayer => {
-            const content = contentLink()
-            if (content == null)
-                throw new Error("content_link is null")
-            const is = content.get().output().get().script().is()
-            if (is.costProposalScript())
-                return 'Economy'
-            if (is.constitutionProposalScript())
-                return 'Constitution'
-            return 'Application'
+            const formatToLayer = (pt: TProposalType) => {
+                const layer = pt as TProposalType
+                if (layer === 'COSTS')
+                    return 'Economy'
+                return (layer.charAt(0).toUpperCase() + layer.slice(1).toLowerCase()) as TLayer
+            }
+            try {
+                const content = contentLink()
+                if (!content.get().output().get().script().is().proposalScript()){
+                    throw new Error("Not a proposal")
+                }
+                return formatToLayer(content.get().output().get().script().proposalContentTypeString() as TProposalType)
+            } catch (e){
+                const { layer } = this.state
+                if (!layer)
+                    contentLink() //will throw an error if no layer key set
+                return formatToLayer(layer)
+            }
         }
+
         const pubKH = (): string => this.state.public_key_hashed
         const pubKHOrigin = ():string => this.state.pubkh_origin
 
         const context = (): ICostProposal | IConstitutionProposalUnRaw | null => {
-            if (this.get().content()){
+            if (this.state.context){
                 switch (this.get().layer()) {
                     case 'Economy':
                         return JSON.parse(this.state.context) as ICostProposal
@@ -263,14 +300,27 @@ export class ProposalCollection extends Collection {
                 },
             })
             if (response.status == 200){
-                const list = response.data || []
+                const json = (response.data || []) as IPreviewProposal[]
                 if (disablePageSystem != true){
-                    if (list.length < MAX_PER_PAGE){
+                    if (json.length < MAX_PER_PAGE){
                         this._maxReached = true
                     }
                     this._pageFetched += 1
                 }
-                this.add(new ProposalCollection(list, {}))
+                const list = new ProposalCollection([], {})
+                for (const o of json){
+                    const preview = StringToParsedPreview(o.preview_code)
+                    list.push({
+                        index: preview.index,
+                        layer: preview.proposal_layer,
+                        created_at: new Date(preview.created_at * 1000),
+                        vote: o.vote,
+                        user_vote: o.user_vote,
+                        title: preview.title,
+                        sid: preview.sid
+                    })
+                }
+                this.add(list)
             }
             return response.status
         } catch (e: any){
@@ -302,7 +352,7 @@ export class ProposalCollection extends Collection {
 
     sortByIndexDesc = (): ProposalCollection => this.orderBy('index', 'desc') as ProposalCollection
 
-    add = (node: ProposalModel | ProposalCollection) => {        
+    add = (elem: ProposalModel | ProposalCollection) => {        
         const addNode = (n: ProposalModel) => {
             const idx = this.findIndex({index: n.get().index()})
             if (idx == -1)
@@ -310,7 +360,7 @@ export class ProposalCollection extends Collection {
             else
                 this.updateAt(n.to().plain(), idx)            
         }
-        node instanceof ProposalModel ? addNode(node) : node.forEach((p: ProposalModel) => addNode(p))
+        elem instanceof ProposalModel ? addNode(elem) : elem.forEach((p: ProposalModel) => addNode(p))
         return this.action()  
     }
 }

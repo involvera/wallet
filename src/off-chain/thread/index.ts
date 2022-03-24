@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { IKindLinkUnRaw, IReactionCount  } from 'community-coin-types'
+import { IHeaderSignature, IKindLinkUnRaw, IReactionCount  } from 'community-coin-types'
 import * as bip32 from 'bip32'
 import { Buffer } from 'buffer'
 import { Model, Collection } from "acey";
@@ -8,6 +8,13 @@ import { KindLinkModel } from "../../transaction";
 import config from '../../config'
 import { AliasModel, IAlias } from '../alias';
 import { RewardsModel } from './rewards'
+import { SocietyModel } from '../society';
+import { IParsedPreview, StringToParsedPreview } from 'involvera-content-embedding';
+
+export interface IPreviewThread{
+    preview_code: string
+    reaction: IReactionCount
+}
 
 export interface IThread {
     sid: number
@@ -16,9 +23,10 @@ export interface IThread {
     title: string
     content: string
     public_key_hashed: string
-    reaction_count?: IReactionCount
+    reaction?: IReactionCount
     embeds?: string[]
     created_at?: Date
+    target: IParsedPreview | null
 }
 
 const DEFAULT_STATE: IThread = {
@@ -28,9 +36,10 @@ const DEFAULT_STATE: IThread = {
     title: '',
     content: '',
     public_key_hashed: "",
-    reaction_count: RewardsModel.DefaultState,
+    reaction: RewardsModel.DefaultState,
     embeds: [],
-    created_at: new Date()
+    created_at: new Date(),
+    target: null
 }
 
 export class ThreadModel extends Model {
@@ -62,37 +71,45 @@ export class ThreadModel extends Model {
     constructor(state: IThread = DEFAULT_STATE, options: any){
         super(state, options) 
         this.setState(Object.assign(state, { 
-            content_link: new KindLinkModel(state.content_link, this.kids()),
-            author: new AliasModel(state.author, this.kids()),
-            rewards: new RewardsModel(state.reaction_count, this.kids()),
+            content_link: state.content_link ? new KindLinkModel(state.content_link, this.kids()) : null,
+            author: state.author ? new AliasModel(state.author, this.kids()) : null,
+            rewards: state.reaction ? new RewardsModel(state.reaction, this.kids()) : null,
             created_at: state.created_at ? new Date(state.created_at) : undefined
         }))
     }
 
     sign = (wallet: bip32.BIP32Interface) => {
         const sig = BuildSignatureHex(wallet, Buffer.from(this.get().content()))
-        this.setState({
+        return {
             public_key: sig.public_key_hex,
             signature: sig.signature_hex
-        })
+        }
     }
     
     broadcast = async (wallet: bip32.BIP32Interface) => {
         try {
             this.sign(wallet)
-            const json = this.to().plain()
-            !json.title && delete json.title
+            const body = Object.assign({
+                title: this.get().title(),
+                content: this.get().content(),
+                sid: this.get().societyID(),
+            }, this.sign(wallet))
+
             const res = await axios(config.getRootAPIOffChainUrl() + '/thread', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                data: json,
+                data: JSON.stringify(body),
                 timeout: 10_000,
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },
             })
-            res.status == 201 && this.hydrate(Object.assign({}, res.data, {
-                content_link: JSON.parse(res.data.content_link)               
+            const state = res.data
+            res.status == 201 && this.setState(Object.assign(state, { 
+                content_link: new KindLinkModel(state.content_link, this.kids()),
+                author: new AliasModel(state.author, this.kids()),
+                rewards: new RewardsModel(state.reaction_count, this.kids()),
+                created_at: new Date(state.created_at)
             }))
             return res
         } catch (e: any){
@@ -102,8 +119,14 @@ export class ThreadModel extends Model {
 
     get = () => {
         const societyID = (): number => this.state.sid
-        const contentLink = (): KindLinkModel => this.state.content_link
-        const embeds = (): string[] => this.state.embeds
+        
+        const contentLink = (): KindLinkModel => {
+            if (this.state.content_link == null)
+                throw new Error("content_link is null")
+            return this.state.content_link
+        }
+
+        const embeds = (): string[] => this.state.embeds || []
         const author = (): AliasModel => this.state.author
         const title = (): string => this.state.title
         const content = (): string => this.state.content
@@ -121,27 +144,79 @@ export class ThreadModel extends Model {
 
 export class ThreadCollection extends Collection {
 
-    static FetchLastThreads = async (societyID: number, page: number) => {
-        try {
-            const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}`,  {
-                headers: {
-                    page: page
-                },
-                timeout: 10_000,
-                validateStatus: function (status) {
-                    return status >= 200 && status < 500;
-                },
-            })
-            if (res.status == 200){
-                return new ThreadCollection(res.data, {})
-            }
-        } catch (e: any){
-            throw new Error(e)
-        }
-        return null
-    }
+    private _currentSociety: SocietyModel | null = null
+    private _pageFetched = 0    
+    private _maxReached = false
 
     constructor(initialState: any, options: any){
         super(initialState, [ThreadModel, ThreadCollection], options)
     }
+
+    setSociety = (s: SocietyModel) => {
+        this._currentSociety = s
+    }    
+
+    fetch = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
+        const MAX_PER_PAGE = 10
+
+        if (this._maxReached == true && disablePageSystem != true){
+            return 200
+        }
+
+        if (!this._currentSociety){
+            throw new Error("You need to set the current used Society through the method 'setSociety' first.")
+        }
+
+        try {
+            const response = await axios(config.getRootAPIOffChainUrl() + `/thread/${this._currentSociety.get().id()}`, {
+                method: 'GET',
+                headers: Object.assign({}, headerSignature as any, {
+                    offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE
+                }),
+                timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (response.status == 200){
+                const json = (response.data || []) as IPreviewThread[]
+                if (disablePageSystem != true){
+                    if (json.length < MAX_PER_PAGE){
+                        this._maxReached = true
+                    }
+                    this._pageFetched += 1
+                }
+                const list = new ThreadCollection([], {})
+                for (const o of json){
+                    const preview = StringToParsedPreview(o.preview_code)
+                    list.push({
+                        public_key_hashed: preview.pkh,
+                        author: preview.author,
+                        created_at: new Date(preview.created_at * 1000),
+                        target: preview.target,
+                        title: preview.title,
+                        content: preview.content,
+                        sid: preview.sid,
+                        reaction: o.reaction
+                    })
+                }
+                this.add(list)
+            }
+            return response.status
+        } catch (e: any){
+            throw new Error(e)
+        }
+    }
+
+        add = (node: ThreadModel | ThreadCollection) => {        
+            const addNode = (n: ThreadModel) => {
+                const idx = this.findIndex({public_key_hashed: n.get().pubKH()})
+                if (idx == -1)
+                    this.push(n.to().plain())
+                else
+                    this.updateAt(n.to().plain(), idx)            
+            }
+            node instanceof ThreadModel ? addNode(node) : node.forEach((p: ThreadModel) => addNode(p))
+            return this.action()
+        }
 }

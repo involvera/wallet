@@ -139,12 +139,12 @@ export class UnserializedPutModel extends Model {
 
         const pkh = (): PubKHModel => this.state.pubkh
         const link = (): LinkModel => this.state.link
-        const value = (): ValueModel => this.state.value
+        // const value = (): ValueModel => this.state.value
 
         const index = (): number => this.state.put_idx
 
-        const CCH = (): string => this.state.fetched_at_cch
-        const MR = () => Number(value().get().now() / value().get().atCreationTime() )
+        // const CCH = (): string => this.state.fetched_at_cch
+        // const MR = () => Number(value().get().now() / value().get().atCreationTime() )
 
         /*
         const meltedValueRatio = (CCHList: string[]) => {
