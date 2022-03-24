@@ -3,7 +3,7 @@ import 'mocha';
 import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
 
-import { COIN_UNIT, LUGH_AMOUNT, MAX_SUPPLY_AMOUNT } from '../src/constant';
+import { COIN_UNIT, LUGH_AMOUNT, LUGH_EVERY_N_S, MAX_SUPPLY_AMOUNT, N_LUGH_VOTE_DURATION } from '../src/constant';
 import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from 'wallet-util';
 import { WalletModel } from '../src/wallet'
 import { UnserializedPutCollection, UnserializedPutModel } from '../src/off-chain/puts';
@@ -653,6 +653,7 @@ const main = () => {
             expect(proposal1.get().vote().get().approved()).to.eq(-1)
             expect(proposal1.get().embeds().length).to.eq(0)
             expect(proposal1.get().endAtLH()).to.eq(28)
+            expect(proposal1.get().estimatedEndAtTime().toDateString()).to.eq(new Date(proposal1.get().createdAt().getTime() + ((N_LUGH_VOTE_DURATION) * LUGH_EVERY_N_S * 1000)).toDateString())
 
             expect(() => proposal1.get().costs()).to.throw(Error)
             expect(() => proposal1.get().author()).to.throw(Error)
@@ -692,6 +693,7 @@ const main = () => {
             expect(proposal2.get().embeds().length).to.eq(0)
             expect(proposal2.get().endAtLH()).to.eq(28)
             expect(proposal2.get().userVote()).to.eq(null)
+            expect(proposal2.get().estimatedEndAtTime().toDateString()).to.eq(new Date(proposal2.get().createdAt().getTime() + ((N_LUGH_VOTE_DURATION) * LUGH_EVERY_N_S * 1000)).toDateString())
 
             expect(() => proposal2.get().constitution()).to.throw(Error)
             expect(() => proposal2.get().costs()).to.throw(Error)
@@ -726,6 +728,7 @@ const main = () => {
             expect(proposal2.get().embeds().length).to.eq(0)
             expect(proposal2.get().endAtLH()).to.eq(28)
             expect(proposal2.get().userVote()).to.eq(null)
+            expect(proposal3.get().estimatedEndAtTime().toDateString()).to.eq(new Date(proposal3.get().createdAt().getTime() + ((N_LUGH_VOTE_DURATION) * LUGH_EVERY_N_S * 1000)).toDateString())
 
             expect(() => proposal2.get().constitution()).to.throw(Error)
             expect(() => proposal2.get().costs()).to.throw(Error)

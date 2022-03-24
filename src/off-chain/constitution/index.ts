@@ -22,7 +22,7 @@ export class ConstitutionModel extends Model {
     private _setNestedModel = (state: IConstitutionData) => {
         if (state){
             this.setState({
-                proposal: Model._isObject(state.proposal) ? new ProposalModel(state.proposal, this.kids()) : null,
+                proposal: state.proposal ? new ProposalModel(state.proposal, this.kids()) : null,
                 constitution: new RuleCollection(state.constitution, this.kids())
             })
             return true

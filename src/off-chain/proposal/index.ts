@@ -16,7 +16,7 @@ import { KindLinkModel } from '../../transaction/kind-link'
 import { IAlias, AliasModel  } from '../alias'
 import {VoteModel, } from './vote'
 import { UserVoteModel } from './user-vote'
-import { LUGH_EVERY_N_S } from '../../constant';
+import { LUGH_EVERY_N_S, N_LUGH_VOTE_DURATION } from '../../constant';
 import { IHeaderSignature } from '../../wallet';
 import { SocietyModel } from '../society';
 
@@ -162,10 +162,7 @@ export class ProposalModel extends Model {
 
         const estimatedEndAtTime = () => {
             const begin = this.get().createdAt().getTime()
-            const beginLH = this.get().contentLink().get().lh()
-            const endLH = this.get().vote().get().closedAtLH()
-
-            return begin + ((endLH - beginLH) * 1000 * LUGH_EVERY_N_S)
+            return new Date(begin + ((N_LUGH_VOTE_DURATION) * LUGH_EVERY_N_S * 1000))
         }
 
         const endAtLH = () => this.get().vote().get().closedAtLH()
