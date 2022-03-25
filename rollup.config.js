@@ -5,6 +5,7 @@ import { uglify } from 'rollup-plugin-uglify';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import nodePolyfills from 'rollup-plugin-node-polyfills';
+import json from "@rollup/plugin-json";
 import pkg from './package.json'
 
 const config = {
@@ -40,6 +41,7 @@ const config = {
         }),
         nodePolyfills(),
         commonjs(),
+        json()
     ]
 }
 

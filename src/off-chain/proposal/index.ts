@@ -92,7 +92,7 @@ export class ProposalModel extends Model {
         state && this.setState(Object.assign(state, { 
             content_link: state.content_link ? new KindLinkModel(state.content_link, this.kids()) : null,
             vote: state.vote ? new VoteModel(state.vote, this.kids()) : null, 
-            author: state.author ? new AliasModel(state.author, this.kids()) : null,
+            author: new AliasModel(state.author, this.kids()),
             user_vote: state.user_vote ? new UserVoteModel(state.user_vote, this.kids()) : null,
             created_at: state.created_at ? new Date(state.created_at) : undefined
         }))
@@ -308,6 +308,7 @@ export class ProposalCollection extends Collection {
                 for (const o of json){
                     const preview = StringToParsedPreview(o.preview_code)
                     list.push({
+                        author: preview.author,
                         index: preview.index,
                         layer: preview.proposal_layer,
                         created_at: new Date(preview.created_at * 1000),

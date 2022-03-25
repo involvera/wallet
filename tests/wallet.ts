@@ -657,11 +657,13 @@ const main = () => {
             expect(proposal1.get().estimatedEndAtTime().toDateString()).to.eq(new Date(proposal1.get().createdAt().getTime() + ((N_LUGH_VOTE_DURATION) * LUGH_EVERY_N_S * 1000)).toDateString())
 
             expect(() => proposal1.get().costs()).to.throw(Error)
-            expect(() => proposal1.get().author()).to.throw(Error)
             expect(proposal1.get().context()).to.eq(null)
             expect(proposal1.get().pubKH()).to.eq(undefined)
             const userVote = proposal1.get().userVote() as UserVoteModel
             expect(userVote.get().hasApproved()).to.eq(true)
+
+            expect(proposal1.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(proposal1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
 
             const fullProposal1 = await ProposalModel.FetchByIndex(1, 10, wallet.sign().header())            
             if (fullProposal1){
@@ -678,8 +680,6 @@ const main = () => {
 
                 expect(fullProposal1.get().costs().proposal).to.eq(BigInt(2000 * COIN_UNIT))
                 expect(fullProposal1.get().costs().thread).to.eq(BigInt(-1))
-                expect(fullProposal1.get().author().get().address()).eq(wallet.keys().get().address())
-                expect(fullProposal1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
                 expect(fullProposal1.get().embeds().length).to.eq(2)
                 expect(fullProposal1.get().pubKH()).to.eq("ee8a1440725029994a56a1d7d7ecb28140fb4fb0")
                 expect(fullProposal1.get().context()).to.not.eq(null)
@@ -698,9 +698,10 @@ const main = () => {
 
             expect(() => proposal2.get().constitution()).to.throw(Error)
             expect(() => proposal2.get().costs()).to.throw(Error)
-            expect(() => proposal2.get().author()).to.throw(Error)
             expect(proposal2.get().context()).to.eq(null)
             expect(proposal2.get().pubKH()).to.eq(undefined)
+            expect(proposal2.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(proposal2.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
 
             const fullProposal2 = await ProposalModel.FetchByIndex(1, 9, wallet.sign().header())
             if (fullProposal2){
@@ -733,7 +734,6 @@ const main = () => {
 
             expect(() => proposal2.get().constitution()).to.throw(Error)
             expect(() => proposal2.get().costs()).to.throw(Error)
-            expect(() => proposal2.get().author()).to.throw(Error)
             expect(proposal2.get().context()).to.eq(null)
             expect(proposal2.get().pubKH()).to.eq(undefined)
 
@@ -745,8 +745,9 @@ const main = () => {
             expect(proposal3.get().embeds().length).to.eq(0)
             expect(proposal3.get().endAtLH()).to.eq(28)
             expect(proposal3.get().userVote()).to.eq(null)
+            expect(proposal3.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(proposal3.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
 
-            expect(() => proposal3.get().author()).to.throw(Error)
             expect(proposal3.get().context()).to.eq(null)
             expect(proposal3.get().pubKH()).to.eq(undefined)
 
