@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { IHeaderSignature, IKindLinkUnRaw, IReactionCount  } from 'community-coin-types'
+import { IHeaderSignature, IKindLinkUnRaw, IThreadReward  } from 'community-coin-types'
 import * as bip32 from 'bip32'
 import { Buffer } from 'buffer'
 import { Model, Collection } from "acey";
@@ -7,13 +7,13 @@ import { BuildSignatureHex } from 'wallet-util'
 import { KindLinkModel } from "../../transaction";
 import config from '../../config'
 import { AliasModel, IAlias } from '../alias';
-import { RewardsModel } from './rewards'
+import { ThreadReactionModel } from './thread-reaction'
 import { SocietyModel } from '../society';
 import { IParsedPreview, StringToParsedPreview } from 'involvera-content-embedding';
 
 export interface IPreviewThread{
     preview_code: string
-    reaction: IReactionCount
+    reaction: IThreadReward
 }
 
 export interface IThread {
@@ -23,7 +23,7 @@ export interface IThread {
     title: string
     content: string
     public_key_hashed: string
-    reaction?: IReactionCount
+    reaction?: IThreadReward
     embeds?: string[]
     created_at?: Date
     target: IParsedPreview | null
@@ -36,7 +36,7 @@ const DEFAULT_STATE: IThread = {
     title: '',
     content: '',
     public_key_hashed: "",
-    reaction: RewardsModel.DefaultState,
+    reaction: ThreadReactionModel.DefaultState,
     embeds: [],
     created_at: new Date(),
     target: null
@@ -46,10 +46,11 @@ export class ThreadModel extends Model {
 
     static DefaultState: IThread = DEFAULT_STATE
 
-    static FetchByPKH = async (societyID: number, pubkh: string) => {
+    static FetchByPKH = async (societyID: number, pubkh: string, headerSig: IHeaderSignature | void) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}/${pubkh}`,  {
                 timeout: 10_000,
+                headers: headerSig || {},
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },
@@ -73,7 +74,7 @@ export class ThreadModel extends Model {
         this.setState(Object.assign(state, { 
             content_link: state.content_link ? new KindLinkModel(state.content_link, this.kids()) : null,
             author: state.author ? new AliasModel(state.author, this.kids()) : null,
-            rewards: state.reaction ? new RewardsModel(state.reaction, this.kids()) : null,
+            reaction: state.reaction ? new ThreadReactionModel(state.reaction, this.kids()) : null,
             created_at: state.created_at ? new Date(state.created_at) : undefined
         }))
     }
@@ -108,7 +109,7 @@ export class ThreadModel extends Model {
             res.status == 201 && this.setState(Object.assign(state, { 
                 content_link: new KindLinkModel(state.content_link, this.kids()),
                 author: new AliasModel(state.author, this.kids()),
-                rewards: new RewardsModel(state.reaction_count, this.kids()),
+                reaction: new ThreadReactionModel(state.reaction_count, this.kids()),
                 created_at: new Date(state.created_at)
             }))
             return res
@@ -132,12 +133,12 @@ export class ThreadModel extends Model {
         const content = (): string => this.state.content
         const createdAt = (): Date => this.state.created_at
         const pubKH = (): string => this.state.public_key_hashed
-        const rewards = (): RewardsModel => this.state.rewards
+        const reaction = (): ThreadReactionModel => this.state.reaction
 
         return {
             contentLink, embeds, author, title,
             content, createdAt, societyID,
-            pubKH, rewards
+            pubKH, reaction
         }
     }
 }

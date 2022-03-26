@@ -8,11 +8,10 @@ import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress }
 import { WalletModel } from '../src/wallet'
 import { UnserializedPutCollection, UnserializedPutModel } from '../src/off-chain/puts';
 import { Constitution } from 'wallet-script';
-import { ContentLinkModel, OutputModel } from '../src/transaction';
+import { OutputModel } from '../src/transaction';
 import { ThreadModel, ProposalModel, SocietyModel, RuleModel, ThreadCollection, ProposalCollection } from '../src/off-chain';
 import axios from 'axios';
 import conf from '../src/config'
-import { RewardSummaryModel } from '../src/transaction/reward-summary';
 import { IConstitutionProposalUnRaw, ICostProposal } from 'community-coin-types'
 import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 
@@ -20,6 +19,7 @@ import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 // conf.setRootAPIOffChainUrl('http://134.122.16.30:3020')
 
 const ADMIN_KEY = '2f72e55b962b6cd66ea70e8b6bd8657d1c87a23a65769213d76dcb5da6abf6b5'
+const SOCIETY_ID= 1
 
 const wallet = new WalletModel({}, { key: 'wallet', connected: true })
 const wallet2 = new WalletModel({}, {key: 'wallet2', connected: true })
@@ -63,6 +63,7 @@ const main = () => {
         }
         await wallet.synchronize()
         await wallet2.synchronize()
+        await wallet3.synchronize()
 
         await walletPuts.fetch(wallet.sign().header(), true).all()
         await wallet2Puts.fetch(wallet2.sign().header(), true).all()
@@ -80,16 +81,6 @@ const main = () => {
         expect(list.count()).to.equal(7)
         expect(utxos.listUnFetchedTxHash().length).to.eq(7)
     });
-
-    it('[ONCHAIN] Wallet -> Check reward summary data', async () => {
-        await wallet.synchronize()
-        expect(wallet.rewardSummary().count()).to.eq(1)
-        const n1 = wallet.rewardSummary().find({thread_pkh: '50610124b1895156879f0f8fc90ade817bea6753'}) as RewardSummaryModel
-
-        expect(n1.get().value()).eq(1800000004)
-        expect(n1.get().reactionCount().get().countUpvote()).eq(4)
-        expect(n1.get().reactionCount().get().cumulatedReactionCount()).eq(4)
-    })
 
     it('Wallet1 -> Check Address: ', () => {
         expect(wallet.keys().get().address()).to.eq("1GHQu3CDZpPZGb6PmaBPP4sZNuT13sja1")
@@ -264,7 +255,6 @@ const main = () => {
         expect(res.status).to.eq(201)
     })
 
-    let uuidContent = ""
     it('[ONCHAIN] Wallet1 -> create a proposal : costs', async () => {
         const tx = await wallet.buildTX().proposal().cost(BigInt(-1), BigInt(COIN_UNIT * 2000))
         const balance = wallet.balance()
@@ -273,7 +263,6 @@ const main = () => {
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
             const out = tx.get().outputs().nodeAt(0) as OutputModel
-            uuidContent = out.get().contentUUID()
             await walletPuts.fetch(wallet.sign().header(), true).all()
             expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte()) - 2)
             expect(walletPuts.count()).to.eq(9)
@@ -301,13 +290,15 @@ const main = () => {
     })
 
     it('[ONCHAIN] Wallet1 -> create a vote', async () => {
-        const proposal = await ContentLinkModel.FetchProposal(uuidContent)
-        const tx = await wallet.buildTX().vote(proposal.get().link().get().output().get().contentPKH(), true)
-        const balance = wallet.balance()
-        expect(tx).not.eq(null)
-        if (tx){
-            const response = await tx.broadcast(wallet)
-            expect(response.status).to.eq(201)
+        const proposal = await ProposalModel.FetchByIndex(SOCIETY_ID, 10, wallet.sign().header())
+        expect(proposal).not.eq(undefined)
+        if (proposal){
+            const tx = await wallet.buildTX().vote(Buffer.from(proposal.get().pubKH(), 'hex'), true)
+            expect(tx).not.eq(null)
+            if (tx){
+                const response = await tx.broadcast(wallet)
+                expect(response.status).to.eq(201)
+            }
         }
     })
 
@@ -319,7 +310,6 @@ const main = () => {
         if (tx){
             const response = await tx.broadcast(wallet)
             const out = tx.get().outputs().nodeAt(0) as OutputModel
-            uuidContent = out.get().contentUUID()
             pkhContent0 = out.get().contentPKH().toString('hex')
             expect(response.status).to.eq(201)
             await walletPuts.fetch(wallet.sign().header(), true).all()
@@ -345,27 +335,29 @@ const main = () => {
 
     let pkhContent2 = ""
     it('[ONCHAIN] Wallet1 -> create a rethread on Thread', async () => {
-        const thread = await ContentLinkModel.FetchThread(uuidContent)
-        const tx = await wallet.buildTX().rethread(thread.get().link().get().output().get().contentPKH())
-        const balance = wallet.balance()
-        expect(tx).not.eq(null)
-        if (tx){
-            const response = await tx.broadcast(wallet)
-            const out = tx.get().outputs().nodeAt(0) as OutputModel
-            pkhContent2 = out.get().contentPKH().toString('hex')
-            expect(response.status).to.eq(201)
-            await walletPuts.fetch(wallet.sign().header(), true).all()
-            expect(walletPuts.count()).to.eq(11)
-            expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte())-1)
-            const lastPut = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
-            expect(lastPut.get().value()).to.eq(wallet.costs().get().thread())
-            expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
-            expect(lastPut.isThread()).to.eq(true)
-            expect(lastPut.isRethread()).to.eq(true)
-            expect(lastPut.get().contentPKH()).to.eq(pkhContent2)
-            expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().link().get().output().get().contentPKH().toString('hex'))
-            expect(lastPut.get().indexProposalTargeted()).to.eq(-1)
-            
+        const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent0)
+        expect(thread).not.eq(undefined)
+        if (thread){
+            const tx = await wallet.buildTX().rethread(Buffer.from(thread.get().pubKH(), 'hex'))
+            const balance = wallet.balance()
+            expect(tx).not.eq(null)
+            if (tx){
+                const response = await tx.broadcast(wallet)
+                const out = tx.get().outputs().nodeAt(0) as OutputModel
+                pkhContent2 = out.get().contentPKH().toString('hex')
+                expect(response.status).to.eq(201)
+                await walletPuts.fetch(wallet.sign().header(), true).all()
+                expect(walletPuts.count()).to.eq(11)
+                expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte())-1)
+                const lastPut = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
+                expect(lastPut.get().value()).to.eq(wallet.costs().get().thread())
+                expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
+                expect(lastPut.isThread()).to.eq(true)
+                expect(lastPut.isRethread()).to.eq(true)
+                expect(lastPut.get().contentPKH()).to.eq(pkhContent2)
+                expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().pubKH())
+                expect(lastPut.get().indexProposalTargeted()).to.eq(-1)
+            }
         }
     })
 
@@ -384,63 +376,52 @@ const main = () => {
 
     let lastReaction = {tx_id: '', vout: -1}
     it('[ONCHAIN] Wallet2 -> create a reward : upvote', async () => {
-        const thread = await ContentLinkModel.FetchThread(uuidContent)
-        const tx = await wallet2.buildTX().reward(thread, 'upvote')        
-        const balance = wallet2.balance()
-        const balance2 = wallet.balance()
-        expect(tx).not.eq(null)
-        if (tx){
-            const response = await tx.broadcast(wallet2)
-            expect(response.status).to.eq(201)
-            lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
-            await wallet.synchronize()
+        const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent0)
+        expect(thread).not.eq(undefined)
+        if (thread){
+            const tx = await wallet2.buildTX().reward(thread, 'upvote')        
+            const balance = wallet2.balance()
+            const balance2 = wallet.balance()
+            expect(tx).not.eq(null)
+            if (tx){
+                const response = await tx.broadcast(wallet2)
+                expect(response.status).to.eq(201)
+                lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
+                await wallet.synchronize()
 
-            await walletPuts.fetch(wallet.sign().header(), true).all()
-            await wallet2Puts.fetch(wallet2.sign().header(), true).all()
+                await walletPuts.fetch(wallet.sign().header(), true).all()
+                await wallet2Puts.fetch(wallet2.sign().header(), true).all()
 
-            expect(wallet2Puts.count()).to.eq(2)
-            expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().upvote()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
+                expect(wallet2Puts.count()).to.eq(2)
+                expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().upvote()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
 
-            expect(balance2).to.eq(wallet.balance()-(wallet.costs().get().upvote() * 0.3)-1)
-            expect(walletPuts.count()).to.eq(11)
+                expect(balance2).to.eq(wallet.balance()-(wallet.costs().get().upvote() * 0.3)-1)
+                expect(walletPuts.count()).to.eq(11)
+            }
         }
     })
 
     it('[ONCHAIN] Wallet2 -> create a reward : reaction0', async () => {
-        const thread = await ContentLinkModel.FetchThread(pkhContent2)
-        const tx = await wallet2.buildTX().reward(thread, 'reaction0')
-        const balance = wallet2.balance()
-        const balance2 = wallet.balance()
-        expect(tx).not.eq(null)
+        const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
+        expect(thread).not.eq(undefined)
+        if (thread){
+            const tx = await wallet2.buildTX().reward(thread, 'reaction0')
+            const balance = wallet2.balance()
+            expect(tx).not.eq(null)
 
-        if (tx){
-            const response = await tx.broadcast(wallet2)
-            expect(response.status).to.eq(201)
-            lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
-            await wallet.synchronize()
-            await wallet2Puts.fetch(wallet2.sign().header(), true).all()
-            await walletPuts.fetch(wallet.sign().header(), true).all()
+            if (tx){
+                const response = await tx.broadcast(wallet2)
+                expect(response.status).to.eq(201)
+                lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
+                await wallet.synchronize()
+                await wallet2Puts.fetch(wallet2.sign().header(), true).all()
+                await walletPuts.fetch(wallet.sign().header(), true).all()
 
-            expect(wallet2Puts.count()).to.eq(3)
-            expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().reaction0()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
-            expect(walletPuts.count()).to.eq(11)
+                expect(wallet2Puts.count()).to.eq(3)
+                expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().reaction0()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
+                expect(walletPuts.count()).to.eq(11)
+            }
         }
-    })
-
-    it('[ONCHAIN] Wallet -> Check reward summary data', async () => {
-        expect(wallet.rewardSummary().count()).to.eq(3)
-        const n1 = wallet.rewardSummary().find({thread_pkh: '2c108813b0f957c5776dffec80c5122b4e782864'}) as RewardSummaryModel
-        const n2 = wallet.rewardSummary().find({thread_pkh: '50610124b1895156879f0f8fc90ade817bea6753'}) as RewardSummaryModel
-        const n3 = wallet.rewardSummary().find({thread_pkh: 'af53ae357d42b460838f4f4157cd579de0f9d6fd'}) as RewardSummaryModel
-
-        expect(n1.get().value()).eq(1800000001)
-        expect(n1.get().reactionCount().get().cumulatedReactionCount()).eq(1)
-
-        expect(n2.get().value()).eq(1800000004)
-        expect(n2.get().reactionCount().get().cumulatedReactionCount()).eq(4)
-
-        expect(n3.get().value()).eq(450000001)
-        expect(n3.get().reactionCount().get().cumulatedReactionCount()).eq(1)
     })
 
     it('[ONCHAIN] Wallet1 -> Check puts:', async () => {
@@ -483,69 +464,84 @@ const main = () => {
     })
 
     it('[ONCHAIN] Wallet3 -> create a reward : reaction0', async () => {
-        const thread = await ContentLinkModel.FetchThread(pkhContent2)
-        const tx = await wallet3.buildTX().reward(thread, 'reaction0')
-        expect(tx).not.eq(null)
-        if (tx){
-            const response = await tx.broadcast(wallet3)
-            expect(response.status).to.eq(201)
-            lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
-            await wallet3.synchronize()
-            await wallet3Puts.fetch(wallet3.sign().header(), true).all()
-            expect(wallet3Puts.count()).to.eq(2)
-            expect(wallet3Puts.filterReactionOnly().count()).to.eq(1)
-            expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+        const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
+        expect(thread).not.eq(undefined)
+        if (thread){
+            const tx = await wallet3.buildTX().reward(thread, 'reaction0')
+            expect(tx).not.eq(null)
+            if (tx){
+                const response = await tx.broadcast(wallet3)
+                expect(response.status).to.eq(201)
+                lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
+                await wallet3.synchronize()
+                await wallet3Puts.fetch(wallet3.sign().header(), true).all()
+                expect(wallet3Puts.count()).to.eq(2)
+                expect(wallet3Puts.filterReactionOnly().count()).to.eq(1)
+                expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+            }
         }
     })
 
     it('[ONCHAIN] Wallet3 -> create a reward : reaction1', async () => {
-        const thread = await ContentLinkModel.FetchThread(pkhContent2)
-        const tx = await wallet3.buildTX().reward(thread, 'reaction1')
-        expect(tx).not.eq(null)
-        if (tx){
-            const response = await tx.broadcast(wallet3)
-            expect(response.status).to.eq(201)
-            lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
-            await wallet3.synchronize()
-            await wallet3Puts.fetch(wallet3.sign().header(), true).all()
-            expect(wallet3Puts.count()).to.eq(3)
-            expect(wallet3Puts.filterReactionOnly().count()).to.eq(2)
-            expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+        const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
+        expect(thread).not.eq(undefined)
+        if (thread){
+            const tx = await wallet3.buildTX().reward(thread, 'reaction1')
+            expect(tx).not.eq(null)
+            if (thread){
+                if (tx){
+                    const response = await tx.broadcast(wallet3)
+                    expect(response.status).to.eq(201)
+                    lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
+                    await wallet3.synchronize()
+                    await wallet3Puts.fetch(wallet3.sign().header(), true).all()
+                    expect(wallet3Puts.count()).to.eq(3)
+                    expect(wallet3Puts.filterReactionOnly().count()).to.eq(2)
+                    expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+                }
+            }
         }
     })
 
     it('[ONCHAIN] Wallet3 -> create a reward : reaction2', async () => {
-        const thread = await ContentLinkModel.FetchThread(pkhContent2)
-        const tx = await wallet3.buildTX().reward(thread, 'reaction2')
-        expect(tx).not.eq(null)
-        if (tx){
-            const response = await tx.broadcast(wallet3)
-            expect(response.status).to.eq(201)
-            lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
-            await wallet3.synchronize()
-            await wallet3Puts.fetch(wallet3.sign().header(), true).all()
-            expect(wallet3Puts.count()).to.eq(4)
-            expect(wallet3Puts.filterReactionOnly().count()).to.eq(3)
-            expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+        const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
+        expect(thread).not.eq(undefined)        
+        if (thread){
+            const tx = await wallet3.buildTX().reward(thread, 'reaction2')
+            expect(tx).not.eq(null)
+
+            if (tx){
+                const response = await tx.broadcast(wallet3)
+                expect(response.status).to.eq(201)
+                lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
+                await wallet3.synchronize()
+                await wallet3Puts.fetch(wallet3.sign().header(), true).all()
+                expect(wallet3Puts.count()).to.eq(4)
+                expect(wallet3Puts.filterReactionOnly().count()).to.eq(3)
+                expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+            }
         }
     })
 
     it('[ONCHAIN] Wallet3 -> create a reward : upvote', async () => {
-        const thread = await ContentLinkModel.FetchThread(pkhContent2)
-        const tx = await wallet3.buildTX().reward(thread, 'upvote')
-        expect(tx).not.eq(null)
-        if (tx){
-            const response = await tx.broadcast(wallet3)
-            expect(response.status).to.eq(201)
-            lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
-            await wallet3.synchronize()
-            await wallet3Puts.fetch(wallet3.sign().header(), true).all()
-            await walletPuts.fetch(wallet.sign().header(), true).all()
-            expect(walletPuts.count()).to.eq(12)
+        const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
+        expect(thread).not.eq(undefined)
+        if (thread){
+            const tx = await wallet3.buildTX().reward(thread, 'upvote')
+            expect(tx).not.eq(null)
+            if (tx){
+                const response = await tx.broadcast(wallet3)
+                expect(response.status).to.eq(201)
+                lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
+                await wallet3.synchronize()
+                await wallet3Puts.fetch(wallet3.sign().header(), true).all()
+                await walletPuts.fetch(wallet.sign().header(), true).all()
+                expect(walletPuts.count()).to.eq(12)
 
-            expect(wallet3Puts.count()).to.eq(5)
-            expect(wallet3Puts.filterReactionOnly().count()).to.eq(4)
-            expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+                expect(wallet3Puts.count()).to.eq(5)
+                expect(wallet3Puts.filterReactionOnly().count()).to.eq(4)
+                expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+            }
         }
     })
 
@@ -602,35 +598,6 @@ const main = () => {
             c = society.get().contributors().findByAddress(addr)
             expect(c?.get().position()).to.eq(168)
         }
-    })
-
-    it('[ONCHAIN] Wallet -> Check reward summary data', async () => {
-        await wallet.synchronize()
-        expect(wallet.rewardSummary().count()).to.eq(3)
-        const n1 = wallet.rewardSummary().find({thread_pkh: '2c108813b0f957c5776dffec80c5122b4e782864'}) as RewardSummaryModel
-        const n2 = wallet.rewardSummary().find({thread_pkh: '50610124b1895156879f0f8fc90ade817bea6753'}) as RewardSummaryModel
-        const n3 = wallet.rewardSummary().find({thread_pkh: 'af53ae357d42b460838f4f4157cd579de0f9d6fd'}) as RewardSummaryModel
-
-        expect(n1.get().value()).eq(41550000003)
-        expect(n1.get().reactionCount().get().cumulatedReactionCount()).eq(5)
-        expect(n1.get().reactionCount().get().countUpvote()).eq(1)
-        expect(n1.get().reactionCount().get().countReward0()).eq(2)
-        expect(n1.get().reactionCount().get().countReward1()).eq(1)
-        expect(n1.get().reactionCount().get().countReward2()).eq(1)
-        
-        expect(n2.get().value()).eq(1800000004)
-        expect(n2.get().reactionCount().get().cumulatedReactionCount()).eq(4)
-        expect(n2.get().reactionCount().get().countUpvote()).eq(4)
-        expect(n2.get().reactionCount().get().countReward0()).eq(0)
-        expect(n2.get().reactionCount().get().countReward1()).eq(0)
-        expect(n2.get().reactionCount().get().countReward2()).eq(0)
-
-        expect(n3.get().value()).eq(450000001)
-        expect(n3.get().reactionCount().get().cumulatedReactionCount()).eq(1)
-        expect(n3.get().reactionCount().get().countUpvote()).eq(1)
-        expect(n3.get().reactionCount().get().countReward0()).eq(0)
-        expect(n3.get().reactionCount().get().countReward1()).eq(0)
-        expect(n3.get().reactionCount().get().countReward2()).eq(0)
     })
 
     it('Fetch Proposal list', async () => {
@@ -786,10 +753,10 @@ const main = () => {
             expect(thread1.get().title()).to.eq("This is a title.")
             expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
             expect(() => thread1.get().contentLink()).to.throw(Error)
-            expect(thread1.get().rewards().get().countUpvote()).to.eq(1)
-            expect(thread1.get().rewards().get().countReward0()).to.eq(2)
-            expect(thread1.get().rewards().get().countReward1()).to.eq(1)
-            expect(thread1.get().rewards().get().countReward2()).to.eq(1)
+            expect(thread1.get().reaction().get().threadReaction().get().countUpvote()).to.eq(1)
+            expect(thread1.get().reaction().get().threadReaction().get().countReward0()).to.eq(2)
+            expect(thread1.get().reaction().get().threadReaction().get().countReward1()).to.eq(1)
+            expect(thread1.get().reaction().get().threadReaction().get().countReward2()).to.eq(1)
             const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
             if (fullThread1){
                 expect(fullThread1.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
@@ -803,10 +770,10 @@ const main = () => {
             expect(thread2.get().title()).to.eq("This is a title.")
             expect(thread2.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
             expect(() => thread1.get().contentLink()).to.throw(Error)
-            expect(thread2.get().rewards().get().countUpvote()).to.eq(1)
-            expect(thread2.get().rewards().get().countReward0()).to.eq(0)
-            expect(thread2.get().rewards().get().countReward1()).to.eq(0)
-            expect(thread2.get().rewards().get().countReward2()).to.eq(0)
+            expect(thread2.get().reaction().get().threadReaction().get().countUpvote()).to.eq(1)
+            expect(thread2.get().reaction().get().threadReaction().get().countReward0()).to.eq(0)
+            expect(thread2.get().reaction().get().threadReaction().get().countReward1()).to.eq(0)
+            expect(thread2.get().reaction().get().threadReaction().get().countReward2()).to.eq(0)
             const fullThread2 = await ThreadModel.FetchByPKH(1, thread2.get().pubKH())
             if (fullThread2){
                 expect(fullThread2.get().content()).to.eq("Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
@@ -883,10 +850,10 @@ const main = () => {
             expect(thread1.get().title()).to.eq('')
             expect(thread1.get().pubKH()).to.eq("4f54e8c7d99764e70622675889e3ee81d2638c6e")
             expect(() => thread1.get().contentLink()).to.throw(Error)
-            expect(thread1.get().rewards().get().countUpvote()).to.eq(0)
-            expect(thread1.get().rewards().get().countReward0()).to.eq(0)
-            expect(thread1.get().rewards().get().countReward1()).to.eq(0)
-            expect(thread1.get().rewards().get().countReward2()).to.eq(0)
+            expect(thread1.get().reaction().get().threadReaction().get().countUpvote()).to.eq(0)
+            expect(thread1.get().reaction().get().threadReaction().get().countReward0()).to.eq(0)
+            expect(thread1.get().reaction().get().threadReaction().get().countReward1()).to.eq(0)
+            expect(thread1.get().reaction().get().threadReaction().get().countReward2()).to.eq(0)
             const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
             if (fullThread1){
                 expect(fullThread1.get().content()).to.eq("Im making my first thread about a proposal.")

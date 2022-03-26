@@ -11,16 +11,14 @@ import KeysModel from './keys'
 import CCHModel from './cch'
 import MemoryModel from './memory'
 import InfoModel from './info'
-import { ContentLinkModel } from '../transaction/content-link'
 
-import { RewardSummaryCollection } from '../transaction/reward-summary'
 import { InputModel, TransactionModel, UTXOCollection } from '../transaction'
 
 import config from '../config'
 import TxBuild from './tx-builder' 
 
 import { BURNING_RATIO } from '../constant'
-import { MAX_CONSTITUTION_RULE } from 'wallet-script/dist/src/constant'
+import { ThreadModel } from '../off-chain'
 
 export interface IHeaderSignature {
     pubkey: string
@@ -40,7 +38,6 @@ export default class Wallet extends Model {
             info: new InfoModel(initialState.info, this.kids()),
             costs: new CostsModel(initialState.costs, this.kids()),
             memory: new MemoryModel(initialState.memory, this.kids()),
-            reward_summary: new RewardSummaryCollection(initialState.reward_summary, this.kids()),
         })
     }
 
@@ -66,12 +63,7 @@ export default class Wallet extends Model {
             this.costs().setState(json.costs)
             this.action().store()
             await this.keys().fetch().aliasIfNotSet()
-            await this.refreshRewardColletion()
         }
-    }
-
-    refreshRewardColletion = async () => {
-        await this.rewardSummary().fetch(this.rewardSummary().get().getLastReactionTime(), this.keys().get().pubHashHex())
     }
 
     public keys = (): KeysModel => this.state.seed
@@ -82,7 +74,6 @@ export default class Wallet extends Model {
     public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
     public memory = (): MemoryModel => this.state.memory
     public cch = (): CCHModel => this.state.cch
-    public rewardSummary = (): RewardSummaryCollection => this.state.reward_summary
 
     buildTX = () => {
 
@@ -178,12 +169,12 @@ export default class Wallet extends Model {
             return await builder.newTx()
         }
 
-        const reward = async (content: ContentLinkModel, rewardType: 'upvote' | 'reaction0' | 'reaction1' | 'reaction2') => {
+        const reward = async (thread: ThreadModel, rewardType: 'upvote' | 'reaction0' | 'reaction1' | 'reaction2') => {
             await this.synchronize()
-            const targetPKH = content.get().link().get().output().get().contentPKH()
+            const targetPKH = thread.get().contentLink().get().output().get().contentPKH()
     
             const scriptReward = new ScriptEngine([]).append().rewardScript(targetPKH, 1)
-            const scriptDistribution = new ScriptEngine([]).append().lockScript(Buffer.from(content.get().pubKHAuthor(), 'hex'))
+            const scriptDistribution = new ScriptEngine([]).append().lockScript(PubKeyHashFromAddress(thread.get().author().get().address()))
             
             const cost = this.costs().get()[rewardType]()
             const burned = Math.floor(BURNING_RATIO * cost)

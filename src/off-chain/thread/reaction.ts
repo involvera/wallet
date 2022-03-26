@@ -8,7 +8,7 @@ const DEFAULT_STATE: IReactionCount = {
     n_reward_2: 0
 }
 
-export class RewardsModel extends Model{
+export class ReactionModel extends Model{
 
     static DefaultState: IReactionCount = DEFAULT_STATE
 

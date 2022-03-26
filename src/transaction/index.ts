@@ -1,5 +1,4 @@
 
-export * from './content-link'
 export { InputModel, InputCollection } from './input'
 export { OutputModel, OutputCollection } from './output'
 export { KindLinkModel} from './kind-link'
