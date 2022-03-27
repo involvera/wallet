@@ -740,7 +740,7 @@ const main = () => {
         const society = await SocietyModel.fetch(1)
         const threads = new ThreadCollection([],{})
         threads.setSociety(society as SocietyModel)
-        await threads.fetch(wallet.sign().header(), true)    
+        await threads.fetch(wallet3.sign().header(), true)    
 
         expect(threads).not.to.eq(null)
         if (threads){
@@ -757,6 +757,10 @@ const main = () => {
             expect(thread1.get().reaction().get().threadReaction().get().countReward0()).to.eq(2)
             expect(thread1.get().reaction().get().threadReaction().get().countReward1()).to.eq(1)
             expect(thread1.get().reaction().get().threadReaction().get().countReward2()).to.eq(1)
+            expect(thread1.get().reaction().get().userReaction().get().countUpvote()).to.eq(1)
+            expect(thread1.get().reaction().get().userReaction().get().countReward0()).to.eq(1)
+            expect(thread1.get().reaction().get().userReaction().get().countReward1()).to.eq(1)
+            expect(thread1.get().reaction().get().userReaction().get().countReward2()).to.eq(1)
             const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
             if (fullThread1){
                 expect(fullThread1.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
