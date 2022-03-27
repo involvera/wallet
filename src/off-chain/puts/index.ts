@@ -49,7 +49,7 @@ export class UnserializedPutModel extends Model {
             link: new LinkModel(state.link, this.kids()),
             pubkh: new PubKHModel(state.pubkh, this.kids()),
             value: new ValueModel(state.value, this.kids()),
-            alias: state.alias ? new AliasModel(undefined, this.kids()) : null
+            alias: state.alias ? new AliasModel(state.alias, this.kids()) : null
         })
     }
 
@@ -241,7 +241,8 @@ export class UnserializedPutCollection extends Collection {
         for (const e of list){
             const { tx_id, time, kind, lh, pubkh, put_idx, value, extra_data, link } = e
             const o = {tx_id, time, kind, lh, pubkh, put_idx, value, extra_data, link }
-            !this.find(o) && this.push(e)
+            const idx = this.findIndex(o)
+            idx == -1 ? this.push(e) : this.updateAt(e, idx)
         }
         this.save()
     }
