@@ -12,7 +12,7 @@ import { OutputModel } from '../src/transaction';
 import { ThreadModel, ProposalModel, SocietyModel, RuleModel, ThreadCollection, ProposalCollection } from '../src/off-chain';
 import axios from 'axios';
 import conf from '../src/config'
-import { IConstitutionProposalUnRaw, ICostProposal } from 'community-coin-types'
+import { IConstitutionProposalUnRaw, ICostProposal, REWARD0_KEY, REWARD2_KEY, REWARD1_KEY, UPVOTE_KEY } from 'community-coin-types'
 import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 
 // conf.setRootAPIChainUrl('http://134.122.16.30:8080')
@@ -383,7 +383,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent0)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet2.buildTX().reward(thread, 'upvote')        
+            const tx = await wallet2.buildTX().reward(thread, UPVOTE_KEY)        
             const balance = wallet2.balance()
             const balance2 = wallet.balance()
             expect(tx).not.eq(null)
@@ -407,9 +407,9 @@ const main = () => {
                 expect(p.get().value()).to.eq((wallet2.costs().get().upvote() * 0.3) + 1)
                 expect(p.get().txID()).to.eq(tx.get().hashHex())
                 expect(p.get().height()).to.eq(tx.get().lughHeight())
-                expect(p.isReaction()).to.eq(true)
+                expect(p.isReward()).to.eq(true)
                 expect(p.isUpvote()).to.eq(true)
-                expect(p.isReaction2()).to.eq(false)
+                expect(p.isReward2()).to.eq(false)
                 expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
                 expect(p.get().otherPartyAlias()?.get().address()).to.eq(wallet.keys().get().alias().get().address())
             }
@@ -420,7 +420,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet2.buildTX().reward(thread, 'reaction0')
+            const tx = await wallet2.buildTX().reward(thread, REWARD0_KEY)
             const balance = wallet2.balance()
             expect(tx).not.eq(null)
 
@@ -433,17 +433,17 @@ const main = () => {
                 await walletPuts.fetch(wallet.sign().header(), true).all()
 
                 expect(wallet2Puts.count()).to.eq(3)
-                expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().reaction0()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
+                expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().reward0()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
                 expect(walletPuts.count()).to.eq(11)
 
                 const p = wallet2Puts.last() as UnserializedPutModel
                 expect(p.get().contentPKHTargeted()).to.eq(pkhContent2)
-                expect(p.get().value()).to.eq((wallet2.costs().get().reaction0() * 0.3) + 1)
+                expect(p.get().value()).to.eq((wallet2.costs().get().reward0() * 0.3) + 1)
                 expect(p.get().txID()).to.eq(tx.get().hashHex())
                 expect(p.get().height()).to.eq(tx.get().lughHeight())
-                expect(p.isReaction()).to.eq(true)
+                expect(p.isReward()).to.eq(true)
                 expect(p.isUpvote()).to.eq(false)
-                expect(p.isReaction0()).to.eq(true)
+                expect(p.isReward0()).to.eq(true)
                 expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
                 expect(p.get().otherPartyAlias()?.get().address()).to.eq(wallet.keys().get().alias().get().address())
             }
@@ -457,15 +457,15 @@ const main = () => {
     })
 
     it('[ONCHAIN] Wallet1 -> Check filters on Puts.', () => {
-        expect(walletPuts.filterLughOnly().count()).to.eq(3)
-        expect(walletPuts.filterNonLughOnly().count()).to.eq(8)
-        expect(walletPuts.filterReactionOnly().count()).to.eq(1)
-        expect(walletPuts.filterNonReaction().count()).to.eq(10)
+        expect(walletPuts.filterLughsOnly().count()).to.eq(3)
+        expect(walletPuts.filterNonLughsOnly().count()).to.eq(8)
+        expect(walletPuts.filterRewardsOnly().count()).to.eq(1)
+        expect(walletPuts.filterNonRewardsOnly().count()).to.eq(10)
     })
 
     it('[ONCHAIN] Wallet1 sends some coins to Wallet3 ', async () => {
         const costs = wallet.costs().get()
-        const total = costs.reaction0() + costs.reaction1() + costs.reaction2() * 2 + costs.upvote() 
+        const total = costs.reward0() + costs.reward1() + costs.reward2() * 2 + costs.upvote() 
         const tx = await wallet.buildTX().toAddress(wallet3.keys().get().address(), total)
         expect(tx).not.eq(null)
         if (tx){
@@ -476,14 +476,14 @@ const main = () => {
             await wallet3Puts.fetch(wallet3.sign().header(), true).all()
             expect(walletPuts.count()).to.eq(12)
             expect(wallet3Puts.count()).to.eq(1)
-            expect(wallet3Puts.filterReactionOnly().count()).to.eq(0)
-            expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+            expect(wallet3Puts.filterRewardsOnly().count()).to.eq(0)
+            expect(wallet3Puts.filterNonRewardsOnly().count()).to.eq(1)
             
             const p = wallet3Puts.last() as UnserializedPutModel
             expect(p.get().value()).to.eq(total)
             expect(p.get().txID()).to.eq(tx.get().hashHex())
             expect(p.get().height()).to.eq(tx.get().lughHeight())
-            expect(p.isReaction()).to.eq(false)
+            expect(p.isReward()).to.eq(false)
             expect(p.isThread()).to.eq(false)
             expect(p.isRegularTx()).to.eq(true)
             expect(p.isVote()).to.eq(false)
@@ -494,7 +494,7 @@ const main = () => {
             expect(p2.get().value()).to.eq(total)
             expect(p2.get().txID()).to.eq(tx.get().hashHex())
             expect(p2.get().height()).to.eq(tx.get().lughHeight())
-            expect(p2.isReaction()).to.eq(false)
+            expect(p2.isReward()).to.eq(false)
             expect(p2.isThread()).to.eq(false)
             expect(p2.isRegularTx()).to.eq(true)
             expect(p2.isVote()).to.eq(false)
@@ -520,7 +520,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet3.buildTX().reward(thread, 'reaction0')
+            const tx = await wallet3.buildTX().reward(thread, REWARD0_KEY)
             expect(tx).not.eq(null)
             if (tx){
                 const response = await tx.broadcast(wallet3)
@@ -529,17 +529,17 @@ const main = () => {
                 await wallet3.synchronize()
                 await wallet3Puts.fetch(wallet3.sign().header(), true).all()
                 expect(wallet3Puts.count()).to.eq(2)
-                expect(wallet3Puts.filterReactionOnly().count()).to.eq(1)
-                expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+                expect(wallet3Puts.filterRewardsOnly().count()).to.eq(1)
+                expect(wallet3Puts.filterNonRewardsOnly().count()).to.eq(1)
 
                 const p = wallet3Puts.last() as UnserializedPutModel
                 expect(p.get().contentPKHTargeted()).to.eq(pkhContent2)
-                expect(p.get().value()).to.eq((wallet3.costs().get().reaction0() * 0.3) + 1)
+                expect(p.get().value()).to.eq((wallet3.costs().get().reward0() * 0.3) + 1)
                 expect(p.get().txID()).to.eq(tx.get().hashHex())
                 expect(p.get().height()).to.eq(tx.get().lughHeight())
-                expect(p.isReaction()).to.eq(true)
+                expect(p.isReward()).to.eq(true)
                 expect(p.isUpvote()).to.eq(false)
-                expect(p.isReaction0()).to.eq(true)
+                expect(p.isReward0()).to.eq(true)
                 expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
                 expect(p.get().otherPartyAlias()?.get().address()).to.eq(wallet.keys().get().alias().get().address())
             }
@@ -550,7 +550,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet3.buildTX().reward(thread, 'reaction1')
+            const tx = await wallet3.buildTX().reward(thread, REWARD1_KEY)
             expect(tx).not.eq(null)
             if (thread){
                 if (tx){
@@ -560,17 +560,17 @@ const main = () => {
                     await wallet3.synchronize()
                     await wallet3Puts.fetch(wallet3.sign().header(), true).all()
                     expect(wallet3Puts.count()).to.eq(3)
-                    expect(wallet3Puts.filterReactionOnly().count()).to.eq(2)
-                    expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+                    expect(wallet3Puts.filterRewardsOnly().count()).to.eq(2)
+                    expect(wallet3Puts.filterNonRewardsOnly().count()).to.eq(1)
 
                     const p = wallet3Puts.last() as UnserializedPutModel
                     expect(p.get().contentPKHTargeted()).to.eq(pkhContent2)
-                    expect(p.get().value()).to.eq((wallet3.costs().get().reaction1() * 0.3))
+                    expect(p.get().value()).to.eq((wallet3.costs().get().reward1() * 0.3))
                     expect(p.get().txID()).to.eq(tx.get().hashHex())
                     expect(p.get().height()).to.eq(tx.get().lughHeight())
-                    expect(p.isReaction()).to.eq(true)
-                    expect(p.isReaction1()).to.eq(true)
-                    expect(p.isReaction0()).to.eq(false)
+                    expect(p.isReward()).to.eq(true)
+                    expect(p.isReward0()).to.eq(false)
+                    expect(p.isReward1()).to.eq(true)
                     expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
                     expect(p.get().otherPartyAlias()?.get().address()).to.eq(wallet.keys().get().alias().get().address())
                 }
@@ -582,7 +582,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)        
         if (thread){
-            const tx = await wallet3.buildTX().reward(thread, 'reaction2')
+            const tx = await wallet3.buildTX().reward(thread, REWARD2_KEY)
             expect(tx).not.eq(null)
 
             if (tx){
@@ -592,17 +592,17 @@ const main = () => {
                 await wallet3.synchronize()
                 await wallet3Puts.fetch(wallet3.sign().header(), true).all()
                 expect(wallet3Puts.count()).to.eq(4)
-                expect(wallet3Puts.filterReactionOnly().count()).to.eq(3)
-                expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+                expect(wallet3Puts.filterRewardsOnly().count()).to.eq(3)
+                expect(wallet3Puts.filterNonRewardsOnly().count()).to.eq(1)
 
                 const p = wallet3Puts.last() as UnserializedPutModel
                 expect(p.get().contentPKHTargeted()).to.eq(pkhContent2)
-                expect(p.get().value()).to.eq((wallet3.costs().get().reaction2() * 0.3))
+                expect(p.get().value()).to.eq((wallet3.costs().get().reward2() * 0.3))
                 expect(p.get().txID()).to.eq(tx.get().hashHex())
                 expect(p.get().height()).to.eq(tx.get().lughHeight())
-                expect(p.isReaction()).to.eq(true)
-                expect(p.isReaction2()).to.eq(true)
-                expect(p.isReaction0()).to.eq(false)
+                expect(p.isReward()).to.eq(true)
+                expect(p.isReward2()).to.eq(true)
+                expect(p.isReward0()).to.eq(false)
                 expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
                 expect(p.get().otherPartyAlias()?.get().address()).to.eq(wallet.keys().get().alias().get().address())
             }
@@ -625,17 +625,17 @@ const main = () => {
                 expect(walletPuts.count()).to.eq(12)
 
                 expect(wallet3Puts.count()).to.eq(5)
-                expect(wallet3Puts.filterReactionOnly().count()).to.eq(4)
-                expect(wallet3Puts.filterNonReaction().count()).to.eq(1)
+                expect(wallet3Puts.filterRewardsOnly().count()).to.eq(4)
+                expect(wallet3Puts.filterNonRewardsOnly().count()).to.eq(1)
 
                 const p = wallet3Puts.last() as UnserializedPutModel
                 expect(p.get().contentPKHTargeted()).to.eq(pkhContent2)
                 expect(p.get().value()).to.eq((wallet3.costs().get().upvote() * 0.3)+1)
                 expect(p.get().txID()).to.eq(tx.get().hashHex())
                 expect(p.get().height()).to.eq(tx.get().lughHeight())
-                expect(p.isReaction()).to.eq(true)
+                expect(p.isReward()).to.eq(true)
                 expect(p.isUpvote()).to.eq(true)
-                expect(p.isReaction0()).to.eq(false)
+                expect(p.isReward0()).to.eq(false)
                 expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
                 expect(p.get().otherPartyAlias()?.get().address()).to.eq(wallet.keys().get().alias().get().address())
             }
@@ -850,14 +850,14 @@ const main = () => {
             expect(thread1.get().title()).to.eq("This is a title.")
             expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
             expect(() => thread1.get().contentLink()).to.throw(Error)
-            expect(thread1.get().reaction().get().threadReaction().get().countUpvote()).to.eq(1)
-            expect(thread1.get().reaction().get().threadReaction().get().countReward0()).to.eq(2)
-            expect(thread1.get().reaction().get().threadReaction().get().countReward1()).to.eq(1)
-            expect(thread1.get().reaction().get().threadReaction().get().countReward2()).to.eq(1)
-            expect(thread1.get().reaction().get().userReaction().get().countUpvote()).to.eq(1)
-            expect(thread1.get().reaction().get().userReaction().get().countReward0()).to.eq(1)
-            expect(thread1.get().reaction().get().userReaction().get().countReward1()).to.eq(1)
-            expect(thread1.get().reaction().get().userReaction().get().countReward2()).to.eq(1)
+            expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
+            expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(2)
+            expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(1)
+            expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(1)
+            expect(thread1.get().reward().get().userReward().get().countUpvote()).to.eq(1)
+            expect(thread1.get().reward().get().userReward().get().countReward0()).to.eq(1)
+            expect(thread1.get().reward().get().userReward().get().countReward1()).to.eq(1)
+            expect(thread1.get().reward().get().userReward().get().countReward2()).to.eq(1)
             const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
             if (fullThread1){
                 expect(fullThread1.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
@@ -871,10 +871,10 @@ const main = () => {
             expect(thread2.get().title()).to.eq("This is a title.")
             expect(thread2.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
             expect(() => thread1.get().contentLink()).to.throw(Error)
-            expect(thread2.get().reaction().get().threadReaction().get().countUpvote()).to.eq(1)
-            expect(thread2.get().reaction().get().threadReaction().get().countReward0()).to.eq(0)
-            expect(thread2.get().reaction().get().threadReaction().get().countReward1()).to.eq(0)
-            expect(thread2.get().reaction().get().threadReaction().get().countReward2()).to.eq(0)
+            expect(thread2.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
+            expect(thread2.get().reward().get().threadReward().get().countReward0()).to.eq(0)
+            expect(thread2.get().reward().get().threadReward().get().countReward1()).to.eq(0)
+            expect(thread2.get().reward().get().threadReward().get().countReward2()).to.eq(0)
             const fullThread2 = await ThreadModel.FetchByPKH(1, thread2.get().pubKH())
             if (fullThread2){
                 expect(fullThread2.get().content()).to.eq("Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
@@ -951,10 +951,10 @@ const main = () => {
             expect(thread1.get().title()).to.eq('')
             expect(thread1.get().pubKH()).to.eq("4f54e8c7d99764e70622675889e3ee81d2638c6e")
             expect(() => thread1.get().contentLink()).to.throw(Error)
-            expect(thread1.get().reaction().get().threadReaction().get().countUpvote()).to.eq(0)
-            expect(thread1.get().reaction().get().threadReaction().get().countReward0()).to.eq(0)
-            expect(thread1.get().reaction().get().threadReaction().get().countReward1()).to.eq(0)
-            expect(thread1.get().reaction().get().threadReaction().get().countReward2()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(0)
             const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
             if (fullThread1){
                 expect(fullThread1.get().content()).to.eq("Im making my first thread about a proposal.")

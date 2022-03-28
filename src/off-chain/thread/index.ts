@@ -7,13 +7,13 @@ import { BuildSignatureHex } from 'wallet-util'
 import { KindLinkModel } from "../../transaction";
 import config from '../../config'
 import { AliasModel, IAlias } from '../alias';
-import { ThreadReactionModel } from './thread-reaction'
+import { ThreadRewardModel } from './thread-rewards'
 import { SocietyModel } from '../society';
 import { IParsedPreview, StringToParsedPreview } from 'involvera-content-embedding';
 
 export interface IPreviewThread{
     preview_code: string
-    reaction: IThreadReward
+    reward: IThreadReward
 }
 
 export interface IThread {
@@ -23,7 +23,7 @@ export interface IThread {
     title: string
     content: string
     public_key_hashed: string
-    reaction?: IThreadReward
+    reward?: IThreadReward
     embeds?: string[]
     created_at?: Date
     target: IParsedPreview | null
@@ -36,7 +36,7 @@ const DEFAULT_STATE: IThread = {
     title: '',
     content: '',
     public_key_hashed: "",
-    reaction: ThreadReactionModel.DefaultState,
+    reward: ThreadRewardModel.DefaultState,
     embeds: [],
     created_at: new Date(),
     target: null
@@ -74,7 +74,7 @@ export class ThreadModel extends Model {
         this.setState(Object.assign(state, { 
             content_link: state.content_link ? new KindLinkModel(state.content_link, this.kids()) : null,
             author: state.author ? new AliasModel(state.author, this.kids()) : null,
-            reaction: state.reaction ? new ThreadReactionModel(state.reaction, this.kids()) : null,
+            reward: state.reward ? new ThreadRewardModel(state.reward, this.kids()) : null,
             created_at: state.created_at ? new Date(state.created_at) : undefined
         }))
     }
@@ -105,12 +105,12 @@ export class ThreadModel extends Model {
                     return status >= 200 && status < 500;
                 },
             })
-            const state = res.data
+            const state = res.data as IThread
             res.status == 201 && this.setState(Object.assign(state, { 
                 content_link: new KindLinkModel(state.content_link, this.kids()),
                 author: new AliasModel(state.author, this.kids()),
-                reaction: new ThreadReactionModel(state.reaction_count, this.kids()),
-                created_at: new Date(state.created_at)
+                reward: new ThreadRewardModel(state.reward, this.kids()),
+                created_at: new Date(state.created_at as Date)
             }))
             return res
         } catch (e: any){
@@ -133,12 +133,12 @@ export class ThreadModel extends Model {
         const content = (): string => this.state.content
         const createdAt = (): Date => this.state.created_at
         const pubKH = (): string => this.state.public_key_hashed
-        const reaction = (): ThreadReactionModel => this.state.reaction
+        const reward = (): ThreadRewardModel => this.state.reward
 
         return {
             contentLink, embeds, author, title,
             content, createdAt, societyID,
-            pubKH, reaction
+            pubKH, reward
         }
     }
 }
@@ -198,7 +198,7 @@ export class ThreadCollection extends Collection {
                         title: preview.title,
                         content: preview.content,
                         sid: preview.sid,
-                        reaction: o.reaction
+                        reward: o.reward
                     })
                 }
                 this.add(list)

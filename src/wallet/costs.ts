@@ -8,9 +8,9 @@ const DEFAULT_STATE: ICostProposal = {
     thread: 0, 
     proposal: 0, 
     upvote: 0, 
-    reaction_0: 0, 
-    reaction_1: 0, 
-    reaction_2: 0
+    reward0: 0, 
+    reward1: 0, 
+    reward2: 0
 }
 
 export default class CostsModel extends Model {
@@ -27,13 +27,13 @@ export default class CostsModel extends Model {
         const thread = (): number => this.state.thread
         const proposal = (): number => this.state.proposal
         const upvote = (): number => this.state.upvote
-        const reaction0 = (): number => this.state.reaction_0
-        const reaction1 = (): number => this.state.reaction_1
-        const reaction2 = (): number => this.state.reaction_2
+        const reward0 = (): number => this.state.reward0
+        const reward1 = (): number => this.state.reward1
+        const reward2 = (): number => this.state.reward2
 
         return {
             proposal, upvote, thread,
-            reaction0, reaction1, reaction2
+            reward2, reward1, reward0
         }
     }
 

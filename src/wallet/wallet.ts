@@ -3,6 +3,7 @@ import { B64ToByteArray, PubKeyHashFromAddress, Sha256, BuildSignature } from 'w
 import { Constitution, ScriptEngine } from 'wallet-script'
 import { Buffer } from 'buffer'
 import axios from 'axios'
+import { T_REWARD } from 'community-coin-types'
 
 import AuthContract from './auth-contract'
 import FeesModel from './fees'
@@ -169,7 +170,7 @@ export default class Wallet extends Model {
             return await builder.newTx()
         }
 
-        const reward = async (thread: ThreadModel, rewardType: 'upvote' | 'reaction0' | 'reaction1' | 'reaction2') => {
+        const reward = async (thread: ThreadModel, rewardType: T_REWARD) => {
             await this.synchronize()
             const targetPKH = thread.get().contentLink().get().output().get().contentPKH()
     

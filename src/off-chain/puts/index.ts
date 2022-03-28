@@ -1,6 +1,6 @@
 import { Collection, Model } from 'acey'
 import { Buffer } from 'buffer'
-import { IPubKH, ILink, IValue } from 'community-coin-types'
+import { IPubKH, ILink, IValue, REWARD0_KEY, REWARD1_KEY, REWARD2_KEY, UPVOTE_KEY } from 'community-coin-types'
 import { COIN_UNIT, /* CYCLE_IN_LUGH */ } from '../../constant';
 import { /* CalculateOutputMeltedValue,*/ GetAddressFromPubKeyHash } from 'wallet-util';
 import axios from 'axios'
@@ -53,12 +53,12 @@ export class UnserializedPutModel extends Model {
         })
     }
 
-    isReaction = () => this.isUpvote() || this.isReaction0() || this.isReaction1() || this.isReaction2()
+    isReward = () => this.isUpvote() || this.isReward0() || this.isReward1() || this.isReward2()
 
-    isUpvote = () => this.get().extraData() === "upvote"
-    isReaction0 = () => this.get().extraData() === "reaction_0"
-    isReaction1 = () => this.get().extraData() === "reaction_1"
-    isReaction2 = () => this.get().extraData() === "reaction_2"
+    isUpvote = () => this.get().extraData() === UPVOTE_KEY
+    isReward0 = () => this.get().extraData() === REWARD0_KEY
+    isReward1 = () => this.get().extraData() === REWARD1_KEY
+    isReward2 = () => this.get().extraData() === REWARD2_KEY
 
     isAcceptedVote = () => this.get().extraData() === "accepted"
     isDeclinedVote = () => this.get().extraData() === "declined"
@@ -118,7 +118,7 @@ export class UnserializedPutModel extends Model {
             } else if (this.isProposal()){
                 action = `New ${this.get().extraData()} proposal`
                 to = this.get().indexProposalTargeted()
-            } else if (this.isReaction()){
+            } else if (this.isReward()){
                 from = 'You'
                 action = this.isUpvote() ? 'upvoted' : 'rewarded'
                 to = this.get().contentPKHTargeted()
@@ -223,10 +223,10 @@ export class UnserializedPutCollection extends Collection {
 
     setSociety = (s: SocietyModel) => this._currentSociety = s
 
-    filterLughOnly = ()  => this.filter((p: UnserializedPutModel) => p.isLughTx()) as UnserializedPutCollection
-    filterNonLughOnly = () => this.filter((p: UnserializedPutModel) => !p.isLughTx()) as UnserializedPutCollection
-    filterReactionOnly = () => this.filter((p: UnserializedPutModel) => p.isReaction()) as UnserializedPutCollection
-    filterNonReaction = () => this.filter((p: UnserializedPutModel) => !p.isReaction()) as UnserializedPutCollection
+    filterLughsOnly = ()  => this.filter((p: UnserializedPutModel) => p.isLughTx()) as UnserializedPutCollection
+    filterNonLughsOnly = () => this.filter((p: UnserializedPutModel) => !p.isLughTx()) as UnserializedPutCollection
+    filterRewardsOnly = () => this.filter((p: UnserializedPutModel) => p.isReward()) as UnserializedPutCollection
+    filterNonRewardsOnly = () => this.filter((p: UnserializedPutModel) => !p.isReward()) as UnserializedPutCollection
 
 
     get = () => {
