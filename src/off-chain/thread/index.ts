@@ -11,8 +11,9 @@ import { ThreadRewardModel } from './thread-rewards'
 import { SocietyModel } from '../society';
 import { IParsedPreview, StringToParsedPreview } from 'involvera-content-embedding';
 
-export interface IPreviewThread{
+export interface IPreviewThread {
     preview_code: string
+    content_link: IKindLinkUnRaw
     reward: IThreadReward
 }
 
@@ -198,7 +199,8 @@ export class ThreadCollection extends Collection {
                         title: preview.title,
                         content: preview.content,
                         sid: preview.sid,
-                        reward: o.reward
+                        reward: o.reward,
+                        content_link: o.content_link
                     })
                 }
                 this.add(list)
