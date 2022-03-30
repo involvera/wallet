@@ -16,10 +16,15 @@ export class RewardCountModel extends Model{
         super(state, options)
     }
 
-    incrementUpvote = () => this.setState({n_upvote: this.get().countUpvote()})
-    incrementReward0 = () => this.setState({n_reward0: this.get().countReward0()})
-    incrementReward1 = () => this.setState({n_reward1: this.get().countReward1()})
-    incrementReward2 = () => this.setState({n_reward2: this.get().countReward2()})
+    incrementUpvote = () => this.setState({n_upvote: this.get().countUpvote() + 1})
+    incrementReward0 = () => this.setState({n_reward0: this.get().countReward0() + 1})
+    incrementReward1 = () => this.setState({n_reward1: this.get().countReward1() + 1})
+    incrementReward2 = () => this.setState({n_reward2: this.get().countReward2() + 1})
+
+    decrementUpvote = () => this.setState({n_upvote: this.get().countUpvote() - 1})
+    decrementReward0 = () => this.setState({n_reward0: this.get().countReward0() - 1})
+    decrementReward1 = () => this.setState({n_reward1: this.get().countReward1() - 1})
+    decrementReward2 = () => this.setState({n_reward2: this.get().countReward2() - 1})
     
     get = () => {
         return {
