@@ -400,7 +400,7 @@ const main = () => {
 
                 const p = wallet2Puts.last() as UnserializedPutModel
                 expect(p.get().contentPKHTargeted()).to.eq(pkhContent0)
-                expect(p.get().value()).to.eq((wallet2.costs().get().upvote() * 0.3) + 1)
+                expect(p.get().value()).to.eq(wallet2.costs().get().upvote()) 
                 expect(p.get().txID()).to.eq(tx.get().hashHex())
                 expect(p.get().height()).to.eq(tx.get().lughHeight())
                 expect(p.isReward()).to.eq(true)
@@ -418,23 +418,25 @@ const main = () => {
         if (thread){
             const tx = await wallet2.buildTX().reward(thread, REWARD0_KEY)
             const balance = wallet2.balance()
+            const balanceWallet = wallet.balance()
             expect(tx).not.eq(null)
-
             if (tx){
                 const response = await tx.broadcast(wallet2)
                 expect(response.status).to.eq(201)
                 lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
                 await wallet.synchronize()
+
                 await wallet2Puts.fetch(wallet2.sign().header(), true).all()
                 await walletPuts.fetch(wallet.sign().header(), true).all()
 
                 expect(wallet2Puts.count()).to.eq(3)
                 expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().reward0()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
+                expect(wallet.balance()).to.eq(balanceWallet + (wallet2.costs().get().reward0() * 0.3) + 1)
                 expect(walletPuts.count()).to.eq(11)
 
                 const p = wallet2Puts.last() as UnserializedPutModel
                 expect(p.get().contentPKHTargeted()).to.eq(pkhContent2)
-                expect(p.get().value()).to.eq((wallet2.costs().get().reward0() * 0.3) + 1)
+                expect(p.get().value()).to.eq(wallet2.costs().get().reward0())
                 expect(p.get().txID()).to.eq(tx.get().hashHex())
                 expect(p.get().height()).to.eq(tx.get().lughHeight())
                 expect(p.isReward()).to.eq(true)
@@ -530,7 +532,7 @@ const main = () => {
 
                 const p = wallet3Puts.last() as UnserializedPutModel
                 expect(p.get().contentPKHTargeted()).to.eq(pkhContent2)
-                expect(p.get().value()).to.eq((wallet3.costs().get().reward0() * 0.3) + 1)
+                expect(p.get().value()).to.eq(wallet3.costs().get().reward0())
                 expect(p.get().txID()).to.eq(tx.get().hashHex())
                 expect(p.get().height()).to.eq(tx.get().lughHeight())
                 expect(p.isReward()).to.eq(true)
@@ -561,7 +563,7 @@ const main = () => {
 
                     const p = wallet3Puts.last() as UnserializedPutModel
                     expect(p.get().contentPKHTargeted()).to.eq(pkhContent2)
-                    expect(p.get().value()).to.eq((wallet3.costs().get().reward1() * 0.3))
+                    expect(p.get().value()).to.eq(wallet3.costs().get().reward1())
                     expect(p.get().txID()).to.eq(tx.get().hashHex())
                     expect(p.get().height()).to.eq(tx.get().lughHeight())
                     expect(p.isReward()).to.eq(true)
@@ -593,7 +595,7 @@ const main = () => {
 
                 const p = wallet3Puts.last() as UnserializedPutModel
                 expect(p.get().contentPKHTargeted()).to.eq(pkhContent2)
-                expect(p.get().value()).to.eq((wallet3.costs().get().reward2() * 0.3))
+                expect(p.get().value()).to.eq(wallet3.costs().get().reward2())
                 expect(p.get().txID()).to.eq(tx.get().hashHex())
                 expect(p.get().height()).to.eq(tx.get().lughHeight())
                 expect(p.isReward()).to.eq(true)
@@ -626,7 +628,7 @@ const main = () => {
 
                 const p = wallet3Puts.last() as UnserializedPutModel
                 expect(p.get().contentPKHTargeted()).to.eq(pkhContent2)
-                expect(p.get().value()).to.eq((wallet3.costs().get().upvote() * 0.3)+1)
+                expect(p.get().value()).to.eq(wallet3.costs().get().upvote())
                 expect(p.get().txID()).to.eq(tx.get().hashHex())
                 expect(p.get().height()).to.eq(tx.get().lughHeight())
                 expect(p.isReward()).to.eq(true)
