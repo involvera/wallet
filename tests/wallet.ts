@@ -15,8 +15,8 @@ import conf from '../src/config'
 import { IConstitutionProposalUnRaw, ICostProposal, REWARD0_KEY, REWARD2_KEY, REWARD1_KEY, UPVOTE_KEY } from 'community-coin-types'
 import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 
-// conf.setRootAPIChainUrl('http://134.122.16.30:8080')
-// conf.setRootAPIOffChainUrl('http://134.122.16.30:3020')
+conf.setRootAPIChainUrl('http://134.122.16.30:8080')
+conf.setRootAPIOffChainUrl('http://134.122.16.30:3020')
 
 const ADMIN_KEY = '2f72e55b962b6cd66ea70e8b6bd8657d1c87a23a65769213d76dcb5da6abf6b5'
 const SOCIETY_ID= 1

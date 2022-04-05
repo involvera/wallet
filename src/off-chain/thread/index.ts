@@ -135,11 +135,12 @@ export class ThreadModel extends Model {
         const createdAt = (): Date => this.state.created_at
         const pubKH = (): string => this.state.public_key_hashed
         const reward = (): ThreadRewardModel => this.state.reward
+        const target = (): IParsedPreview | null => this.state.target 
 
         return {
             contentLink, embeds, author, title,
             content, createdAt, societyID,
-            pubKH, reward
+            pubKH, reward, target
         }
     }
 }
