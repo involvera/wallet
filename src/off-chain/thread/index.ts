@@ -10,6 +10,7 @@ import { AliasModel, IAlias } from '../alias';
 import { ThreadRewardModel } from './thread-rewards'
 import { SocietyModel } from '../society';
 import { IParsedPreview, StringToParsedPreview } from 'involvera-content-embedding';
+import { IProposal, ProposalModel } from '../proposal';
 
 export interface IPreviewThread {
     preview_code: string
@@ -27,7 +28,7 @@ export interface IThread {
     reward?: IThreadReward
     embeds?: string[]
     created_at?: Date
-    target: IParsedPreview | null
+    target: IThread | IProposal | null
 }
 
 const DEFAULT_STATE: IThread = {
@@ -70,13 +71,50 @@ export class ThreadModel extends Model {
         return new ThreadModel({sid, content, title} as any, {})
     }
 
+    static NewTarget = (target: IThread | IProposal | null): ThreadModel | ProposalModel | null => {
+        if (!target)
+            return null
+        if ((target as any).index)
+            return new ProposalModel(target as any, {})
+        else 
+            return new ThreadModel(target as any, {})
+    }
+
+    static NewPreviewTarget = (target: IParsedPreview | null): ThreadModel | ProposalModel | null => {
+        if (!target)
+            return null
+        if (target.index){
+            return new ProposalModel({
+                sid: target.sid,
+                author: target.author,
+                title: target.title,
+                index: target.index,
+                created_at: typeof target.created_at == 'number' ? new Date(target.created_at * 1000) : new Date(target.created_at),
+                layer: target.proposal_layer,
+                vote: target.vote
+            } as any, {})
+        } else if (target.pkh) {
+            return new ThreadModel({
+                author: target.author,
+                public_key_hashed: target.pkh,
+                created_at: typeof target.created_at == 'number' ? new Date(target.created_at * 1000) : new Date(target.created_at),
+                target: ThreadModel.NewPreviewTarget(target.target as any),
+                title: target.title ? target.title : '',
+                content: target.title ? '' : target.content,
+                sid: target.sid,
+            } as any, {})
+        }
+        return null
+    }
+
     constructor(state: IThread = DEFAULT_STATE, options: any){
         super(state, options) 
         this.setState(Object.assign(state, { 
             content_link: state.content_link ? new KindLinkModel(state.content_link, this.kids()) : null,
             author: state.author ? new AliasModel(state.author, this.kids()) : null,
             reward: state.reward ? new ThreadRewardModel(state.reward, this.kids()) : null,
-            created_at: state.created_at ? new Date(state.created_at) : undefined
+            created_at: state.created_at ? new Date(state.created_at) : undefined,
+            target: state.target ? ThreadModel.NewTarget(state.target) : null 
         }))
     }
 
@@ -111,7 +149,8 @@ export class ThreadModel extends Model {
                 content_link: new KindLinkModel(state.content_link, this.kids()),
                 author: new AliasModel(state.author, this.kids()),
                 reward: new ThreadRewardModel(state.reward, this.kids()),
-                created_at: new Date(state.created_at as Date)
+                created_at: new Date(state.created_at as Date),
+                target: ThreadModel.NewTarget(state.target)
             }))
             return res
         } catch (e: any){
@@ -135,7 +174,7 @@ export class ThreadModel extends Model {
         const createdAt = (): Date => this.state.created_at
         const pubKH = (): string => this.state.public_key_hashed
         const reward = (): ThreadRewardModel => this.state.reward
-        const target = (): IParsedPreview | null => this.state.target 
+        const target = (): ThreadModel | ProposalModel | null => this.state.target
 
         return {
             contentLink, embeds, author, title,
@@ -196,7 +235,7 @@ export class ThreadCollection extends Collection {
                         public_key_hashed: preview.pkh,
                         author: preview.author,
                         created_at: new Date(preview.created_at * 1000),
-                        target: preview.target,
+                        target: null,
                         title: preview.title,
                         content: preview.content,
                         sid: preview.sid,
