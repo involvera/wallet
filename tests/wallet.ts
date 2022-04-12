@@ -15,8 +15,8 @@ import conf from '../src/config'
 import { IConstitutionProposalUnRaw, ICostProposal, REWARD0_KEY, REWARD2_KEY, REWARD1_KEY, UPVOTE_KEY } from 'community-coin-types'
 import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 
-conf.setRootAPIChainUrl('http://134.122.16.30:8080')
-conf.setRootAPIOffChainUrl('http://134.122.16.30:3020')
+// conf.setRootAPIChainUrl('http://134.122.16.30:8080')
+// conf.setRootAPIOffChainUrl('http://134.122.16.30:3020')
 
 const ADMIN_KEY = '2f72e55b962b6cd66ea70e8b6bd8657d1c87a23a65769213d76dcb5da6abf6b5'
 const SOCIETY_ID= 1
@@ -327,9 +327,27 @@ const main = () => {
     })
 
     it('[OFFCHAIN] Wallet1 -> create a thread', async () => {
-        const p = ThreadModel.NewContent(1, "This is a title.", "Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+        const title = "This is a title."
+        const content = "Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]"
+
+        const p = ThreadModel.NewContent(1, title, content)
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
+        expect(p.get().target()).to.eq(null)
+        expect(p.get().title()).to.eq(title)
+        expect(p.get().content()).to.eq(content)
+        expect(p.get().author().get().username()).to.eq('fantasim')
+        expect(p.get().societyID()).to.eq(1)
+        expect(p.get().pubKH()).to.eq(pkhContent0)
+        expect(p.get().embeds().length).to.eq(3)
+        expect(p.get().reward().get().threadReward().get().countReward0()).to.eq(0)
+        expect(p.get().reward().get().threadReward().get().countReward1()).to.eq(0)
+        expect(p.get().reward().get().threadReward().get().countReward2()).to.eq(0)
+        expect(p.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
+        expect(p.get().reward().get().userReward().get().countReward0()).to.eq(0)
+        expect(p.get().reward().get().userReward().get().countReward1()).to.eq(0)
+        expect(p.get().reward().get().userReward().get().countReward2()).to.eq(0)
+        expect(p.get().reward().get().userReward().get().countUpvote()).to.eq(0)
         await timeout(1000)
     })
 
@@ -362,9 +380,31 @@ const main = () => {
     })
 
     it('[OFFCHAIN] Wallet1 -> create a rethread on Thread', async () => {
-        const p = ThreadModel.NewContent(1, "This is a title.", `Here my favorite Thread: %[thread/${pkhContent0}] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]`)
+        const title = `This is a title.`
+        const content = `Here my favorite Thread: %[thread/${pkhContent0}] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]`
+        const p = ThreadModel.NewContent(1, title, content)
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
+
+        const target = p.get().target() as ThreadModel
+        expect(target.get().title()).to.eq(title)
+        expect(target.get().societyID()).to.eq(1)
+        expect(target.get().author().get().username()).to.eq('fantasim')
+        expect(target.get().target()).to.eq(null)
+        expect(target.get().pubKH()).to.eq(pkhContent0)
+        expect(p.get().title()).to.eq(title)
+        expect(p.get().content()).to.eq(content)
+        expect(p.get().societyID()).to.eq(1)
+        expect(p.get().pubKH()).to.eq(pkhContent2)
+        expect(p.get().embeds().length).to.eq(4)
+        expect(p.get().reward().get().threadReward().get().countReward0()).to.eq(0)
+        expect(p.get().reward().get().threadReward().get().countReward1()).to.eq(0)
+        expect(p.get().reward().get().threadReward().get().countReward2()).to.eq(0)
+        expect(p.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
+        expect(p.get().reward().get().userReward().get().countReward0()).to.eq(0)
+        expect(p.get().reward().get().userReward().get().countReward1()).to.eq(0)
+        expect(p.get().reward().get().userReward().get().countReward2()).to.eq(0)
+        expect(p.get().reward().get().userReward().get().countUpvote()).to.eq(0)
     })
 
     it('[OFFCHAIN] Create an alias on Wallet 2', async () => {
@@ -861,6 +901,12 @@ const main = () => {
             if (fullThread1){
                 expect(fullThread1.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
                 expect(fullThread1.get().embeds().length).to.eq(4)
+                const target = fullThread1.get().target() as ThreadModel
+                expect(target.get().title()).to.eq('This is a title.')
+                expect(target.get().societyID()).to.eq(1)
+                expect(target.get().author().get().username()).to.eq('fantasim')
+                expect(target.get().target()).to.eq(null)
+                expect(target.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
             }
 
             expect(thread2.get().author().get().address()).eq(wallet.keys().get().address())
@@ -878,6 +924,7 @@ const main = () => {
             if (fullThread2){
                 expect(fullThread2.get().content()).to.eq("Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
                 expect(fullThread2.get().embeds().length).to.eq(3)
+                expect(fullThread2.get().target()).to.eq(null)
             }
         }
     })
@@ -927,8 +974,8 @@ const main = () => {
     })
 
     it('[OFFCHAIN] Wallet1 -> create a rethread on Proposal', async () => {
-        const p = ThreadModel.NewContent(1, '', `Im making my first thread about a proposal.`)
-        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        const t = ThreadModel.NewContent(1, '', `Im making my first thread about a proposal.`)
+        const res = await t.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
     })
 
