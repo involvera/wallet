@@ -897,6 +897,13 @@ const main = () => {
             expect(thread1.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
 
+            const target = thread1.get().target() as ThreadModel
+            expect(target.get().title()).to.eq('This is a title.')
+            expect(target.get().societyID()).to.eq(1)
+            expect(target.get().author().get().username()).to.eq('fantasim')
+            expect(target.get().target()).to.eq(null)
+            expect(target.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+
             const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
             if (fullThread1){
                 expect(fullThread1.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
@@ -919,7 +926,7 @@ const main = () => {
             expect(thread2.get().reward().get().threadReward().get().countReward2()).to.eq(0)
             expect(thread2.get().contentLink().get().targetContent()).to.eq("")
             expect(thread2.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
-
+            expect(thread2.get().target()).to.eq(null)
             const fullThread2 = await ThreadModel.FetchByPKH(1, thread2.get().pubKH())
             if (fullThread2){
                 expect(fullThread2.get().content()).to.eq("Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
@@ -1005,6 +1012,128 @@ const main = () => {
             if (fullThread1){
                 expect(fullThread1.get().content()).to.eq("Im making my first thread about a proposal.")
                 expect(fullThread1.get().embeds().length).to.eq(0)
+                const target = fullThread1.get().target() as ProposalModel
+                expect(target.get().title()).to.eq('This is the title of a cost proposal')
+                expect(target.get().societyID()).to.eq(1)
+                expect(target.get().index()).to.eq(10)
+                expect(target.get().layer()).to.eq("Economy")
+                expect(target.get().vote().get().closedAtLH()).to.eq(28)
+                expect(target.get().vote().get().approved()).to.eq(-1)
+            }
+        }
+    })
+
+    it('[ONCHAIN] Wallet1 -> create a rethread on Thread', async () => {
+        const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, "2c108813b0f957c5776dffec80c5122b4e782864")
+        expect(thread).not.eq(undefined)
+        if (thread){
+            const tx = await wallet.buildTX().rethread(Buffer.from(thread.get().pubKH(), 'hex'))
+            const balance = wallet.balance()
+            expect(tx).not.eq(null)
+            if (tx){
+                const response = await tx.broadcast(wallet)
+                const out = tx.get().outputs().nodeAt(0) as OutputModel
+                pkhContent2 = out.get().contentPKH().toString('hex')
+                expect(response.status).to.eq(201)
+                await walletPuts.fetch(wallet.sign().header(), true).all()
+                expect(walletPuts.count()).to.eq(15)
+                expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte()))
+                const lastPut = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
+                expect(lastPut.get().value()).to.eq(wallet.costs().get().thread())
+                expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
+                expect(lastPut.isThread()).to.eq(true)
+                expect(lastPut.isRethread()).to.eq(true)
+                expect(lastPut.get().contentPKH()).to.eq(pkhContent2)
+                expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().pubKH())
+                expect(lastPut.get().indexProposalTargeted()).to.eq(-1)
+            }
+        }
+    })
+
+    it('[OFFCHAIN] Wallet1 -> create a rethread on rethread of a Thread', async () => {
+        const title = ``
+        const content = `I have always loved to be into quick answers just for the sake of answering crap.`
+        const p = ThreadModel.NewContent(1, title, content)
+        const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
+        expect(res.status).to.eq(201)
+
+        const target = p.get().target() as ThreadModel
+        expect(target.get().title()).to.eq(`This is a title.`)
+        expect(target.get().societyID()).to.eq(1)
+        expect(target.get().author().get().username()).to.eq('fantasim')
+        expect(target.get().target()).to.not.eq(null)
+        expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+
+        const target2 = target.get().target() as ThreadModel
+        expect(target2.get().title()).to.eq(`This is a title.`)
+        expect(target2.get().societyID()).to.eq(1)
+        expect(target2.get().author().get().username()).to.eq('fantasim')
+        expect(target2.get().target()).to.eq(null)
+        expect(target2.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+
+        expect(p.get().title()).to.eq(title)
+        expect(p.get().content()).to.eq(content)
+        expect(p.get().societyID()).to.eq(1)
+        expect(p.get().pubKH()).to.eq(pkhContent2)
+        expect(p.get().embeds().length).to.eq(0)
+        expect(p.get().reward().get().threadReward().get().countReward0()).to.eq(0)
+        expect(p.get().reward().get().threadReward().get().countReward1()).to.eq(0)
+        expect(p.get().reward().get().threadReward().get().countReward2()).to.eq(0)
+        expect(p.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
+        expect(p.get().reward().get().userReward().get().countReward0()).to.eq(0)
+        expect(p.get().reward().get().userReward().get().countReward1()).to.eq(0)
+        expect(p.get().reward().get().userReward().get().countReward2()).to.eq(0)
+        expect(p.get().reward().get().userReward().get().countUpvote()).to.eq(0)
+    })
+
+    it('Fetch Thread list 3', async () => {
+        const society = await SocietyModel.fetch(1)
+        const threads = new ThreadCollection([],{})
+        threads.setSociety(society as SocietyModel)
+        await threads.fetch(wallet.sign().header(), true)    
+
+        expect(threads).not.to.eq(null)
+        if (threads){
+            expect(threads.count()).to.eq(4)
+            const thread1 = threads.nodeAt(0) as ThreadModel
+
+            expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
+            expect(thread1.get().title()).to.eq('')
+            expect(thread1.get().pubKH()).to.eq("810fad66ae84c212b9c8f2971d7e7975375fedfb")
+            expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(0)
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
+            
+            const target = thread1.get().target() as ThreadModel
+            expect(target.get().title()).to.eq('This is a title.')
+            expect(target.get().societyID()).to.eq(1)
+            expect(target.get().author().get().username()).to.eq('fantasim')
+            expect(target.get().target()).to.eq(null)
+            expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+
+
+            const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
+            if (fullThread1){
+                expect(fullThread1.get().content()).to.eq("I have always loved to be into quick answers just for the sake of answering crap.")
+                expect(fullThread1.get().embeds().length).to.eq(0)
+                const target = fullThread1.get().target() as ThreadModel
+                expect(target.get().title()).to.eq('This is a title.')
+                expect(target.get().societyID()).to.eq(1)
+                expect(target.get().author().get().username()).to.eq('fantasim')
+                expect(target.get().target()).to.not.eq(null)
+                expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+                
+                const target2 = target.get().target() as ThreadModel
+                expect(target2.get().title()).to.eq('This is a title.')
+                expect(target2.get().societyID()).to.eq(1)
+                expect(target2.get().author().get().username()).to.eq('fantasim')
+                expect(target2.get().target()).to.eq(null)
+                expect(target2.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+
             }
         }
     })

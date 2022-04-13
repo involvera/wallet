@@ -84,21 +84,25 @@ export class ThreadModel extends Model {
         if (!target)
             return null
         if (target.index){
-            return new ProposalModel({
+            const p = new ProposalModel({
                 sid: target.sid,
                 author: target.author,
                 title: target.title,
                 index: target.index,
                 created_at: typeof target.created_at == 'number' ? new Date(target.created_at * 1000) : new Date(target.created_at),
-                layer: target.proposal_layer,
                 vote: target.vote
             } as any, {})
+            p.setState({ layer: target.proposal_layer })
+            return p
         } else if (target.pkh) {
+            let t = ThreadModel.NewPreviewTarget(target.target as any)
+            if (t != null)
+                t = t.to().plain()
             return new ThreadModel({
                 author: target.author,
                 public_key_hashed: target.pkh,
                 created_at: typeof target.created_at == 'number' ? new Date(target.created_at * 1000) : new Date(target.created_at),
-                target: ThreadModel.NewPreviewTarget(target.target as any),
+                target: t,
                 title: target.title ? target.title : '',
                 content: target.title ? '' : target.content,
                 sid: target.sid,
@@ -110,11 +114,11 @@ export class ThreadModel extends Model {
     constructor(state: IThread = DEFAULT_STATE, options: any){
         super(state, options) 
         this.setState(Object.assign(state, { 
-            content_link: state.content_link ? new KindLinkModel(state.content_link, this.kids()) : null,
-            author: state.author ? new AliasModel(state.author, this.kids()) : null,
-            reward: state.reward ? new ThreadRewardModel(state.reward, this.kids()) : null,
-            created_at: state.created_at ? new Date(state.created_at) : undefined,
-            target: state.target ? ThreadModel.NewTarget(state.target) : null 
+            content_link: !!state.content_link ? new KindLinkModel(state.content_link, this.kids()) : null,
+            author: !!state.author ? new AliasModel(state.author, this.kids()) : null,
+            reward: !!state.reward ? new ThreadRewardModel(state.reward, this.kids()) : null,
+            created_at: !!state.created_at ? new Date(state.created_at) : undefined,
+            target: !!state.target ? ThreadModel.NewTarget(state.target) : null 
         }))
     }
 
@@ -231,11 +235,12 @@ export class ThreadCollection extends Collection {
                 const list = new ThreadCollection([], {})
                 for (const o of json){
                     const preview = StringToParsedPreview(o.preview_code)
+                    const target = ThreadModel.NewPreviewTarget(preview.target as any)
                     list.push({
                         public_key_hashed: preview.pkh,
                         author: preview.author,
                         created_at: new Date(preview.created_at * 1000),
-                        target: null,
+                        target: target ? target.to().plain() : null,
                         title: preview.title,
                         content: preview.content,
                         sid: preview.sid,
@@ -251,15 +256,15 @@ export class ThreadCollection extends Collection {
         }
     }
 
-        add = (node: ThreadModel | ThreadCollection) => {        
-            const addNode = (n: ThreadModel) => {
-                const idx = this.findIndex({public_key_hashed: n.get().pubKH()})
-                if (idx == -1)
-                    this.push(n.to().plain())
-                else
-                    this.updateAt(n.to().plain(), idx)            
-            }
-            node instanceof ThreadModel ? addNode(node) : node.forEach((p: ThreadModel) => addNode(p))
-            return this.action()
+    add = (node: ThreadModel | ThreadCollection) => {        
+        const addNode = (n: ThreadModel) => {
+            const idx = this.findIndex({public_key_hashed: n.get().pubKH()})
+            if (idx == -1)
+                this.push(n.to().plain())
+            else
+                this.updateAt(n.to().plain(), idx)            
         }
+        node instanceof ThreadModel ? addNode(node) : node.forEach((p: ThreadModel) => addNode(p))
+        return this.action()
+    }
 }

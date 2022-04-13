@@ -173,6 +173,7 @@ export class UnserializedPutModel extends Model {
             return ""
         }
         
+        //Only usable method for proposal and vote puts.
         const indexProposalTargeted = (): number => {
             if (this.isProposal())
                 return parseInt(link().get().from())
