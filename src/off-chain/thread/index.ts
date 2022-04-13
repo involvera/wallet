@@ -89,10 +89,10 @@ export class ThreadModel extends Model {
                 author: target.author,
                 title: target.title,
                 index: target.index,
+                layer: (target as any).layer,
                 created_at: typeof target.created_at == 'number' ? new Date(target.created_at * 1000) : new Date(target.created_at),
                 vote: target.vote
             } as any, {})
-            p.setState({ layer: target.proposal_layer })
             return p
         } else if (target.pkh) {
             let t = ThreadModel.NewPreviewTarget(target.target as any)

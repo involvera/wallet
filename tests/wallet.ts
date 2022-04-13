@@ -1008,6 +1008,14 @@ const main = () => {
             expect(thread1.get().contentLink().get().targetContent()).to.eq("ee8a1440725029994a56a1d7d7ecb28140fb4fb0")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
             
+            const target = thread1.get().target() as ProposalModel
+            expect(target.get().title()).to.eq('This is the title of a cost proposal')
+            expect(target.get().societyID()).to.eq(1)
+            expect(target.get().index()).to.eq(10)
+            expect(target.get().layer()).to.eq("Economy")
+            expect(target.get().vote().get().closedAtLH()).to.eq(28)
+            expect(target.get().vote().get().approved()).to.eq(-1)
+
             const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
             if (fullThread1){
                 expect(fullThread1.get().content()).to.eq("Im making my first thread about a proposal.")
