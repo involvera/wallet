@@ -16,6 +16,7 @@ export interface IPreviewThread {
     preview_code: string
     content_link: IKindLinkUnRaw
     reward: IThreadReward
+    reply_count: number
 }
 
 export interface IThread {
@@ -171,6 +172,7 @@ export class ThreadModel extends Model {
             return this.state.content_link
         }
 
+        const replyCount = (): number => this.state.reply_count
         const embeds = (): string[] => this.state.embeds || []
         const author = (): AliasModel => this.state.author
         const title = (): string => this.state.title
@@ -181,9 +183,9 @@ export class ThreadModel extends Model {
         const target = (): ThreadModel | ProposalModel | null => this.state.target
 
         return {
-            contentLink, embeds, author, title,
+            contentLink, replyCount, embeds, author, title,
             content, createdAt, societyID,
-            pubKH, reward, target
+            pubKH, reward, target,
         }
     }
 }
@@ -245,7 +247,8 @@ export class ThreadCollection extends Collection {
                         content: preview.content,
                         sid: preview.sid,
                         reward: o.reward,
-                        content_link: o.content_link
+                        content_link: o.content_link,
+                        reply_count: o.reply_count
                     })
                 }
                 this.add(list)
