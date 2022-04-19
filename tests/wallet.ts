@@ -927,6 +927,7 @@ const main = () => {
             expect(thread1.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
             expect(thread1.get().replyCount()).to.eq(0)
+            expect(thread1.get().target()).to.eq(null)
         }
     })
 
