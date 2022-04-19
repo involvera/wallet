@@ -872,7 +872,7 @@ const main = () => {
         }
     })
 
-    it('Fetch Target Thread List', async () => {
+    it('Fetch Target Thread List - PREVIEW MODE', async () => {
         const society = await SocietyModel.fetch(1)
         const threads = new ThreadCollection([],{})
         threads.setSociety(society as SocietyModel)
@@ -886,6 +886,36 @@ const main = () => {
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq("This is a title.")
             expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
+            expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(2)
+            expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(1)
+            expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(1)
+            expect(thread1.get().reward().get().userReward().get().countUpvote()).to.eq(1)
+            expect(thread1.get().reward().get().userReward().get().countReward0()).to.eq(1)
+            expect(thread1.get().reward().get().userReward().get().countReward1()).to.eq(1)
+            expect(thread1.get().reward().get().userReward().get().countReward2()).to.eq(1)
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
+            expect(thread1.get().replyCount()).to.eq(0)
+        }
+    })
+
+    it('Fetch Target Thread List - FULL MODE', async () => {
+        const society = await SocietyModel.fetch(1)
+        const threads = new ThreadCollection([],{})
+        threads.setSociety(society as SocietyModel)
+        threads.setTargetPKH("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+        await threads.fetchFullReplies(wallet3.sign().header(), true)   
+        expect(threads).not.to.eq(null)
+        if (threads){
+            expect(threads.count()).to.eq(1)
+            const thread1 = threads.nodeAt(0) as ThreadModel
+            expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
+            expect(thread1.get().title()).to.eq("This is a title.")
+            expect(thread1.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+            expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().embeds().length).to.eq(4)
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(2)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(1)
@@ -1019,7 +1049,7 @@ const main = () => {
         expect(res.status).to.eq(201)
     })
 
-    it('Fetch Target Thread List 2 ', async () => {
+    it('Fetch Target Thread List 2 - PREVIEW MODE ', async () => {
         const society = await SocietyModel.fetch(1)
         const threads = new ThreadCollection([],{})
         threads.setSociety(society as SocietyModel)
@@ -1163,7 +1193,7 @@ const main = () => {
         expect(p.get().reward().get().userReward().get().countUpvote()).to.eq(0)
     })
 
-    it('Fetch Target Thread List 3 ', async () => {
+    it('Fetch Target Thread List 3 - PREVIEW MODE', async () => {
         const society = await SocietyModel.fetch(1)
         const threads = new ThreadCollection([],{})
         threads.setSociety(society as SocietyModel)
@@ -1191,6 +1221,65 @@ const main = () => {
             expect(target.get().author().get().username()).to.eq('fantasim')
             expect(target.get().target()).to.eq(null)
             expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+        }
+    })
+
+    it('Fetch Target Thread List 3 - PREVIEW MODE', async () => {
+        const society = await SocietyModel.fetch(1)
+        const threads = new ThreadCollection([],{})
+        threads.setSociety(society as SocietyModel)
+        threads.setTargetPKH("2c108813b0f957c5776dffec80c5122b4e782864")
+        await threads.fetch(wallet3.sign().header(), true)   
+        expect(threads).not.to.eq(null)
+        if (threads){
+            expect(threads.count()).to.eq(1)
+            const thread1 = threads.nodeAt(0) as ThreadModel
+            expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
+            expect(thread1.get().title()).to.eq('')
+            expect(thread1.get().pubKH()).to.eq("810fad66ae84c212b9c8f2971d7e7975375fedfb")
+            expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(0)
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
+            expect(thread1.get().replyCount()).to.eq(0)
+
+            const target = thread1.get().target() as ThreadModel
+            expect(target.get().title()).to.eq('This is a title.')
+            expect(target.get().societyID()).to.eq(1)
+            expect(target.get().author().get().username()).to.eq('fantasim')
+            expect(target.get().target()).to.eq(null)
+            expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+        }
+    })
+
+
+    it('Fetch Target Thread List 3 - FULL MODE', async () => {
+        const society = await SocietyModel.fetch(1)
+        const threads = new ThreadCollection([],{})
+        threads.setSociety(society as SocietyModel)
+        threads.setTargetPKH("2c108813b0f957c5776dffec80c5122b4e782864")
+        await threads.fetchFullReplies(wallet3.sign().header(), true)   
+        expect(threads).not.to.eq(null)
+        if (threads){
+            expect(threads.count()).to.eq(1)
+            const thread1 = threads.nodeAt(0) as ThreadModel
+            expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
+            expect(thread1.get().title()).to.eq('')
+            expect(thread1.get().content()).to.eq("I have always loved to be into quick answers just for the sake of answering crap.")
+            expect(thread1.get().embeds().length).to.eq(0)
+            expect(thread1.get().pubKH()).to.eq("810fad66ae84c212b9c8f2971d7e7975375fedfb")
+            expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(0)
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
+            expect(thread1.get().replyCount()).to.eq(0)
+            expect(thread1.get().target()).to.eq(null)
         }
     })
 

@@ -201,6 +201,28 @@ export class ThreadCollection extends Collection {
         super(initialState, [ThreadModel, ThreadCollection], options)
     }
 
+    private _shouldStopExecution = (disablePageSystem: void | boolean) => this._maxReached == true && disablePageSystem != true
+    private _throwErrorIfNoSocietySet = () => {
+        if (!this._currentSociety){
+            throw new Error("You need to set the current used Society through the method 'setSociety' first.")
+        }
+    }
+
+    private _throwErrorIfNoTargetPKHSet = () => {
+        if (!this._currentSociety){
+            throw new Error("You need to set the target public key hashed through the method 'setTargetPKH' first.")
+        }
+    }
+
+    private _updateFetchingInternalData = (jsonLength: number, max: number, disablePageSystem: void | boolean) => {
+        if (disablePageSystem != true){
+            if (jsonLength < max){
+                this._maxReached = true
+            }
+            this._pageFetched += 1
+        }
+    }
+
     setSociety = (s: SocietyModel) => {
         this._currentSociety = s
     }
@@ -211,19 +233,46 @@ export class ThreadCollection extends Collection {
         this._maxReached = false
     }
 
+    public fetchFullReplies = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
+        const MAX_PER_PAGE = 5
+
+        if (this._shouldStopExecution(disablePageSystem))
+            return 200
+
+        this._throwErrorIfNoSocietySet()
+        this._throwErrorIfNoTargetPKHSet()
+
+        try {
+            const response = await axios(config.getRootAPIOffChainUrl() + `/thread/replies/${this._currentSociety?.get().id()}/${this._targetPKH}`, {
+                method: 'GET',
+                headers: Object.assign({}, headerSignature as any, {
+                    offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE
+                }),
+                timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                }
+            })
+            if (response.status == 200){
+                const json = (response.data || []) as any[]
+                this._updateFetchingInternalData(json.length, MAX_PER_PAGE, disablePageSystem)
+                this.add(new ThreadCollection(json, {}))
+            }
+        } catch (e: any){
+            throw new Error(e)
+        }
+    }
+
     fetch = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
         const MAX_PER_PAGE = 10
 
-        if (this._maxReached == true && disablePageSystem != true){
+        if (this._shouldStopExecution(disablePageSystem))
             return 200
-        }
 
-        if (!this._currentSociety){
-            throw new Error("You need to set the current used Society through the method 'setSociety' first.")
-        }
+        this._throwErrorIfNoSocietySet()
 
         try {
-            const response = await axios(config.getRootAPIOffChainUrl() + `/thread/${this._currentSociety.get().id()}`, {
+            const response = await axios(config.getRootAPIOffChainUrl() + `/thread/${this._currentSociety?.get().id()}`, {
                 method: 'GET',
                 headers: Object.assign({}, headerSignature as any, {
                     offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE,
@@ -236,12 +285,7 @@ export class ThreadCollection extends Collection {
             })
             if (response.status == 200){
                 const json = (response.data || []) as IPreviewThread[]
-                if (disablePageSystem != true){
-                    if (json.length < MAX_PER_PAGE){
-                        this._maxReached = true
-                    }
-                    this._pageFetched += 1
-                }
+                this._updateFetchingInternalData(json.length, MAX_PER_PAGE, disablePageSystem)
                 const list = new ThreadCollection([], {})
                 for (const o of json){
                     const preview = StringToParsedPreview(o.preview_code)
