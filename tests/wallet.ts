@@ -899,6 +899,54 @@ const main = () => {
             expect(thread1.get().replyCount()).to.eq(0)
         }
     })
+    
+    it('Fetch Thread and Target', async () => {
+        const ths = await ThreadModel.FetchThreadAndThreadTarget(SOCIETY_ID, "2c108813b0f957c5776dffec80c5122b4e782864", "af53ae357d42b460838f4f4157cd579de0f9d6fd", wallet3.sign().header())
+        expect(ths).not.to.eq(null)
+        if (ths){
+            expect(ths.length).to.eq(2)
+            const thread1 = ths[0]
+            const target = ths[1]
+        
+            expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
+            expect(thread1.get().title()).to.eq("This is a title.")
+            expect(thread1.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+            expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().embeds().length).to.eq(4)
+            expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
+            expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(2)
+            expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(1)
+            expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(1)
+            expect(thread1.get().reward().get().userReward().get().countUpvote()).to.eq(1)
+            expect(thread1.get().reward().get().userReward().get().countReward0()).to.eq(1)
+            expect(thread1.get().reward().get().userReward().get().countReward1()).to.eq(1)
+            expect(thread1.get().reward().get().userReward().get().countReward2()).to.eq(1)
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
+            expect(thread1.get().replyCount()).to.eq(0)
+            expect(thread1.get().target()).to.eq(null)
+
+            expect(target.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(target.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
+            expect(target.get().title()).to.eq("This is a title.")
+            expect(target.get().content()).to.eq("Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+            expect(target.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(target.get().embeds().length).to.eq(3)
+            expect(target.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
+            expect(target.get().reward().get().threadReward().get().countReward0()).to.eq(0)
+            expect(target.get().reward().get().threadReward().get().countReward1()).to.eq(0)
+            expect(target.get().reward().get().threadReward().get().countReward2()).to.eq(0)
+            expect(target.get().reward().get().userReward().get().countUpvote()).to.eq(0)
+            expect(target.get().reward().get().userReward().get().countReward0()).to.eq(0)
+            expect(target.get().reward().get().userReward().get().countReward1()).to.eq(0)
+            expect(target.get().reward().get().userReward().get().countReward2()).to.eq(0)
+            expect(target.get().contentLink().get().targetContent()).to.eq("")
+            expect(target.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
+            expect(target.get().replyCount()).to.eq(1)
+            expect(target.get().target()).to.eq(null)
+        }
+    })
 
     it('Fetch Target Thread List - FULL MODE', async () => {
         const society = await SocietyModel.fetch(1)
@@ -1222,6 +1270,54 @@ const main = () => {
             expect(target.get().author().get().username()).to.eq('fantasim')
             expect(target.get().target()).to.eq(null)
             expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+        }
+    })
+
+    it('Fetch Thread and Target 3', async () => {
+        const ths = await ThreadModel.FetchThreadAndThreadTarget(SOCIETY_ID, "810fad66ae84c212b9c8f2971d7e7975375fedfb", "2c108813b0f957c5776dffec80c5122b4e782864", wallet3.sign().header())
+        expect(ths).not.to.eq(null)
+        if (ths){
+            expect(ths.length).to.eq(2)
+            const thread1 = ths[0]
+            const target = ths[1]
+        
+            expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
+            expect(thread1.get().title()).to.eq("")
+            expect(thread1.get().content()).to.eq("I have always loved to be into quick answers just for the sake of answering crap.")
+            expect(thread1.get().pubKH()).to.eq("810fad66ae84c212b9c8f2971d7e7975375fedfb")
+            expect(thread1.get().embeds().length).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
+            expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(0)
+            expect(thread1.get().reward().get().userReward().get().countUpvote()).to.eq(0)
+            expect(thread1.get().reward().get().userReward().get().countReward0()).to.eq(0)
+            expect(thread1.get().reward().get().userReward().get().countReward1()).to.eq(0)
+            expect(thread1.get().reward().get().userReward().get().countReward2()).to.eq(0)
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
+            expect(thread1.get().replyCount()).to.eq(0)
+            expect(thread1.get().target()).to.eq(null)
+
+            expect(target.get().author().get().address()).eq(wallet.keys().get().address())
+            expect(target.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
+            expect(target.get().title()).to.eq("This is a title.")
+            expect(target.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+            expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(target.get().embeds().length).to.eq(4)
+            expect(target.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
+            expect(target.get().reward().get().threadReward().get().countReward0()).to.eq(2)
+            expect(target.get().reward().get().threadReward().get().countReward1()).to.eq(1)
+            expect(target.get().reward().get().threadReward().get().countReward2()).to.eq(1)
+            expect(target.get().reward().get().userReward().get().countUpvote()).to.eq(1)
+            expect(target.get().reward().get().userReward().get().countReward0()).to.eq(1)
+            expect(target.get().reward().get().userReward().get().countReward1()).to.eq(1)
+            expect(target.get().reward().get().userReward().get().countReward2()).to.eq(1)
+            expect(target.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(target.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
+            expect(target.get().replyCount()).to.eq(1)
+            expect(target.get().target()).to.not.eq(null)
         }
     })
 

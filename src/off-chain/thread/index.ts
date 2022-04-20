@@ -49,6 +49,29 @@ export class ThreadModel extends Model {
 
     static DefaultState: IThread = DEFAULT_STATE
 
+    static FetchThreadAndThreadTarget = async (societyID: number, threadPKH: string, threadTargetPKH: string, headerSig: IHeaderSignature | void) => {
+        try {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}/${threadPKH}`,  {
+                timeout: 10_000,
+                headers: Object.assign(headerSig || {}, {}, {
+                    target_pkh: threadTargetPKH
+                }),
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                }
+            })
+            if (res.status == 200){
+                const { data } = res
+                return [
+                    new ThreadModel(data[0], {}),
+                    new ThreadModel(data[1], {})
+                ]
+            }    
+        } catch (e: any){
+            throw new Error(e.toString())
+        }
+    }
+
     static FetchByPKH = async (societyID: number, pubkh: string, headerSig: IHeaderSignature | void) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}/${pubkh}`,  {
