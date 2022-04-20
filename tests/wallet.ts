@@ -901,12 +901,10 @@ const main = () => {
     })
     
     it('Fetch Thread and Target', async () => {
-        const ths = await ThreadModel.FetchThreadAndThreadTarget(SOCIETY_ID, "2c108813b0f957c5776dffec80c5122b4e782864", "af53ae357d42b460838f4f4157cd579de0f9d6fd", wallet3.sign().header())
-        expect(ths).not.to.eq(null)
-        if (ths){
-            expect(ths.length).to.eq(2)
-            const thread1 = ths[0]
-            const target = ths[1]
+        const thread1 = await ThreadModel.FetchByPKH(SOCIETY_ID, "2c108813b0f957c5776dffec80c5122b4e782864", wallet3.sign().header())
+        expect(thread1).not.to.eq(null)
+        if (thread1){
+            const target = thread1.get().target() as ThreadModel
         
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
@@ -925,7 +923,7 @@ const main = () => {
             expect(thread1.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
             expect(thread1.get().replyCount()).to.eq(0)
-            expect(thread1.get().target()).to.eq(null)
+            expect(thread1.get().target()).to.not.eq(null)
 
             expect(target.get().author().get().address()).eq(wallet.keys().get().address())
             expect(target.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
@@ -1274,12 +1272,10 @@ const main = () => {
     })
 
     it('Fetch Thread and Target 3', async () => {
-        const ths = await ThreadModel.FetchThreadAndThreadTarget(SOCIETY_ID, "810fad66ae84c212b9c8f2971d7e7975375fedfb", "2c108813b0f957c5776dffec80c5122b4e782864", wallet3.sign().header())
-        expect(ths).not.to.eq(null)
-        if (ths){
-            expect(ths.length).to.eq(2)
-            const thread1 = ths[0]
-            const target = ths[1]
+        const thread1 = await ThreadModel.FetchByPKH(SOCIETY_ID, "810fad66ae84c212b9c8f2971d7e7975375fedfb", wallet3.sign().header())
+        expect(thread1).not.to.eq(null)
+        if (thread1){
+            const target = thread1.get().target() as ThreadModel
         
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
@@ -1298,7 +1294,7 @@ const main = () => {
             expect(thread1.get().contentLink().get().targetContent()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
             expect(thread1.get().replyCount()).to.eq(0)
-            expect(thread1.get().target()).to.eq(null)
+            expect(thread1.get().target()).to.not.eq(null) 
 
             expect(target.get().author().get().address()).eq(wallet.keys().get().address())
             expect(target.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
