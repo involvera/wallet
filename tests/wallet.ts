@@ -250,7 +250,7 @@ const main = () => {
     })
 
     it('[OFFCHAIN] Wallet1 -> create a proposal constitution content', async () => {
-        const p = ProposalModel.NewContent(1, "This is the title of a constitution proposal", ["Content 1: %[proposal/8]", "Content 2: %[involvera/proposal/8]", "Content 3: %[https://involvera.com/involvera/proposal/8]"])
+        const p = ProposalModel.NewContent(1, "This is the title of a constitution proposal", ["Content 1: https://involvera.com/involvera/proposal/8", "Content 2: https://involvera.com/involvera/proposal/8", "Content 3: https://involvera.com/involvera/proposal/8"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
     })
@@ -284,7 +284,7 @@ const main = () => {
     })
 
     it('[OFFCHAIN] Wallet1 -> create a proposal cost content', async () => {
-        const p = ProposalModel.NewContent(1, "This is the title of a cost proposal", ["Content 1: %[proposal/8]\n%[https://involvera.com/involvera/proposal/9]", "Content 2: %[involvera/proposal/8]\n%[proposal/9]", "Content 3: %[https://involvera.com/involvera/proposal/8]\n%[involvera/proposal/9]"])
+        const p = ProposalModel.NewContent(1, "This is the title of a cost proposal", ["Content 1: https://involvera.com/involvera/proposal/8\nhttps://involvera.com/involvera/proposal/9", "Content 2: https://involvera.com/involvera/proposal/8\nhttps://involvera.com/involvera/proposal/9", "Content 3: https://involvera.com/involvera/proposal/8\nhttps://involvera.com/involvera/proposal/9"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
     })
@@ -328,7 +328,7 @@ const main = () => {
 
     it('[OFFCHAIN] Wallet1 -> create a thread', async () => {
         const title = "This is a title."
-        const content = "Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]"
+        const content = "Here are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10"
 
         const p = ThreadModel.NewContent(1, title, content)
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
@@ -382,7 +382,7 @@ const main = () => {
 
     it('[OFFCHAIN] Wallet1 -> create a rethread on Thread', async () => {
         const title = `This is a title.`
-        const content = `Here my favorite Thread: %[thread/${pkhContent0}] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]`
+        const content = `Here my favorite Thread: https://involvera.com/involvera/thread/${pkhContent0} \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10`
         const p = ThreadModel.NewContent(1, title, content)
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
@@ -778,9 +778,9 @@ const main = () => {
                 const content = fullProposal1.get().content()
                 expect(fullProposal1.get().embeds().length).to.eq(2)
                 expect(content.length).to.eq(3)
-                expect(content[0]).to.eq("Content 1: %[proposal/8]\n%[https://involvera.com/involvera/proposal/9]")
-                expect(content[1]).to.eq("Content 2: %[involvera/proposal/8]\n%[proposal/9]")
-                expect(content[2]).to.eq("Content 3: %[https://involvera.com/involvera/proposal/8]\n%[involvera/proposal/9]")
+                expect(content[0]).to.eq("Content 1: https://involvera.com/involvera/proposal/8\nhttps://involvera.com/involvera/proposal/9")
+                expect(content[1]).to.eq("Content 2: https://involvera.com/involvera/proposal/8\nhttps://involvera.com/involvera/proposal/9")
+                expect(content[2]).to.eq("Content 3: https://involvera.com/involvera/proposal/8\nhttps://involvera.com/involvera/proposal/9")
 
                 expect(fullProposal1.get().costs().proposal).to.eq(BigInt(2000 * COIN_UNIT))
                 expect(fullProposal1.get().costs().thread).to.eq(BigInt(-1))
@@ -813,9 +813,9 @@ const main = () => {
                 expect(content.length).to.eq(3)
                 const context = fullProposal2.get().context()
                 expect((context as IConstitutionProposalUnRaw).constitution.length).to.eq(10)
-                expect(content[0]).to.eq("Content 1: %[proposal/8]")
-                expect(content[1]).to.eq("Content 2: %[involvera/proposal/8]")
-                expect(content[2]).to.eq("Content 3: %[https://involvera.com/involvera/proposal/8]")
+                expect(content[0]).to.eq("Content 1: https://involvera.com/involvera/proposal/8")
+                expect(content[1]).to.eq("Content 2: https://involvera.com/involvera/proposal/8")
+                expect(content[2]).to.eq("Content 3: https://involvera.com/involvera/proposal/8")
 
                 expect(fullProposal2.get().author().get().address()).eq(wallet.keys().get().address())
                 expect(fullProposal2.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
@@ -909,7 +909,7 @@ const main = () => {
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq("This is a title.")
-            expect(thread1.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+            expect(thread1.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/af53ae357d42b460838f4f4157cd579de0f9d6fd \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
             expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
             expect(thread1.get().embeds().length).to.eq(4)
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
@@ -928,7 +928,7 @@ const main = () => {
             expect(target.get().author().get().address()).eq(wallet.keys().get().address())
             expect(target.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(target.get().title()).to.eq("This is a title.")
-            expect(target.get().content()).to.eq("Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+            expect(target.get().content()).to.eq("Here are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
             expect(target.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
             expect(target.get().embeds().length).to.eq(3)
             expect(target.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
@@ -959,7 +959,7 @@ const main = () => {
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq("This is a title.")
-            expect(thread1.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+            expect(thread1.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/af53ae357d42b460838f4f4157cd579de0f9d6fd \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
             expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
             expect(thread1.get().embeds().length).to.eq(4)
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
@@ -1013,7 +1013,7 @@ const main = () => {
 
             const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
             if (fullThread1){
-                expect(fullThread1.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+                expect(fullThread1.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/af53ae357d42b460838f4f4157cd579de0f9d6fd \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
                 expect(fullThread1.get().embeds().length).to.eq(4)
                 expect(fullThread1.get().replyCount()).to.eq(0)
                 const target = fullThread1.get().target() as ThreadModel
@@ -1038,7 +1038,7 @@ const main = () => {
             expect(thread2.get().replyCount()).to.eq(1)
             const fullThread2 = await ThreadModel.FetchByPKH(1, thread2.get().pubKH())
             if (fullThread2){
-                expect(fullThread2.get().content()).to.eq("Here are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+                expect(fullThread2.get().content()).to.eq("Here are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
                 expect(fullThread2.get().embeds().length).to.eq(3)
                 expect(fullThread2.get().target()).to.eq(null)
                 expect(fullThread2.get().replyCount()).to.eq(1)
@@ -1299,7 +1299,7 @@ const main = () => {
             expect(target.get().author().get().address()).eq(wallet.keys().get().address())
             expect(target.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(target.get().title()).to.eq("This is a title.")
-            expect(target.get().content()).to.eq("Here my favorite Thread: %[thread/af53ae357d42b460838f4f4157cd579de0f9d6fd] \n and these are the 3 proposals I like:\n1. %[proposal/8]\n2. %[involvera/proposal/9]\n3. %[https://involvera.com/involvera/proposal/10]")
+            expect(target.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/af53ae357d42b460838f4f4157cd579de0f9d6fd \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
             expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
             expect(target.get().embeds().length).to.eq(4)
             expect(target.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
