@@ -340,7 +340,7 @@ const main = () => {
         expect(p.get().societyID()).to.eq(1)
         expect(p.get().pubKH()).to.eq(pkhContent0)
         expect(p.get().replyCount()).to.eq(0)
-        expect(p.get().embeds().length).to.eq(3)
+        // expect(p.get().embeds().length).to.eq(3)
         expect(p.get().reward().get().threadReward().get().countReward0()).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward1()).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward2()).to.eq(0)
@@ -398,7 +398,7 @@ const main = () => {
         expect(p.get().replyCount()).to.eq(0)
         expect(p.get().societyID()).to.eq(1)
         expect(p.get().pubKH()).to.eq(pkhContent2)
-        expect(p.get().embeds().length).to.eq(4)
+        // expect(p.get().embeds().length).to.eq(4)
         expect(p.get().reward().get().threadReward().get().countReward0()).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward1()).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward2()).to.eq(0)
@@ -756,7 +756,7 @@ const main = () => {
             expect(proposal1.get().context()).to.eq(null)
             expect(proposal1.get().vote().get().closedAtLH()).to.eq(28)
             expect(proposal1.get().vote().get().approved()).to.eq(-1)
-            expect(proposal1.get().embeds().length).to.eq(0)
+            // expect(proposal1.get().embeds().length).to.eq(0)
             expect(proposal1.get().endAtLH()).to.eq(28)
             expect(proposal1.get().estimatedEndAtTime().toDateString()).to.eq(new Date(proposal1.get().createdAt().getTime() + ((N_LUGH_VOTE_DURATION) * LUGH_EVERY_N_S * 1000)).toDateString())
 
@@ -776,7 +776,7 @@ const main = () => {
                 expect((context as ICostProposal).thread).to.eq(50000000000)
 
                 const content = fullProposal1.get().content()
-                expect(fullProposal1.get().embeds().length).to.eq(2)
+                // expect(fullProposal1.get().embeds().length).to.eq(2)
                 expect(content.length).to.eq(3)
                 expect(content[0]).to.eq("Content 1: https://involvera.com/involvera/proposal/8\nhttps://involvera.com/involvera/proposal/9")
                 expect(content[1]).to.eq("Content 2: https://involvera.com/involvera/proposal/8\nhttps://involvera.com/involvera/proposal/9")
@@ -784,7 +784,7 @@ const main = () => {
 
                 expect(fullProposal1.get().costs().proposal).to.eq(BigInt(2000 * COIN_UNIT))
                 expect(fullProposal1.get().costs().thread).to.eq(BigInt(-1))
-                expect(fullProposal1.get().embeds().length).to.eq(2)
+                // expect(fullProposal1.get().embeds().length).to.eq(2)
                 expect(fullProposal1.get().pubKH()).to.eq("ee8a1440725029994a56a1d7d7ecb28140fb4fb0")
                 expect(fullProposal1.get().context()).to.not.eq(null)
             }
@@ -794,7 +794,7 @@ const main = () => {
             expect(proposal2.get().layer()).to.eq("Constitution")
             expect(proposal2.get().vote().get().closedAtLH()).to.eq(28)
             expect(proposal2.get().vote().get().approved()).to.eq(-1)
-            expect(proposal2.get().embeds().length).to.eq(0)
+            // expect(proposal2.get().embeds().length).to.eq(0)
             expect(proposal2.get().endAtLH()).to.eq(28)
             expect(proposal2.get().userVote()).to.eq(null)
             expect(proposal2.get().estimatedEndAtTime().toDateString()).to.eq(new Date(proposal2.get().createdAt().getTime() + ((N_LUGH_VOTE_DURATION) * LUGH_EVERY_N_S * 1000)).toDateString())
@@ -809,7 +809,7 @@ const main = () => {
             const fullProposal2 = await ProposalModel.FetchByIndex(1, 9, wallet.sign().header())
             if (fullProposal2){
                 const content = fullProposal2.get().content()
-                expect(fullProposal2.get().embeds().length).to.eq(1)
+                // expect(fullProposal2.get().embeds().length).to.eq(1)
                 expect(content.length).to.eq(3)
                 const context = fullProposal2.get().context()
                 expect((context as IConstitutionProposalUnRaw).constitution.length).to.eq(10)
@@ -830,7 +830,7 @@ const main = () => {
             expect(proposal2.get().layer()).to.eq("Constitution")
             expect(proposal2.get().vote().get().closedAtLH()).to.eq(28)
             expect(proposal2.get().vote().get().approved()).to.eq(-1)
-            expect(proposal2.get().embeds().length).to.eq(0)
+            // expect(proposal2.get().embeds().length).to.eq(0)
             expect(proposal2.get().endAtLH()).to.eq(28)
             expect(proposal2.get().userVote()).to.eq(null)
             expect(proposal3.get().estimatedEndAtTime().toDateString()).to.eq(new Date(proposal3.get().createdAt().getTime() + ((N_LUGH_VOTE_DURATION) * LUGH_EVERY_N_S * 1000)).toDateString())
@@ -845,7 +845,7 @@ const main = () => {
             expect(proposal3.get().layer()).to.eq("Application")
             expect(proposal3.get().vote().get().closedAtLH()).to.eq(28)
             expect(proposal3.get().vote().get().approved()).to.eq(-1)
-            expect(proposal3.get().embeds().length).to.eq(0)
+            // expect(proposal3.get().embeds().length).to.eq(0)
             expect(proposal3.get().endAtLH()).to.eq(28)
             expect(proposal3.get().userVote()).to.eq(null)
             expect(proposal3.get().author().get().address()).eq(wallet.keys().get().address())
@@ -856,7 +856,7 @@ const main = () => {
 
             const fullProposal3 = await ProposalModel.FetchByIndex(1, 8, wallet.sign().header())
             if (fullProposal3){
-                expect(fullProposal3.get().embeds().length).to.eq(0)
+                // expect(fullProposal3.get().embeds().length).to.eq(0)
                 expect(fullProposal3.get().context()).to.eq(null)
                 const content = fullProposal3.get().content()
                 expect(content.length).to.eq(4)
@@ -911,7 +911,7 @@ const main = () => {
             expect(thread1.get().title()).to.eq("This is a title.")
             expect(thread1.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/af53ae357d42b460838f4f4157cd579de0f9d6fd \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
             expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
-            expect(thread1.get().embeds().length).to.eq(4)
+            // expect(thread1.get().embeds().length).to.eq(4)
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(2)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(1)
@@ -930,7 +930,7 @@ const main = () => {
             expect(target.get().title()).to.eq("This is a title.")
             expect(target.get().content()).to.eq("Here are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
             expect(target.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
-            expect(target.get().embeds().length).to.eq(3)
+            // expect(target.get().embeds().length).to.eq(3)
             expect(target.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(target.get().reward().get().threadReward().get().countReward0()).to.eq(0)
             expect(target.get().reward().get().threadReward().get().countReward1()).to.eq(0)
@@ -961,7 +961,7 @@ const main = () => {
             expect(thread1.get().title()).to.eq("This is a title.")
             expect(thread1.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/af53ae357d42b460838f4f4157cd579de0f9d6fd \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
             expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
-            expect(thread1.get().embeds().length).to.eq(4)
+            // expect(thread1.get().embeds().length).to.eq(4)
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(2)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(1)
@@ -1014,7 +1014,7 @@ const main = () => {
             const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
             if (fullThread1){
                 expect(fullThread1.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/af53ae357d42b460838f4f4157cd579de0f9d6fd \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
-                expect(fullThread1.get().embeds().length).to.eq(4)
+                // expect(fullThread1.get().embeds().length).to.eq(4)
                 expect(fullThread1.get().replyCount()).to.eq(0)
                 const target = fullThread1.get().target() as ThreadModel
                 expect(target.get().title()).to.eq('This is a title.')
@@ -1039,7 +1039,7 @@ const main = () => {
             const fullThread2 = await ThreadModel.FetchByPKH(1, thread2.get().pubKH())
             if (fullThread2){
                 expect(fullThread2.get().content()).to.eq("Here are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
-                expect(fullThread2.get().embeds().length).to.eq(3)
+                // expect(fullThread2.get().embeds().length).to.eq(3)
                 expect(fullThread2.get().target()).to.eq(null)
                 expect(fullThread2.get().replyCount()).to.eq(1)
             }
@@ -1165,7 +1165,7 @@ const main = () => {
             const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
             if (fullThread1){
                 expect(fullThread1.get().content()).to.eq("Im making my first thread about a proposal.")
-                expect(fullThread1.get().embeds().length).to.eq(0)
+                // expect(fullThread1.get().embeds().length).to.eq(0)
                 const target = fullThread1.get().target() as ProposalModel
                 expect(target.get().title()).to.eq('This is the title of a cost proposal')
                 expect(target.get().societyID()).to.eq(1)
@@ -1229,7 +1229,7 @@ const main = () => {
         expect(p.get().content()).to.eq(content)
         expect(p.get().societyID()).to.eq(1)
         expect(p.get().pubKH()).to.eq(pkhContent2)
-        expect(p.get().embeds().length).to.eq(0)
+        // expect(p.get().embeds().length).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward0()).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward1()).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward2()).to.eq(0)
@@ -1282,7 +1282,7 @@ const main = () => {
             expect(thread1.get().title()).to.eq("")
             expect(thread1.get().content()).to.eq("I have always loved to be into quick answers just for the sake of answering crap.")
             expect(thread1.get().pubKH()).to.eq("810fad66ae84c212b9c8f2971d7e7975375fedfb")
-            expect(thread1.get().embeds().length).to.eq(0)
+            // expect(thread1.get().embeds().length).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
@@ -1301,7 +1301,7 @@ const main = () => {
             expect(target.get().title()).to.eq("This is a title.")
             expect(target.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/af53ae357d42b460838f4f4157cd579de0f9d6fd \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
             expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
-            expect(target.get().embeds().length).to.eq(4)
+            // expect(target.get().embeds().length).to.eq(4)
             expect(target.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(target.get().reward().get().threadReward().get().countReward0()).to.eq(2)
             expect(target.get().reward().get().threadReward().get().countReward1()).to.eq(1)
@@ -1363,7 +1363,7 @@ const main = () => {
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq('')
             expect(thread1.get().content()).to.eq("I have always loved to be into quick answers just for the sake of answering crap.")
-            expect(thread1.get().embeds().length).to.eq(0)
+            // expect(thread1.get().embeds().length).to.eq(0)
             expect(thread1.get().pubKH()).to.eq("810fad66ae84c212b9c8f2971d7e7975375fedfb")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
@@ -1414,7 +1414,7 @@ const main = () => {
             const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
             if (fullThread1){
                 expect(fullThread1.get().content()).to.eq("I have always loved to be into quick answers just for the sake of answering crap.")
-                expect(fullThread1.get().embeds().length).to.eq(0)
+                // expect(fullThread1.get().embeds().length).to.eq(0)
                 expect(fullThread1.get().replyCount()).to.eq(0)
 
                 const target = fullThread1.get().target() as ThreadModel

@@ -158,7 +158,7 @@ export class ProposalModel extends Model {
             return this.state.content_link
         }
         const societyID = (): number => this.state.sid
-        const embeds = (): string[] => this.state.embeds || []
+        // const embeds = (): string[] => this.state.embeds || []
 
         const estimatedEndAtTime = () => {
             const begin = this.get().createdAt().getTime()
@@ -250,7 +250,7 @@ export class ProposalModel extends Model {
 
         return {
             index,
-            contentLink, embeds, costs, constitution,
+            contentLink, costs, constitution,
             author, content, title, layer, createdAt, 
             vote, societyID, dataToSign, 
             createdAtAgo, createdAtPretty, pubKH,

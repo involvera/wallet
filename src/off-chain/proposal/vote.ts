@@ -29,9 +29,15 @@ export class VoteModel extends Model {
     get = () => {
         return {
             approvedPercent: (): number => this.get().approved() * 100,
-            approvedPercentPretty: (): string => formatPercent(this.get().approvedPercent()),
+            approvedPercentPretty: (): string => {
+                const percent = this.get().approvedPercent()
+                return percent < 1 ? '<1%' : formatPercent(this.get().approvedPercent())
+            },
             declinedPercent: (): number => this.get().declined() * 100,
-            declinedPercentPretty: (): string => formatPercent(this.get().declinedPercent()),
+            declinedPercentPretty: (): string => {
+                const percent = this.get().declinedPercent()
+                return percent < 1 ? '<1%' : formatPercent(this.get().declinedPercent())
+            },
             approved: (): number => this.state.approved,
             declined: (): number => this.state.declined,
             closedAtLH: (): number => this.state.closed_at_lh,

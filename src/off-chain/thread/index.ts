@@ -23,6 +23,7 @@ export interface IThread {
     sid: number
     content_link?: IKindLinkUnRaw
     author?: IAlias
+    reply_count: number
     title: string
     content: string
     public_key_hashed: string
@@ -38,6 +39,7 @@ const DEFAULT_STATE: IThread = {
     author: AliasModel.DefaultState,
     title: '',
     content: '',
+    reply_count: 0,
     public_key_hashed: "",
     reward: ThreadRewardModel.DefaultState,
     embeds: [],
@@ -166,6 +168,8 @@ export class ThreadModel extends Model {
         }
     }
 
+    incrementReplyCount = () => this.setState({reply_count: this.get().replyCount() + 1})
+
     get = () => {
         const societyID = (): number => this.state.sid
         
@@ -176,7 +180,6 @@ export class ThreadModel extends Model {
         }
 
         const replyCount = (): number => this.state.reply_count
-        const embeds = (): string[] => this.state.embeds || []
         const author = (): AliasModel => this.state.author
         const title = (): string => this.state.title
         const content = (): string => this.state.content
@@ -186,7 +189,7 @@ export class ThreadModel extends Model {
         const target = (): ThreadModel | ProposalModel | null => this.state.target
 
         return {
-            contentLink, replyCount, embeds, author, title,
+            contentLink, replyCount, author, title,
             content, createdAt, societyID,
             pubKH, reward, target,
         }
