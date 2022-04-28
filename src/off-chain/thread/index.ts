@@ -138,7 +138,6 @@ export class ThreadModel extends Model {
     
     broadcast = async (wallet: bip32.BIP32Interface) => {
         try {
-            this.sign(wallet)
             const body = Object.assign({
                 title: this.get().title(),
                 content: this.get().content(),
@@ -168,7 +167,7 @@ export class ThreadModel extends Model {
         }
     }
 
-    incrementReplyCount = () => this.setState({reply_count: this.get().replyCount() + 1})
+    incrementReplyCount = () => this.setState({reply_count: this.get().replyCount() + 1 })
 
     get = () => {
         const societyID = (): number => this.state.sid
@@ -202,6 +201,7 @@ export class ThreadCollection extends Collection {
     private _pageFetched = 0    
     private _maxReached = false
     private _targetPKH: string = ''
+    private _address: string = ''
 
     constructor(initialState: any, options: any){
         super(initialState, [ThreadModel, ThreadCollection], options)
@@ -215,8 +215,14 @@ export class ThreadCollection extends Collection {
     }
 
     private _throwErrorIfNoTargetPKHSet = () => {
-        if (!this._currentSociety){
+        if (!this._targetPKH){
             throw new Error("You need to set the target public key hashed through the method 'setTargetPKH' first.")
+        }
+    }
+
+    private _throwErrorIfNoAddressSet = () => {
+        if (!this._address){
+            throw new Error("You need to set the address through the method 'setAddress' first.")
         }
     }
 
@@ -230,13 +236,72 @@ export class ThreadCollection extends Collection {
     }
 
     setSociety = (s: SocietyModel) => {
+        this._pageFetched = 0
+        this._maxReached = false
+        this.setState([])
         this._currentSociety = s
     }
 
-    setTargetPKH = (target: string) =>{ 
-        this._targetPKH = target
+    setAddress = (address: string) => {
         this._pageFetched = 0
         this._maxReached = false
+        this.setState([])
+        this._address = address
+    }
+
+    setTargetPKH = (target: string) => {
+        this._pageFetched = 0
+        this._maxReached = false
+        this.setState([])
+        this._targetPKH = target
+    }
+
+    public fetchUserThreads = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
+        const MAX_PER_PAGE = 10
+
+        if (this._shouldStopExecution(disablePageSystem))
+            return 200
+
+        this._throwErrorIfNoSocietySet()
+        this._throwErrorIfNoAddressSet()
+
+        try {
+            const response = await axios(config.getRootAPIOffChainUrl() + `/thread/${this._currentSociety?.get().id()}/user/${this._address}`, {
+                method: 'GET',
+                headers: Object.assign({}, headerSignature as any, {
+                    offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE
+                }),
+                timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (response.status == 200){
+                const json = (response.data || []) as IPreviewThread[]
+                this._updateFetchingInternalData(json.length, MAX_PER_PAGE, disablePageSystem)
+                const list = new ThreadCollection([], {})
+                for (const o of json){
+                    const preview = StringToParsedPreview(o.preview_code)
+                    const target = ThreadModel.NewPreviewTarget(preview.target as any)
+                    list.push({
+                        public_key_hashed: preview.pkh,
+                        author: preview.author,
+                        created_at: new Date(preview.created_at * 1000),
+                        target: target ? target.to().plain() : null,
+                        title: preview.title,
+                        content: preview.content,
+                        sid: preview.sid,
+                        reward: o.reward,
+                        content_link: o.content_link,
+                        reply_count: o.reply_count
+                    })
+                }
+                this.add(list)
+            }
+            return response.status
+        } catch (e: any){
+            throw new Error(e)
+        }
     }
 
     public fetchFullReplies = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
