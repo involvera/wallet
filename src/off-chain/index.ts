@@ -22,6 +22,7 @@ export { IThread, ThreadCollection, ThreadModel } from './thread'
 export { LastCostChangeModel } from './society/stats/last-cost-change'
 export { RewardCountModel } from './thread/reward'
 export { ThreadRewardModel } from './thread/thread-rewards'
+export { IUser, UserModel, UserCollection } from './user'
 
 export {
     LinkModel, PubKHModel, ValueModel,
