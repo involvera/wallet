@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { Model, Collection } from 'acey'
-import { IHeaderSignature, InfoModel } from '../wallet'
+import { IHeaderSignature } from '../wallet'
+import InfoModel from '../wallet/info'
 import { IWalletInfo } from 'community-coin-types'
 import { AliasModel, IAlias } from './alias'
 import config from '../config'
@@ -29,6 +30,11 @@ export class UserModel extends Model {
             })
             if (res.status == 200){
                 return new UserModel(res.data, {})
+            }
+            if (res.status == 404){
+                const state = UserModel.DefaultState
+                state.alias.address = address
+                return new UserModel(state, {})
             }
         } catch (e: any){
             throw new Error(e.toString())
