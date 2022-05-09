@@ -265,14 +265,20 @@ export class ProposalCollection extends Collection {
     private _currentSociety: SocietyModel | null = null
     private _pageFetched = 0    
     private _maxReached = false
+    private _hasInitLoaded: boolean = false
 
     constructor(initialState: any, options: any){
         super(initialState, [ProposalModel, ProposalCollection], options)
     }
 
     setSociety = (s: SocietyModel) => {
+        this._hasInitLoaded = false
+        this._pageFetched = 0
+        this._maxReached = false
         this._currentSociety = s
     }
+
+    hasInitLoadedData = () => this._hasInitLoaded
 
     fetch = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
         const MAX_PER_PAGE = 5
@@ -296,6 +302,7 @@ export class ProposalCollection extends Collection {
                     return status >= 200 && status < 500;
                 },
             })
+            this._hasInitLoaded = true
             if (response.status == 200){
                 const json = (response.data || []) as IPreviewProposal[]
                 if (disablePageSystem != true){
@@ -322,6 +329,7 @@ export class ProposalCollection extends Collection {
             }
             return response.status
         } catch (e: any){
+            this._hasInitLoaded = true
             throw new Error(e)
         }
     }

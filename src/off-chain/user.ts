@@ -5,6 +5,7 @@ import InfoModel from '../wallet/info'
 import { IWalletInfo } from 'community-coin-types'
 import { AliasModel, IAlias } from './alias'
 import config from '../config'
+import { BuildThreadPreviewString } from 'involvera-content-embedding'
 
 export interface IUser {
     alias: IAlias
@@ -68,5 +69,6 @@ export class UserCollection extends Collection {
         const index = this.findIndex((u: UserModel) => u.get().alias().get().address() === user.get().alias().get().address())
         return index === -1 ? this.push(user) : this.updateAt(user, index)
     }
+    findByAddress = (address: string) => this.find((u: UserModel) => u.get().alias().get().address() === address) as UserModel
 }
 

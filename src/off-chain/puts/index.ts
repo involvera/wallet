@@ -202,6 +202,8 @@ export class UnserializedPutModel extends Model {
     }
 }
 
+export type T_FETCH_FILTER = 'all' | 'lugh' | 'non_lugh'
+
 export class UnserializedPutCollection extends Collection {
 
     private _pageFetched = {
@@ -216,13 +218,44 @@ export class UnserializedPutCollection extends Collection {
         non_lugh: false
     }
 
+    private _hasInitLoaded = {
+        all: false,
+        lugh: false,
+        non_lugh: false
+    }
+
     private _currentSociety: SocietyModel | null = null
 
     constructor(list: IUnSerializedPut[] = [], options: any){
         super(list, [UnserializedPutModel, UnserializedPutCollection], options)
     }
 
-    setSociety = (s: SocietyModel) => this._currentSociety = s
+    hasInitLoadedData = () => {
+        return {
+            all: () => this._hasInitLoaded['all'],
+            lughPuts: () => this._hasInitLoaded['lugh'],
+            nonLughPuts: () => this._hasInitLoaded['non_lugh']
+        }
+    }
+
+    setSociety = (s: SocietyModel) => {
+        this._pageFetched = {
+            all: 0,
+            lugh: 0,
+            non_lugh: 0
+        }
+        this._maxReached = {
+            all: false,
+            lugh: false,
+            non_lugh: false
+        }
+        this._hasInitLoaded = {
+            all: false,
+            lugh: false,
+            non_lugh: false
+        }
+        this._currentSociety = s
+    }
 
     filterLughsOnly = ()  => this.filter((p: UnserializedPutModel) => p.isLughTx()) as UnserializedPutCollection
     filterNonLughsOnly = () => this.filter((p: UnserializedPutModel) => !p.isLughTx()) as UnserializedPutCollection
@@ -248,7 +281,7 @@ export class UnserializedPutCollection extends Collection {
         this.save()
     }
 
-    private _fetch = async (headerSignature: IHeaderSignature, filter: 'all' | 'lugh' | 'non_lugh', disablePageSystem: void | boolean) => {
+    private _fetch = async (headerSignature: IHeaderSignature, filter: T_FETCH_FILTER, disablePageSystem: void | boolean) => {
         const MAX_PER_PAGE = 10
 
         if (this._maxReached[filter] == true && disablePageSystem != true){
@@ -271,6 +304,7 @@ export class UnserializedPutCollection extends Collection {
                     return status >= 200 && status < 500;
                 },
             })
+            this._hasInitLoaded[filter] = true
             if (response.status == 200){
                 const list = response.data || []
                 if (disablePageSystem != true){
@@ -283,6 +317,7 @@ export class UnserializedPutCollection extends Collection {
             }
             return response.status
         } catch (e: any){
+            this._hasInitLoaded[filter] = true
             throw new Error(e)
         }
     }
