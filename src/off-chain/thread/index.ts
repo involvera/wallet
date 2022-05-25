@@ -201,7 +201,6 @@ export class ThreadCollection extends Collection {
     private _pageFetched = 0    
     private _maxReached = false
     private _targetPKH: string = ''
-    private _hasInitLoaded: boolean = false
     private _address: string = ''
 
     constructor(initialState: any, options: any){
@@ -236,10 +235,8 @@ export class ThreadCollection extends Collection {
         }
     }
 
-    hasInitLoadedData = () => this._hasInitLoaded
 
     setSociety = (s: SocietyModel) => {
-        this._hasInitLoaded = false
         this._pageFetched = 0
         this._maxReached = false
         this.setState([])
@@ -247,7 +244,6 @@ export class ThreadCollection extends Collection {
     }
 
     setAddress = (address: string) => {
-        this._hasInitLoaded = false
         this._pageFetched = 0
         this._maxReached = false
         this.setState([])
@@ -255,7 +251,6 @@ export class ThreadCollection extends Collection {
     }
 
     setTargetPKH = (target: string) => {
-        this._hasInitLoaded = false
         this._pageFetched = 0
         this._maxReached = false
         this.setState([])
@@ -282,7 +277,6 @@ export class ThreadCollection extends Collection {
                     return status >= 200 && status < 500;
                 },
             })
-            this._hasInitLoaded = true
             if (response.status == 200){
                 const json = (response.data || []) as IPreviewThread[]
                 this._updateFetchingInternalData(json.length, MAX_PER_PAGE, disablePageSystem)
@@ -307,7 +301,6 @@ export class ThreadCollection extends Collection {
             }
             return response.status
         } catch (e: any){
-            this._hasInitLoaded = true
             throw new Error(e)
         }
     }
@@ -332,14 +325,12 @@ export class ThreadCollection extends Collection {
                     return status >= 200 && status < 500;
                 }
             })
-            this._hasInitLoaded = true
             if (response.status == 200){
                 const json = (response.data || []) as any[]
                 this._updateFetchingInternalData(json.length, MAX_PER_PAGE, disablePageSystem)
                 this.add(new ThreadCollection(json, {}))
             }
         } catch (e: any){
-            this._hasInitLoaded = true
             throw new Error(e)
         }
     }
@@ -364,7 +355,6 @@ export class ThreadCollection extends Collection {
                     return status >= 200 && status < 500;
                 },
             })
-            this._hasInitLoaded = true
             if (response.status == 200){
                 const json = (response.data || []) as IPreviewThread[]
                 this._updateFetchingInternalData(json.length, MAX_PER_PAGE, disablePageSystem)
@@ -389,7 +379,6 @@ export class ThreadCollection extends Collection {
             }
             return response.status
         } catch (e: any){
-            this._hasInitLoaded = true
             throw new Error(e)
         }
     }

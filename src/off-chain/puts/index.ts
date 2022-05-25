@@ -218,24 +218,10 @@ export class UnserializedPutCollection extends Collection {
         non_lugh: false
     }
 
-    private _hasInitLoaded = {
-        all: false,
-        lugh: false,
-        non_lugh: false
-    }
-
     private _currentSociety: SocietyModel | null = null
 
     constructor(list: IUnSerializedPut[] = [], options: any){
         super(list, [UnserializedPutModel, UnserializedPutCollection], options)
-    }
-
-    hasInitLoadedData = () => {
-        return {
-            all: () => this._hasInitLoaded['all'],
-            lughPuts: () => this._hasInitLoaded['lugh'],
-            nonLughPuts: () => this._hasInitLoaded['non_lugh']
-        }
     }
 
     setSociety = (s: SocietyModel) => {
@@ -245,11 +231,6 @@ export class UnserializedPutCollection extends Collection {
             non_lugh: 0
         }
         this._maxReached = {
-            all: false,
-            lugh: false,
-            non_lugh: false
-        }
-        this._hasInitLoaded = {
             all: false,
             lugh: false,
             non_lugh: false
@@ -304,7 +285,6 @@ export class UnserializedPutCollection extends Collection {
                     return status >= 200 && status < 500;
                 },
             })
-            this._hasInitLoaded[filter] = true
             if (response.status == 200){
                 const list = response.data || []
                 if (disablePageSystem != true){
@@ -317,7 +297,6 @@ export class UnserializedPutCollection extends Collection {
             }
             return response.status
         } catch (e: any){
-            this._hasInitLoaded[filter] = true
             throw new Error(e)
         }
     }
