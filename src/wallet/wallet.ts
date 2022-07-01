@@ -10,7 +10,6 @@ import FeesModel from './fees'
 import CostsModel from './costs'
 import KeysModel from './keys'
 import CCHModel from './cch'
-import MemoryModel from './memory'
 import InfoModel from './info'
 
 import { InputModel, TransactionModel, UTXOCollection } from '../transaction'
@@ -38,7 +37,6 @@ export default class Wallet extends Model {
             fees: new FeesModel(initialState.fees, this.kids()),
             info: new InfoModel(initialState.info, this.kids()),
             costs: new CostsModel(initialState.costs, this.kids()),
-            memory: new MemoryModel(initialState.memory, this.kids()),
         })
     }
 
@@ -73,7 +71,6 @@ export default class Wallet extends Model {
     public costs = (): CostsModel => this.state.costs
     public info = (): InfoModel => this.state.info
     public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
-    public memory = (): MemoryModel => this.state.memory
     public cch = (): CCHModel => this.state.cch
 
     buildTX = () => {

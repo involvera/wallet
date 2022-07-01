@@ -20,6 +20,23 @@ const DEFAULT_STATE = {
 export class UserModel extends Model {
     static DefaultState: IUser = DEFAULT_STATE
 
+    static RandomUsername = async () =>{
+        try {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/user/name`,  {
+                timeout: 10_000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (res.status == 200){
+                return res.data as string
+            }
+        } catch (e){
+            throw new Error(e.toString())
+        }
+        return null
+    }
+
     static FetchByAddress = async (societyID: number, address: string, headerSig: IHeaderSignature | void) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/user/${societyID}/${address}`,  {
