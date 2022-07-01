@@ -31,7 +31,7 @@ export class UserModel extends Model {
             if (res.status == 200){
                 return res.data as string
             }
-        } catch (e){
+        } catch (e: any){
             throw new Error(e.toString())
         }
         return null
