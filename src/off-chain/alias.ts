@@ -39,6 +39,24 @@ export class AliasModel extends Model {
         }
     }
 
+    static isUsernameAlreadyUsed = async (username: string) => {
+        try {
+            const res = await axios(config.getRootAPIOffChainUrl() + '/alias/' + username, {
+                method: 'HEAD',
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (res.status === 404)
+                return false
+            if (res.status === 200)
+                return true
+        } catch (e){
+            throw e
+        }
+        return null
+    }
+
     constructor(state: IAlias = DEFAULT_STATE, options: any){
         super(state, options) 
     }
