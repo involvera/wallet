@@ -53,7 +53,9 @@ const main = () => {
         config.setStoreEngine(new LocalStorage('./db'))
         await config.done()
         initWallets()
+        expect(wallet.keys().get().address()).to.eq(wallet.keys().get().alias().get().address())
     })
+
 
     it('refresh wallets', async () => {
         const s = await SocietyModel.fetch(1)
@@ -67,10 +69,15 @@ const main = () => {
         await wallet2.synchronize()
         await wallet3.synchronize()
 
+        expect(wallet.keys().get().address()).to.eq(wallet.keys().get().alias().get().address())
+        expect(wallet2.keys().get().address()).to.eq(wallet2.keys().get().alias().get().address())
+        expect(wallet3.keys().get().address()).to.eq(wallet3.keys().get().alias().get().address())
+
         await walletPuts.fetch(wallet.sign().header(), true).all()
         await wallet2Puts.fetch(wallet2.sign().header(), true).all()
         await wallet3Puts.fetch(wallet3.sign().header(), true).all()
     })
+
 
     it('[ONCHAIN] Wallet1 -> Fetch and check UTXOS: ', () => {
         const CCHList = wallet.cch().get().list()
@@ -128,7 +135,7 @@ const main = () => {
             expect(activity.length).to.eq(0) 
         }
     })
-
+    
     it('[OFFCHAIN] Wallet1 -> create a thread failed 1/3', async () => {
         const p = ThreadModel.NewContent(1, "", "Content of my thread")
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce() + 1))
@@ -215,11 +222,17 @@ const main = () => {
         expect(res.data.error).to.eq("You need to create an alias on your address before adding content.")
     })
 
-    it('[OFFCHAIN] Create an alias on Wallet 1', async () => {
-        const alias = wallet.keys().get().alias()
+    it('[OFFCHAIN] Create an alias on Wallet 1', async () => {        
+        let alias = wallet.keys().get().alias()
+        expect(alias.get().address()).to.eq("1GHQu3CDZpPZGb6PmaBPP4sZNuT13sja1")
+        expect(wallet.keys().get().address()).to.eq("1GHQu3CDZpPZGb6PmaBPP4sZNuT13sja1")
         alias.setUsername('fantasim')
         const res = await alias.update(wallet.keys().get().wallet())
         expect(res.status).to.eq(201)
+
+        alias = wallet.keys().get().alias()
+        expect(alias.get().address()).to.eq("1GHQu3CDZpPZGb6PmaBPP4sZNuT13sja1")
+        expect(alias.get().username()).to.eq('fantasim')
     })
 
     it('[OFFCHAIN] Fetch user (Wallet1) 1', async () => {
@@ -436,7 +449,6 @@ const main = () => {
         expect(p.get().replyCount()).to.eq(0)
         expect(p.get().societyID()).to.eq(1)
         expect(p.get().pubKH()).to.eq(pkhContent2)
-        // expect(p.get().embeds().length).to.eq(4)
         expect(p.get().reward().get().threadReward().get().countReward0()).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward1()).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward2()).to.eq(0)
@@ -449,9 +461,15 @@ const main = () => {
 
     it('[OFFCHAIN] Create an alias on Wallet 2', async () => {
         const alias = wallet2.keys().get().alias()
+        expect(alias.get().address()).to.eq("1ELWq5Swc7mJRCBTVn1sW5iiR3w7cNSPiH")
+        expect(wallet2.keys().get().address()).to.eq("1ELWq5Swc7mJRCBTVn1sW5iiR3w7cNSPiH")
         alias.setUsername('skily')
         const res = await alias.update(wallet2.keys().get().wallet())
         expect(res.status).to.eq(201)
+
+        const alias2 = wallet2.keys().get().alias()
+        expect(alias2.get().address()).to.eq("1ELWq5Swc7mJRCBTVn1sW5iiR3w7cNSPiH")
+        expect(alias2.get().username()).to.eq('skily')
     })
 
     it('[OFFCHAIN] Fetch user (Wallet2) 1', async () => {
@@ -622,9 +640,15 @@ const main = () => {
 
     it('[OFFCHAIN] Create an alias on Wallet 3', async () => {
         const alias = wallet3.keys().get().alias()
+        expect(alias.get().address()).to.eq("1DUqkRe7TzK97WftEmuTjJcSq3Az4gYXwH")
+        expect(wallet3.keys().get().address()).to.eq("1DUqkRe7TzK97WftEmuTjJcSq3Az4gYXwH")
         alias.setUsername('wallet3')
         const res = await alias.update(wallet3.keys().get().wallet())
         expect(res.status).to.eq(201)
+
+        const alias2 = wallet3.keys().get().alias()
+        expect(alias2.get().address()).to.eq("1DUqkRe7TzK97WftEmuTjJcSq3Az4gYXwH")
+        expect(alias2.get().username()).to.eq('wallet3')
     })
 
     it('[OFFCHAIN] Fetch user (Wallet3) 1', async () => {

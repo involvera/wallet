@@ -62,9 +62,8 @@ export default class KeysModel extends Model {
             pass_hash: this._hashPass(pass),
             mnemonic: encryptedHex,
         })
-        return this.setState({
-            alias: new AliasModel(Object.assign(AliasModel.DefaultState, {address: this.get().address()}) , this.kids())
-        })
+        this.get().alias().setState({address: this.get().address()})
+        return this.action()   
     }
 
     isPasswordSet = () => !!this.getPassword()

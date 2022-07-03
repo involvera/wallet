@@ -33,7 +33,6 @@ export default class Wallet extends Model {
             seed: new KeysModel(initialState.seed, this.kids()),
             utxos: new UTXOCollection(initialState.utxos || [], this.kids()),
             cch: new CCHModel(initialState.cch, this.kids()),
-            // contract: new AuthContract(initialState.contract, this.kids()),
             fees: new FeesModel(initialState.fees, this.kids()),
             info: new InfoModel(initialState.info, this.kids()),
             costs: new CostsModel(initialState.costs, this.kids()),
