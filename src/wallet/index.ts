@@ -1,4 +1,4 @@
-import AuthContractModel from './auth-contract'
+// import AuthContractModel from './auth-contract'
 import CostsModel from './costs'
 import FeesModel from './fees'
 import KeysModel from './keys'
@@ -10,7 +10,7 @@ import WalletModel, {
 } from './wallet'
 
 export {
-    AuthContractModel,
+    // AuthContractModel,
     CostsModel,
     FeesModel,
     InfoModel,

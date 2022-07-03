@@ -5,7 +5,7 @@ import { Buffer } from 'buffer'
 import axios from 'axios'
 import { T_REWARD } from 'community-coin-types'
 
-import AuthContract from './auth-contract'
+// import AuthContract from './auth-contract'
 import FeesModel from './fees'
 import CostsModel from './costs'
 import KeysModel from './keys'
@@ -33,7 +33,7 @@ export default class Wallet extends Model {
             seed: new KeysModel(initialState.seed, this.kids()),
             utxos: new UTXOCollection(initialState.utxos || [], this.kids()),
             cch: new CCHModel(initialState.cch, this.kids()),
-            contract: new AuthContract(initialState.contract, this.kids()),
+            // contract: new AuthContract(initialState.contract, this.kids()),
             fees: new FeesModel(initialState.fees, this.kids()),
             info: new InfoModel(initialState.info, this.kids()),
             costs: new CostsModel(initialState.costs, this.kids()),
@@ -41,7 +41,7 @@ export default class Wallet extends Model {
     }
 
     synchronize = async () => {
-        await this.auth().refresh()
+        // await this.auth().refresh()
         const response = await axios(config.getRootAPIChainUrl() + '/wallet', {
             headers: Object.assign(this.sign().header() as any, {
                 last_cch: this.cch().get().last(),
@@ -56,7 +56,7 @@ export default class Wallet extends Model {
             
             this.setState({ info: new InfoModel(json.info, this.kids()) })
             this.cch().assignJSONResponse(json.cch)
-            this.auth().setState(json.contract)
+            // this.auth().setState(json.contract)
             this.fees().setState(json.fees)
             this.utxos().get().setState(json.utxos || [])
             this.costs().setState(json.costs)
@@ -66,7 +66,7 @@ export default class Wallet extends Model {
     }
 
     public keys = (): KeysModel => this.state.seed
-    public auth = (): AuthContract => this.state.contract
+    // public auth = (): AuthContract => this.state.contract
     public fees = (): FeesModel => this.state.fees
     public costs = (): CostsModel => this.state.costs
     public info = (): InfoModel => this.state.info
@@ -209,7 +209,7 @@ export default class Wallet extends Model {
     utxos = () => {
         const get = (): UTXOCollection => this.state.utxos
         const fetch = async () => {
-            await this.auth().refresh()
+            // await this.auth().refresh()
             try {
                 const res = await axios(config.getRootAPIChainUrl() + '/utxos', {
                     method: 'GET',
@@ -257,9 +257,18 @@ export default class Wallet extends Model {
             value,
             transaction,
             header: (): IHeaderSignature => {
+                const now = new Date()
+                const year = now.getUTCFullYear().toString()
+                let month = (now.getUTCMonth() + 1).toString()
+                month = month.length == 1 ? '0' + month : month
+                let day = now.getUTCDate().toString()
+                day = day.length == 1 ? '0' + day : day
+
+                const toSignStr = this.keys().get().pubHex() + `${year}-${month}-${day}`
+
                 return {
                     pubkey: this.keys().get().pubHex(),
-                    signature: Buffer.from(value(Sha256(B64ToByteArray(this.auth().get().value())))).toString('hex')
+                    signature: value(Sha256(toSignStr)).toString('hex')
                 }
             }
         }
