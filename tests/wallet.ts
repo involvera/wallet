@@ -91,8 +91,9 @@ const main = () => {
         expect(utxos.listUnFetchedTxHash().length).to.eq(7)
     });
 
+
     it('Wallet1 -> Check Address: ', () => {
-        expect(wallet.keys().get().address()).to.eq("1GHQu3CDZpPZGb6PmaBPP4sZNuT13sja1")
+        expect(wallet.keys().get().address()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
         expect(Buffer.compare(PubKeyHashFromAddress(wallet.keys().get().address()), wallet.keys().get().pubHash())).to.eq(0)
         expect(IsAddressValid(wallet.keys().get().address())).to.eq(true)
         expect(wallet.keys().get().mnemonic()).to.eq("film dirt damage apart carry horse enroll carry power prison flush bulb")
@@ -224,14 +225,14 @@ const main = () => {
 
     it('[OFFCHAIN] Create an alias on Wallet 1', async () => {        
         let alias = wallet.keys().get().alias()
-        expect(alias.get().address()).to.eq("1GHQu3CDZpPZGb6PmaBPP4sZNuT13sja1")
-        expect(wallet.keys().get().address()).to.eq("1GHQu3CDZpPZGb6PmaBPP4sZNuT13sja1")
+        expect(alias.get().address()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
+        expect(wallet.keys().get().address()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
         alias.setUsername('fantasim')
         const res = await alias.update(wallet.keys().get().wallet())
         expect(res.status).to.eq(201)
 
         alias = wallet.keys().get().alias()
-        expect(alias.get().address()).to.eq("1GHQu3CDZpPZGb6PmaBPP4sZNuT13sja1")
+        expect(alias.get().address()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
         expect(alias.get().username()).to.eq('fantasim')
     })
 
@@ -461,14 +462,14 @@ const main = () => {
 
     it('[OFFCHAIN] Create an alias on Wallet 2', async () => {
         const alias = wallet2.keys().get().alias()
-        expect(alias.get().address()).to.eq("1ELWq5Swc7mJRCBTVn1sW5iiR3w7cNSPiH")
-        expect(wallet2.keys().get().address()).to.eq("1ELWq5Swc7mJRCBTVn1sW5iiR3w7cNSPiH")
+        expect(alias.get().address()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
+        expect(wallet2.keys().get().address()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
         alias.setUsername('skily')
         const res = await alias.update(wallet2.keys().get().wallet())
         expect(res.status).to.eq(201)
 
         const alias2 = wallet2.keys().get().alias()
-        expect(alias2.get().address()).to.eq("1ELWq5Swc7mJRCBTVn1sW5iiR3w7cNSPiH")
+        expect(alias2.get().address()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
         expect(alias2.get().username()).to.eq('skily')
     })
 
@@ -640,14 +641,14 @@ const main = () => {
 
     it('[OFFCHAIN] Create an alias on Wallet 3', async () => {
         const alias = wallet3.keys().get().alias()
-        expect(alias.get().address()).to.eq("1DUqkRe7TzK97WftEmuTjJcSq3Az4gYXwH")
-        expect(wallet3.keys().get().address()).to.eq("1DUqkRe7TzK97WftEmuTjJcSq3Az4gYXwH")
+        expect(alias.get().address()).to.eq("1KC2hAHD4ekwuzz7szQtQufKKNYoGJ5K6D")
+        expect(wallet3.keys().get().address()).to.eq("1KC2hAHD4ekwuzz7szQtQufKKNYoGJ5K6D")
         alias.setUsername('wallet3')
         const res = await alias.update(wallet3.keys().get().wallet())
         expect(res.status).to.eq(201)
 
         const alias2 = wallet3.keys().get().alias()
-        expect(alias2.get().address()).to.eq("1DUqkRe7TzK97WftEmuTjJcSq3Az4gYXwH")
+        expect(alias2.get().address()).to.eq("1KC2hAHD4ekwuzz7szQtQufKKNYoGJ5K6D")
         expect(alias2.get().username()).to.eq('wallet3')
     })
 
@@ -924,7 +925,7 @@ const main = () => {
 
                 expect(fullProposal1.get().costs().proposal).to.eq(BigInt(2000 * COIN_UNIT))
                 expect(fullProposal1.get().costs().thread).to.eq(BigInt(-1))
-                expect(fullProposal1.get().pubKH()).to.eq("ee8a1440725029994a56a1d7d7ecb28140fb4fb0")
+                expect(fullProposal1.get().pubKH()).to.eq("e4c60b0853e76a70d864fafed15964af337313a6")
                 expect(fullProposal1.get().context()).to.not.eq(null)
             }
             
@@ -933,7 +934,6 @@ const main = () => {
             expect(proposal2.get().layer()).to.eq("Constitution")
             expect(proposal2.get().vote().get().closedAtLH()).to.eq(28)
             expect(proposal2.get().vote().get().approved()).to.eq(-1)
-            // expect(proposal2.get().embeds().length).to.eq(0)
             expect(proposal2.get().endAtLH()).to.eq(28)
             expect(proposal2.get().userVote()).to.eq(null)
             expect(proposal2.get().estimatedEndAtTime().toDateString()).to.eq(new Date(proposal2.get().createdAt().getTime() + ((N_LUGH_VOTE_DURATION) * LUGH_EVERY_N_S * 1000)).toDateString())
@@ -957,7 +957,7 @@ const main = () => {
 
                 expect(fullProposal2.get().author().get().address()).eq(wallet.keys().get().address())
                 expect(fullProposal2.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
-                expect(fullProposal2.get().pubKH()).to.eq("56c1544ea85a2065c3ff2019f1786912ef5d599f")
+                expect(fullProposal2.get().pubKH()).to.eq("b4cb71271efc2ac6d75d1a337fc1873d10ffa5da")
                 expect(fullProposal2.get().constitution()[0].content).to.eq("Content #0")
                 expect(fullProposal2.get().constitution()[0].title).to.eq("Title #0")
                 expect(fullProposal2.get().context()).to.not.eq(null)
@@ -1002,16 +1002,16 @@ const main = () => {
                 expect(fullProposal3.get().context()).to.eq(null)
                 expect(fullProposal3.get().author().get().address()).eq(wallet.keys().get().address())
                 expect(fullProposal3.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
-                expect(fullProposal3.get().pubKH()).to.eq("d9ea8f0f43aa29a263ab036e42203305c48ab33b")
+                expect(fullProposal3.get().pubKH()).to.eq("41c7fb5001fdb63ebd4638fc6e900d192c4c0041")
             }
         }
     })
-
+    
     it('Fetch Target Thread List - PREVIEW MODE', async () => {
         const society = await SocietyModel.fetch(1)
         const threads = new ThreadCollection([],{})
         threads.setSociety(society as SocietyModel)
-        threads.setTargetPKH("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+        threads.setTargetPKH("4001282825b5b91d792787c1b69ce72d996a3e2e")
         await threads.fetch(wallet3.sign().header(), true)   
         expect(threads).not.to.eq(null)
         if (threads){
@@ -1020,7 +1020,7 @@ const main = () => {
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq("This is a title.")
-            expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().pubKH()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(2)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(1)
@@ -1029,14 +1029,14 @@ const main = () => {
             expect(thread1.get().reward().get().userReward().get().countReward0()).to.eq(1)
             expect(thread1.get().reward().get().userReward().get().countReward1()).to.eq(1)
             expect(thread1.get().reward().get().userReward().get().countReward2()).to.eq(1)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
             expect(thread1.get().replyCount()).to.eq(0)
         }
     })
     
     it('Fetch Thread and Target', async () => {
-        const thread1 = await ThreadModel.FetchByPKH(SOCIETY_ID, "2c108813b0f957c5776dffec80c5122b4e782864", wallet3.sign().header())
+        const thread1 = await ThreadModel.FetchByPKH(SOCIETY_ID, "0e01d4ea4c3b4e090b5287bbc4efb024f6d38642", wallet3.sign().header())
         expect(thread1).not.to.eq(null)
         if (thread1){
             const target = thread1.get().target() as ThreadModel
@@ -1044,8 +1044,8 @@ const main = () => {
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq("This is a title.")
-            expect(thread1.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/af53ae357d42b460838f4f4157cd579de0f9d6fd \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
-            expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/4001282825b5b91d792787c1b69ce72d996a3e2e \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
+            expect(thread1.get().pubKH()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(2)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(1)
@@ -1054,7 +1054,7 @@ const main = () => {
             expect(thread1.get().reward().get().userReward().get().countReward0()).to.eq(1)
             expect(thread1.get().reward().get().userReward().get().countReward1()).to.eq(1)
             expect(thread1.get().reward().get().userReward().get().countReward2()).to.eq(1)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
             expect(thread1.get().replyCount()).to.eq(0)
             expect(thread1.get().target()).to.not.eq(null)
@@ -1063,7 +1063,7 @@ const main = () => {
             expect(target.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(target.get().title()).to.eq("This is a title.")
             expect(target.get().content()).to.eq("Here are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
-            expect(target.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(target.get().pubKH()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
             // expect(target.get().embeds().length).to.eq(3)
             expect(target.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(target.get().reward().get().threadReward().get().countReward0()).to.eq(0)
@@ -1084,7 +1084,7 @@ const main = () => {
         const society = await SocietyModel.fetch(1)
         const threads = new ThreadCollection([],{})
         threads.setSociety(society as SocietyModel)
-        threads.setTargetPKH("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+        threads.setTargetPKH("4001282825b5b91d792787c1b69ce72d996a3e2e")
         await threads.fetchFullReplies(wallet3.sign().header(), true)   
         expect(threads).not.to.eq(null)
         if (threads){
@@ -1093,8 +1093,8 @@ const main = () => {
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq("This is a title.")
-            expect(thread1.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/af53ae357d42b460838f4f4157cd579de0f9d6fd \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
-            expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/4001282825b5b91d792787c1b69ce72d996a3e2e \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
+            expect(thread1.get().pubKH()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(2)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(1)
@@ -1103,7 +1103,7 @@ const main = () => {
             expect(thread1.get().reward().get().userReward().get().countReward0()).to.eq(1)
             expect(thread1.get().reward().get().userReward().get().countReward1()).to.eq(1)
             expect(thread1.get().reward().get().userReward().get().countReward2()).to.eq(1)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
             expect(thread1.get().replyCount()).to.eq(0)
             expect(thread1.get().target()).to.eq(null)
@@ -1125,7 +1125,7 @@ const main = () => {
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq("This is a title.")
-            expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().pubKH()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(2)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(1)
@@ -1134,7 +1134,7 @@ const main = () => {
             expect(thread1.get().reward().get().userReward().get().countReward0()).to.eq(1)
             expect(thread1.get().reward().get().userReward().get().countReward1()).to.eq(1)
             expect(thread1.get().reward().get().userReward().get().countReward2()).to.eq(1)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
             expect(thread1.get().replyCount()).to.eq(0)
             const target = thread1.get().target() as ThreadModel
@@ -1142,24 +1142,24 @@ const main = () => {
             expect(target.get().societyID()).to.eq(1)
             expect(target.get().author().get().username()).to.eq('fantasim')
             expect(target.get().target()).to.eq(null)
-            expect(target.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(target.get().pubKH()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
 
             const fullThread1 = await ThreadModel.FetchByPKH(1, thread1.get().pubKH())
             if (fullThread1){
-                expect(fullThread1.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/af53ae357d42b460838f4f4157cd579de0f9d6fd \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
+                expect(fullThread1.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/4001282825b5b91d792787c1b69ce72d996a3e2e \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
                 expect(fullThread1.get().replyCount()).to.eq(0)
                 const target = fullThread1.get().target() as ThreadModel
                 expect(target.get().title()).to.eq('This is a title.')
                 expect(target.get().societyID()).to.eq(1)
                 expect(target.get().author().get().username()).to.eq('fantasim')
                 expect(target.get().target()).to.eq(null)
-                expect(target.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+                expect(target.get().pubKH()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
             }
 
             expect(thread2.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread2.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread2.get().title()).to.eq("This is a title.")
-            expect(thread2.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(thread2.get().pubKH()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
             expect(thread2.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(thread2.get().reward().get().threadReward().get().countReward0()).to.eq(0)
             expect(thread2.get().reward().get().threadReward().get().countReward1()).to.eq(0)
@@ -1193,7 +1193,7 @@ const main = () => {
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq("This is a title.")
-            expect(thread1.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().pubKH()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(2)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(1)
@@ -1202,7 +1202,7 @@ const main = () => {
             expect(thread1.get().reward().get().userReward().get().countReward0()).to.eq(1)
             expect(thread1.get().reward().get().userReward().get().countReward1()).to.eq(1)
             expect(thread1.get().reward().get().userReward().get().countReward2()).to.eq(1)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
             expect(thread1.get().replyCount()).to.eq(0)
             const target = thread1.get().target() as ThreadModel
@@ -1210,12 +1210,12 @@ const main = () => {
             expect(target.get().societyID()).to.eq(1)
             expect(target.get().author().get().username()).to.eq('fantasim')
             expect(target.get().target()).to.eq(null)
-            expect(target.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(target.get().pubKH()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
 
             expect(thread2.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread2.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread2.get().title()).to.eq("This is a title.")
-            expect(thread2.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(thread2.get().pubKH()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
             expect(thread2.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(thread2.get().reward().get().threadReward().get().countReward0()).to.eq(0)
             expect(thread2.get().reward().get().threadReward().get().countReward1()).to.eq(0)
@@ -1276,7 +1276,7 @@ const main = () => {
         const res = await t.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
     })
-
+    
     it('Fetch Target Thread List 2 - PREVIEW MODE ', async () => {
         const society = await SocietyModel.fetch(1)
         const threads = new ThreadCollection([],{})
@@ -1295,12 +1295,12 @@ const main = () => {
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq('')
-            expect(thread1.get().pubKH()).to.eq("4f54e8c7d99764e70622675889e3ee81d2638c6e")
+            expect(thread1.get().pubKH()).to.eq("06ec72410c9dc2e528fe6e9ef22071b6278818dd")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(0)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("ee8a1440725029994a56a1d7d7ecb28140fb4fb0")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("e4c60b0853e76a70d864fafed15964af337313a6")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
             
             const target = thread1.get().target() as ProposalModel
@@ -1312,6 +1312,7 @@ const main = () => {
             expect(target.get().vote().get().approved()).to.eq(-1)
         }
     })
+
 
     it('Fetch Thread list 2', async () => {
         const society = await SocietyModel.fetch(1)
@@ -1327,12 +1328,12 @@ const main = () => {
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq('')
-            expect(thread1.get().pubKH()).to.eq("4f54e8c7d99764e70622675889e3ee81d2638c6e")
+            expect(thread1.get().pubKH()).to.eq("06ec72410c9dc2e528fe6e9ef22071b6278818dd")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(0)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("ee8a1440725029994a56a1d7d7ecb28140fb4fb0")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("e4c60b0853e76a70d864fafed15964af337313a6")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
             
             const target = thread1.get().target() as ProposalModel
@@ -1372,12 +1373,12 @@ const main = () => {
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq('')
-            expect(thread1.get().pubKH()).to.eq("4f54e8c7d99764e70622675889e3ee81d2638c6e")
+            expect(thread1.get().pubKH()).to.eq("06ec72410c9dc2e528fe6e9ef22071b6278818dd")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(0)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("ee8a1440725029994a56a1d7d7ecb28140fb4fb0")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("e4c60b0853e76a70d864fafed15964af337313a6")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
             
             const target = thread1.get().target() as ProposalModel
@@ -1390,8 +1391,9 @@ const main = () => {
         }
     })
 
+
     it('[ONCHAIN] Wallet1 -> create a rethread on Thread', async () => {
-        const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, "2c108813b0f957c5776dffec80c5122b4e782864")
+        const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, "0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
         expect(thread).not.eq(undefined)
         if (thread){
             const tx = await wallet.buildTX().rethread(Buffer.from(thread.get().pubKH(), 'hex'))
@@ -1417,6 +1419,7 @@ const main = () => {
         }
     })
 
+
     it('[OFFCHAIN] Wallet1 -> create a rethread on rethread of a Thread', async () => {
         const title = ``
         const content = `I have always loved to be into quick answers just for the sake of answering crap.`
@@ -1429,14 +1432,14 @@ const main = () => {
         expect(target.get().societyID()).to.eq(1)
         expect(target.get().author().get().username()).to.eq('fantasim')
         expect(target.get().target()).to.not.eq(null)
-        expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+        expect(target.get().pubKH()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
 
         const target2 = target.get().target() as ThreadModel
         expect(target2.get().title()).to.eq(`This is a title.`)
         expect(target2.get().societyID()).to.eq(1)
         expect(target2.get().author().get().username()).to.eq('fantasim')
         expect(target2.get().target()).to.eq(null)
-        expect(target2.get().pubKH()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+        expect(target2.get().pubKH()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
 
         expect(p.get().title()).to.eq(title)
         expect(p.get().content()).to.eq(content)
@@ -1456,7 +1459,7 @@ const main = () => {
         const society = await SocietyModel.fetch(1)
         const threads = new ThreadCollection([],{})
         threads.setSociety(society as SocietyModel)
-        threads.setTargetPKH("2c108813b0f957c5776dffec80c5122b4e782864")
+        threads.setTargetPKH("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
         await threads.fetch(wallet3.sign().header(), true)   
         expect(threads).not.to.eq(null)
         if (threads){
@@ -1465,12 +1468,12 @@ const main = () => {
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq('')
-            expect(thread1.get().pubKH()).to.eq("810fad66ae84c212b9c8f2971d7e7975375fedfb")
+            expect(thread1.get().pubKH()).to.eq("3aa6c96a0ee66445c749f87199fb8d5ea45b95cb")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(0)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
             expect(thread1.get().replyCount()).to.eq(0)
 
@@ -1479,12 +1482,12 @@ const main = () => {
             expect(target.get().societyID()).to.eq(1)
             expect(target.get().author().get().username()).to.eq('fantasim')
             expect(target.get().target()).to.eq(null)
-            expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(target.get().pubKH()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
         }
     })
 
     it('Fetch Thread and Target 3', async () => {
-        const thread1 = await ThreadModel.FetchByPKH(SOCIETY_ID, "810fad66ae84c212b9c8f2971d7e7975375fedfb", wallet3.sign().header())
+        const thread1 = await ThreadModel.FetchByPKH(SOCIETY_ID, "3aa6c96a0ee66445c749f87199fb8d5ea45b95cb", wallet3.sign().header())
         expect(thread1).not.to.eq(null)
         if (thread1){
             const target = thread1.get().target() as ThreadModel
@@ -1493,7 +1496,7 @@ const main = () => {
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq("")
             expect(thread1.get().content()).to.eq("I have always loved to be into quick answers just for the sake of answering crap.")
-            expect(thread1.get().pubKH()).to.eq("810fad66ae84c212b9c8f2971d7e7975375fedfb")
+            expect(thread1.get().pubKH()).to.eq("3aa6c96a0ee66445c749f87199fb8d5ea45b95cb")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
@@ -1502,7 +1505,7 @@ const main = () => {
             expect(thread1.get().reward().get().userReward().get().countReward0()).to.eq(0)
             expect(thread1.get().reward().get().userReward().get().countReward1()).to.eq(0)
             expect(thread1.get().reward().get().userReward().get().countReward2()).to.eq(0)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
             expect(thread1.get().replyCount()).to.eq(0)
             expect(thread1.get().target()).to.not.eq(null) 
@@ -1510,8 +1513,8 @@ const main = () => {
             expect(target.get().author().get().address()).eq(wallet.keys().get().address())
             expect(target.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(target.get().title()).to.eq("This is a title.")
-            expect(target.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/af53ae357d42b460838f4f4157cd579de0f9d6fd \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
-            expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(target.get().content()).to.eq("Here my favorite Thread: https://involvera.com/involvera/thread/4001282825b5b91d792787c1b69ce72d996a3e2e \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10")
+            expect(target.get().pubKH()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(target.get().reward().get().threadReward().get().countUpvote()).to.eq(1)
             expect(target.get().reward().get().threadReward().get().countReward0()).to.eq(2)
             expect(target.get().reward().get().threadReward().get().countReward1()).to.eq(1)
@@ -1520,7 +1523,7 @@ const main = () => {
             expect(target.get().reward().get().userReward().get().countReward0()).to.eq(1)
             expect(target.get().reward().get().userReward().get().countReward1()).to.eq(1)
             expect(target.get().reward().get().userReward().get().countReward2()).to.eq(1)
-            expect(target.get().contentLink().get().targetContent()).to.eq("af53ae357d42b460838f4f4157cd579de0f9d6fd")
+            expect(target.get().contentLink().get().targetContent()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
             expect(target.get().contentLink().get().output().get().value()).to.eq(BigInt(50103021979))
             expect(target.get().replyCount()).to.eq(1)
             expect(target.get().target()).to.not.eq(null)
@@ -1531,7 +1534,7 @@ const main = () => {
         const society = await SocietyModel.fetch(1)
         const threads = new ThreadCollection([],{})
         threads.setSociety(society as SocietyModel)
-        threads.setTargetPKH("2c108813b0f957c5776dffec80c5122b4e782864")
+        threads.setTargetPKH("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
         await threads.fetch(wallet3.sign().header(), true)   
         expect(threads).not.to.eq(null)
         if (threads){
@@ -1540,12 +1543,12 @@ const main = () => {
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq('')
-            expect(thread1.get().pubKH()).to.eq("810fad66ae84c212b9c8f2971d7e7975375fedfb")
+            expect(thread1.get().pubKH()).to.eq("3aa6c96a0ee66445c749f87199fb8d5ea45b95cb")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(0)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
             expect(thread1.get().replyCount()).to.eq(0)
 
@@ -1554,7 +1557,7 @@ const main = () => {
             expect(target.get().societyID()).to.eq(1)
             expect(target.get().author().get().username()).to.eq('fantasim')
             expect(target.get().target()).to.eq(null)
-            expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(target.get().pubKH()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
         }
     })
 
@@ -1563,7 +1566,7 @@ const main = () => {
         const society = await SocietyModel.fetch(1)
         const threads = new ThreadCollection([],{})
         threads.setSociety(society as SocietyModel)
-        threads.setTargetPKH("2c108813b0f957c5776dffec80c5122b4e782864")
+        threads.setTargetPKH("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
         await threads.fetchFullReplies(wallet3.sign().header(), true)   
         expect(threads).not.to.eq(null)
         if (threads){
@@ -1573,12 +1576,12 @@ const main = () => {
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq('')
             expect(thread1.get().content()).to.eq("I have always loved to be into quick answers just for the sake of answering crap.")
-            expect(thread1.get().pubKH()).to.eq("810fad66ae84c212b9c8f2971d7e7975375fedfb")
+            expect(thread1.get().pubKH()).to.eq("3aa6c96a0ee66445c749f87199fb8d5ea45b95cb")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(0)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
             expect(thread1.get().replyCount()).to.eq(0)
             expect(thread1.get().target()).to.eq(null)
@@ -1599,18 +1602,18 @@ const main = () => {
             const thread1 = threads.nodeAt(0) as ThreadModel
             const thread2 = threads.nodeAt(2) as ThreadModel
 
-            expect(thread2.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread2.get().pubKH()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(thread2.get().replyCount()).to.eq(1)
             
             expect(thread1.get().author().get().address()).eq(wallet.keys().get().address())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq('')
-            expect(thread1.get().pubKH()).to.eq("810fad66ae84c212b9c8f2971d7e7975375fedfb")
+            expect(thread1.get().pubKH()).to.eq("3aa6c96a0ee66445c749f87199fb8d5ea45b95cb")
             expect(thread1.get().reward().get().threadReward().get().countUpvote()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward0()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward1()).to.eq(0)
             expect(thread1.get().reward().get().threadReward().get().countReward2()).to.eq(0)
-            expect(thread1.get().contentLink().get().targetContent()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(thread1.get().contentLink().get().targetContent()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(thread1.get().contentLink().get().output().get().value()).to.eq(BigInt(50000000000))
             expect(thread1.get().replyCount()).to.eq(0)
 
@@ -1619,7 +1622,7 @@ const main = () => {
             expect(target.get().societyID()).to.eq(1)
             expect(target.get().author().get().username()).to.eq('fantasim')
             expect(target.get().target()).to.eq(null)
-            expect(target.get().pubKH()).to.eq("2c108813b0f957c5776dffec80c5122b4e782864")
+            expect(target.get().pubKH()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
         }
     })
 

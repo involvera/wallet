@@ -92,7 +92,7 @@ export default class KeysModel extends Model {
     get = () => {
         const passHash = (): string => this.state.pass_hash
         const alias = (): AliasModel => this.state.alias 
-        const seed = () => bip39.mnemonicToSeedSync(mnemonic(), this.getPassword())
+        const seed = () => bip39.mnemonicToSeedSync(mnemonic())
         const master = () => bip32.fromSeed(seed())
         const wallet = () => master()?.derivePath('m/0/0')
         const priv = () => wallet().privateKey as Buffer

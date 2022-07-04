@@ -39,8 +39,18 @@ export default class Wallet extends Model {
         })
     }
 
+    reset = () => {
+        return this.setState({
+            seed: new KeysModel(undefined, this.kids()),
+            utxos: new UTXOCollection([], this.kids()),
+            cch: new CCHModel(undefined, this.kids()),
+            fees: new FeesModel(undefined, this.kids()),
+            info: new InfoModel(undefined, this.kids()),
+            costs: new CostsModel(undefined, this.kids()),
+        })
+    }
+
     synchronize = async () => {
-        // await this.auth().refresh()
         const response = await axios(config.getRootAPIChainUrl() + '/wallet', {
             headers: Object.assign(this.sign().header() as any, {
                 last_cch: this.cch().get().last(),
@@ -55,7 +65,6 @@ export default class Wallet extends Model {
             
             this.setState({ info: new InfoModel(json.info, this.kids()) })
             this.cch().assignJSONResponse(json.cch)
-            // this.auth().setState(json.contract)
             this.fees().setState(json.fees)
             this.utxos().get().setState(json.utxos || [])
             this.costs().setState(json.costs)
@@ -65,7 +74,6 @@ export default class Wallet extends Model {
     }
 
     public keys = (): KeysModel => this.state.seed
-    // public auth = (): AuthContract => this.state.contract
     public fees = (): FeesModel => this.state.fees
     public costs = (): CostsModel => this.state.costs
     public info = (): InfoModel => this.state.info
