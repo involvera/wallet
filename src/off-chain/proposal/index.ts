@@ -6,19 +6,20 @@ import { Collection, Model } from "acey";
 import { BuildSignatureHex } from 'wallet-util'
 import { 
     IConstitutionProposalUnRaw, ICostProposal, IUserVote, 
-    IKindLinkUnRaw,IVoteSummary 
+    IKindLinkUnRaw,IVoteSummary, IContentLink 
 } from 'community-coin-types'
 import { StringToParsedPreview } from 'involvera-content-embedding'
-import { TProposalType } from 'wallet-script'
+import { TProposalType, Constant } from 'wallet-script'
 
 import config from "../../config";
 import { KindLinkModel } from '../../transaction/kind-link'
 import { IAlias, AliasModel  } from '../alias'
 import {VoteModel, } from './vote'
 import { UserVoteModel } from './user-vote'
-import { LUGH_EVERY_N_S, N_LUGH_VOTE_DURATION } from '../../constant';
+import { COUNT_DEFAULT_PROPOSALS, LUGH_EVERY_N_S, N_LUGH_VOTE_DURATION } from '../../constant';
 import { IHeaderSignature } from '../../wallet';
 import { SocietyModel } from '../society';
+import { Transaction } from '../../..';
 
 export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
@@ -38,7 +39,6 @@ export interface IProposal {
     title: string,
     content: string[3]
     author: IAlias
-    embeds: string[]
     pubkh_origin: string
     user_vote: IUserVote | null
 }
@@ -53,7 +53,6 @@ const DEFAULT_STATE: IProposal = {
     title: '',
     content: ['','',''] as any,
     author: AliasModel.DefaultState,
-    embeds: [],
     pubkh_origin: '',
     user_vote: UserVoteModel.DefaultState
 }
@@ -146,8 +145,10 @@ export class ProposalModel extends Model {
         const over = (currentLH: number) => this.get().vote().get().closedAtLH() <= currentLH || (this.get().vote().get().approved() > 0.5 || this.get().vote().get().declined() >= 0.5)
         const approved = (currentLH: number) => over(currentLH) && this.get().vote().get().approved() > 0.5
         const declined = (currentLH: number) => over(currentLH) && this.get().vote().get().approved() <= 0.5
+        const genesis = () => this.get().index() <= COUNT_DEFAULT_PROPOSALS
 
-        return { over, approved, declined }
+
+        return { over, approved, declined, genesis }
     }
 
     get = () => {
@@ -158,9 +159,11 @@ export class ProposalModel extends Model {
             return this.state.content_link
         }
         const societyID = (): number => this.state.sid
-        // const embeds = (): string[] => this.state.embeds || []
 
         const estimatedEndAtTime = () => {
+            if (this.is2().genesis()){
+                return this.get().createdAt()
+            }
             const begin = this.get().createdAt().getTime()
             return new Date(begin + ((N_LUGH_VOTE_DURATION) * LUGH_EVERY_N_S * 1000))
         }
@@ -276,19 +279,70 @@ export class ProposalCollection extends Collection {
         this._currentSociety = s
     }
 
-    fetch = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
-        const MAX_PER_PAGE = 5
-
-        if (this._maxReached == true && disablePageSystem != true){
-            return 200
-        }
-
+    private _throwErrorIfNoSocietySet = () => {
         if (!this._currentSociety){
             throw new Error("You need to set the current used Society through the method 'setSociety' first.")
         }
+    }
+
+
+    private _fetchGenesisProposalsIfRequired = async () => {
+        if (this._maxReached == true || (this.sortByIndexAsc().nodeAt(0) as ProposalModel).get().index() === (COUNT_DEFAULT_PROPOSALS + 1)){
+            await this.fetchGenesisProposals()
+        }
+    }
+
+    public fetchGenesisProposals = async () => {
+        this._throwErrorIfNoSocietySet()
 
         try {
-            const response = await axios(config.getRootAPIOffChainUrl() + `/proposal/${this._currentSociety.get().id()}`, {
+            const response = await axios(config.getRootAPIChainUrl() + `/proposals/genesis`, {
+                timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            if (response.status == 200){
+                const list = new ProposalCollection([], {})
+                const json = (response.data || []) as IContentLink[]
+                for (const o of json){
+
+                    const link = new Transaction.KindLinkModel(o.link, {})
+                    const t = link.get().output().get().script().proposalContentTypeString()
+
+                    list.push({
+                        sid: this._currentSociety?.get().id() as number,
+                        content_link: o.link,
+                        index: o.index,
+                        created_at: this._currentSociety?.get().created_at() as Date,
+                        public_key_hashed: link.get().output().get().contentPKH().toString('hex'),
+                        title: `Genesis ${t?.toLowerCase()}`,
+                        content: ['', '', ''],
+                        author: {address: '1111111111111111111111111111111111', pp: '/images/involvera.png', username: 'involvera'},
+                        pubkh_origin: Constant.PUBKEY_H_BURNER,
+                        user_vote: null,
+                        vote: {closed_at_lh: 1, approved: 100, declined: 0},
+                    })
+                }
+                this.add(list)
+            }
+        } catch (e: any){
+            throw new Error(e)
+        }
+    }
+
+    fetch = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
+        const MAX_PER_PAGE = 5
+        
+        this._throwErrorIfNoSocietySet()
+
+        if (this._maxReached == true && disablePageSystem != true){
+            await this._fetchGenesisProposalsIfRequired()
+            return 200
+        }
+
+        try {
+            const response = await axios(config.getRootAPIOffChainUrl() + `/proposal/${this._currentSociety?.get().id()}`, {
                 method: 'GET',
                 headers: Object.assign({}, headerSignature as any, {
                     offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE
@@ -300,6 +354,7 @@ export class ProposalCollection extends Collection {
             })
             if (response.status == 200){
                 const json = (response.data || []) as IPreviewProposal[]
+                
                 if (disablePageSystem != true){
                     if (json.length < MAX_PER_PAGE){
                         this._maxReached = true
@@ -321,6 +376,7 @@ export class ProposalCollection extends Collection {
                     })
                 }
                 this.add(list)
+                await this._fetchGenesisProposalsIfRequired()
             }
             return response.status
         } catch (e: any){
@@ -351,6 +407,7 @@ export class ProposalCollection extends Collection {
     */
 
     sortByIndexDesc = (): ProposalCollection => this.orderBy('index', 'desc') as ProposalCollection
+    sortByIndexAsc = (): ProposalCollection => this.orderBy('index', 'asc') as ProposalCollection
 
     add = (elem: ProposalModel | ProposalCollection) => {        
         const addNode = (n: ProposalModel) => {

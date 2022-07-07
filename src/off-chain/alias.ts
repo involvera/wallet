@@ -2,7 +2,7 @@ import { Collection, Model } from "acey";
 import WalletInfoModel from '../wallet/info'
 import * as bip32 from 'bip32'
 import { Buffer } from 'buffer'
-import { BuildSignatureHex, PubKeyHashFromAddress } from 'wallet-util'
+import { BuildSignatureHex, IsAddressValid, PubKeyHashFromAddress } from 'wallet-util'
 import axios from 'axios'
 import config from "../config";
 
@@ -103,6 +103,12 @@ export class AliasModel extends Model {
         } catch (e){
             throw e
         }
+    }
+
+    setAddress = (address: string) => {
+        if (!IsAddressValid(address))
+        throw new Error("Wrong address format")
+    return this.setState({ address })
     }
 
     setUsername = (username: string) => {

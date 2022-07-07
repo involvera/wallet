@@ -3,7 +3,7 @@ import 'mocha';
 import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
 
-import { COIN_UNIT, LUGH_AMOUNT, LUGH_EVERY_N_S, MAX_SUPPLY_AMOUNT, N_LUGH_VOTE_DURATION } from '../src/constant';
+import { COIN_UNIT, COUNT_DEFAULT_PROPOSALS, LUGH_AMOUNT, LUGH_EVERY_N_S, MAX_SUPPLY_AMOUNT, N_LUGH_VOTE_DURATION } from '../src/constant';
 import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from 'wallet-util';
 import { WalletModel } from '../src/wallet'
 import { UnserializedPutCollection, UnserializedPutModel } from '../src/off-chain/puts';
@@ -1623,6 +1623,64 @@ const main = () => {
             expect(target.get().author().get().username()).to.eq('fantasim')
             expect(target.get().target()).to.eq(null)
             expect(target.get().pubKH()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
+        }
+    })
+
+
+    it('Fetch Proposal list with Genesis proposals', async () => {
+        const society = await SocietyModel.fetch(1)
+        const proposals = new ProposalCollection([],{})
+        proposals.setSociety(society as SocietyModel)
+        await proposals.fetch(wallet.sign().header(), true)    
+
+        expect(proposals).not.to.eq(null)
+        if (proposals){
+            await proposals.fetchGenesisProposals()
+            expect(proposals.count()).to.eq(3 + COUNT_DEFAULT_PROPOSALS)
+
+            const proposal1 = proposals.sortByIndexAsc().nodeAt(0) as ProposalModel
+            expect(proposal1.get().title()).to.eq("Genesis costs")
+            expect(proposal1.get().index()).to.eq(1)
+            expect(proposal1.get().layer()).to.eq("Economy")
+            expect(proposal1.get().context()).to.eq(null)
+            expect(proposal1.get().vote().get().closedAtLH()).to.eq(1)
+            expect(proposal1.get().vote().get().approved()).to.eq(100)
+            expect(proposal1.get().endAtLH()).to.eq(1)
+            expect(proposal1.get().estimatedEndAtTime().toDateString()).to.eq(proposal1.get().createdAt().toDateString())
+
+            expect(() => proposal1.get().costs()).to.not.throw(Error)
+            expect(() => proposal1.get().constitution()).to.throw(Error)
+            expect(proposal1.get().context()).to.eq(null)
+            expect(proposal1.get().pubKH()).to.eq(proposal1.get().contentLink().get().output().get().contentPKH().toString('hex'))
+            expect(proposal1.get().userVote()).to.eq(null)
+
+            expect(proposal1.get().author().get().address()).eq('1111111111111111111111111111111111')
+            expect(proposal1.get().author().get().username()).eq('involvera')
+
+            expect(proposal1.get().costs().proposal).to.eq(BigInt(20000 * COIN_UNIT))
+            expect(proposal1.get().costs().thread).to.eq(BigInt(1000 * COIN_UNIT))
+
+            const proposal2 = proposals.sortByIndexAsc().nodeAt(1) as ProposalModel
+            expect(proposal2.get().title()).to.eq("Genesis constitution")
+            expect(proposal2.get().index()).to.eq(2)
+            expect(proposal2.get().layer()).to.eq("Constitution")
+            expect(proposal2.get().vote().get().closedAtLH()).to.eq(1)
+            expect(proposal2.get().vote().get().approved()).to.eq(100)
+            expect(proposal2.get().endAtLH()).to.eq(1)
+            expect(proposal2.get().estimatedEndAtTime().toDateString()).to.eq(proposal2.get().createdAt().toDateString())
+
+            expect(() => proposal2.get().costs()).to.throw(Error)
+            expect(() => proposal2.get().constitution()).to.not.throw(Error)
+            expect(proposal2.get().context()).to.eq(null)
+            expect(proposal2.get().pubKH()).to.eq(proposal2.get().contentLink().get().output().get().contentPKH().toString('hex'))
+            expect(proposal2.get().userVote()).to.eq(null)
+
+            expect(proposal2.get().author().get().address()).eq('1111111111111111111111111111111111')
+            expect(proposal2.get().author().get().username()).eq('involvera')
+
+            const consti = proposal2.get().constitution()
+            expect(consti[0].title == 'No constitution.')
+            expect(consti[0].content == "No rules.")
         }
     })
 

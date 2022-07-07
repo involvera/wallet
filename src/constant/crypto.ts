@@ -6,3 +6,4 @@ export const BURNING_RATIO = 0.7
 export const BILLED_SIGNATURE_LENGTH = 72
 export const LUGH_EVERY_N_S = 8 * 3600
 export const N_LUGH_VOTE_DURATION = 20
+export const COUNT_DEFAULT_PROPOSALS = 2
