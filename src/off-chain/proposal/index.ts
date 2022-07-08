@@ -285,7 +285,6 @@ export class ProposalCollection extends Collection {
         }
     }
 
-
     private _fetchGenesisProposalsIfRequired = async () => {
         if (this._maxReached == true || (this.sortByIndexAsc().nodeAt(0) as ProposalModel).get().index() === (COUNT_DEFAULT_PROPOSALS + 1)){
             await this.fetchGenesisProposals()
@@ -295,6 +294,10 @@ export class ProposalCollection extends Collection {
     public fetchGenesisProposals = async () => {
         this._throwErrorIfNoSocietySet()
 
+        if (this.getByIndex(COUNT_DEFAULT_PROPOSALS)){
+            return 200
+        }
+    
         try {
             const response = await axios(config.getRootAPIChainUrl() + `/proposals/genesis`, {
                 timeout: 10000,
@@ -321,11 +324,12 @@ export class ProposalCollection extends Collection {
                         author: {address: '1111111111111111111111111111111111', pp: '/images/involvera.png', username: 'involvera'},
                         pubkh_origin: Constant.PUBKEY_H_BURNER,
                         user_vote: null,
-                        vote: {closed_at_lh: 1, approved: 100, declined: 0},
+                        vote: {closed_at_lh: 1, approved: 1, declined: 0},
                     })
                 }
                 this.add(list)
             }
+            return response.status
         } catch (e: any){
             throw new Error(e)
         }
@@ -405,6 +409,8 @@ export class ProposalCollection extends Collection {
         }
     }
     */
+
+    getByIndex = (proposalIndex: number) => this.find((p: ProposalModel) => p.get().index() === proposalIndex) as ProposalModel
 
     sortByIndexDesc = (): ProposalCollection => this.orderBy('index', 'desc') as ProposalCollection
     sortByIndexAsc = (): ProposalCollection => this.orderBy('index', 'asc') as ProposalCollection
