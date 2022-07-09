@@ -8,14 +8,12 @@ import { AliasModel, IAlias } from '../off-chain'
 import { DEFAULT_PASS } from '../constant/off-chain'
 
 export interface IKey {
-    passwordSet: boolean | null
     pass_hash: string
     mnemonic: string
     alias: IAlias
 }
 
 const DEFAULT_STATE = {
-    passwordSet: null,
     pass_hash: '',
     mnemonic: '',
     alias: AliasModel.DefaultState
@@ -30,8 +28,7 @@ export default class KeysModel extends Model {
     constructor(initialState: IKey = DEFAULT_STATE, options: any){
         super(initialState, options)
         this.setState({
-            alias: new AliasModel(initialState.alias, this.kids()),
-            passwordSet: DEFAULT_STATE.passwordSet
+            alias: new AliasModel(initialState.alias, this.kids())
         })
     }
 
@@ -52,12 +49,10 @@ export default class KeysModel extends Model {
             throw new Error("wrong unlocking password")
         }
         this._password = password
-        return this.setState({passwordSet: true})
     }
 
     lock = () => {
         this._password = ""
-        return this.setState({passwordSet: false})
     }
 
     set = (mnemonic: string, unlockingPassword: string) => {
@@ -83,9 +78,8 @@ export default class KeysModel extends Model {
 
     is2 = () => {
         return {
-            noPasswordInteractionDone: () => this.state.passwordSet === null,
-            locked: () => this.state.passwordSet === false,
-            unlocked: () => this.state.passwordSet === true,
+            locked: () => !this._password,
+            unlocked: () => !!this._password,
             set: () => this.state.mnemonic.length > 0
         }
     }
