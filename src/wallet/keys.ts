@@ -30,7 +30,8 @@ export default class KeysModel extends Model {
     constructor(initialState: IKey = DEFAULT_STATE, options: any){
         super(initialState, options)
         this.setState({
-            alias: new AliasModel(initialState.alias, this.kids())
+            alias: new AliasModel(initialState.alias, this.kids()),
+            passwordSet: DEFAULT_STATE.passwordSet
         })
     }
 
