@@ -16,6 +16,8 @@ export class RewardCountModel extends Model{
         super(state, options)
     }
 
+    reset = () => this.setState(DEFAULT_STATE)
+
     incrementUpvote = () => this.setState({n_upvote: this.get().countUpvote() + 1})
     incrementReward0 = () => this.setState({n_reward0: this.get().countReward0() + 1})
     incrementReward1 = () => this.setState({n_reward1: this.get().countReward1() + 1})

@@ -1,5 +1,5 @@
 import { Model } from 'acey'
-import { B64ToByteArray, PubKeyHashFromAddress, Sha256, BuildSignature } from 'wallet-util'
+import { B64ToByteArray, PubKeyHashFromAddress, Sha256, BuildSignature, NewMnemonic } from 'wallet-util'
 import { Constitution, ScriptEngine } from 'wallet-script'
 import { Buffer } from 'buffer'
 import axios from 'axios'
@@ -19,6 +19,7 @@ import TxBuild from './tx-builder'
 
 import { BURNING_RATIO } from '../constant'
 import { ThreadModel } from '../off-chain'
+import { DEFAULT_PASS, DEFAULT_PASS_HASH } from '../constant/off-chain'
 
 export interface IHeaderSignature {
     pubkey: string
@@ -39,8 +40,13 @@ export default class Wallet extends Model {
         })
     }
 
+    generateRandomSeed = () => {
+        this.keys().set(NewMnemonic(), DEFAULT_PASS)
+        return this.action()
+    }
+
     reset = () => {
-        return this.setState({
+        this.setState({
             seed: new KeysModel(undefined, this.kids()),
             utxos: new UTXOCollection([], this.kids()),
             cch: new CCHModel(undefined, this.kids()),
@@ -48,6 +54,8 @@ export default class Wallet extends Model {
             info: new InfoModel(undefined, this.kids()),
             costs: new CostsModel(undefined, this.kids()),
         })
+
+        return this.generateRandomSeed()
     }
 
     synchronize = async () => {
@@ -70,6 +78,16 @@ export default class Wallet extends Model {
             this.costs().setState(json.costs)
             this.action().store()
             await this.keys().fetch().aliasIfNotSet()
+        }
+    }
+
+    public is2 = () => {
+        const generatedWallet = () => this.keys().get().passHash() === DEFAULT_PASS_HASH
+        const activeWallet = () => this.info().get().votePowerCount() > 0 || this.balance() > 0
+
+        return {
+            generatedWallet,
+            activeWallet
         }
     }
 

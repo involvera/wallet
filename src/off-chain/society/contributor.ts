@@ -28,6 +28,8 @@ export class ContributorModel extends Model {
         super(state, options)
     }
 
+    reset = () => this.setState(DEFAULT_STATE)
+
     get = () => {
         return {
             addr: (): string => this.state.addr,
@@ -50,4 +52,6 @@ export class ContributorCollection extends Collection {
     findByAddress = (addr: string): ContributorModel | undefined => {
         return this.find({ addr }) as ContributorModel | undefined
     }
+
+    reset = () => this.setState([])
 }

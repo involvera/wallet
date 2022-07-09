@@ -273,6 +273,13 @@ export class ProposalCollection extends Collection {
         super(initialState, [ProposalModel, ProposalCollection], options)
     }
 
+    reset = () => {
+        this._pageFetched = 0
+        this._maxReached = false
+        this._currentSociety = null
+        return this.setState([])
+    }
+
     setSociety = (s: SocietyModel) => {
         this._pageFetched = 0
         this._maxReached = false

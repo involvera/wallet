@@ -31,43 +31,58 @@ export default class KeysModel extends Model {
         })
     }
 
-    _hashPass = (pass: string) => Sha256(Ripemd160(pass)).toString('hex')
+    private _getPasswordClear = () => this._password
 
-    _triggerPasswordError = () => {
-        if (this.getPassword() == ''){
-            throw new Error("Password is not set")
+    private _hashPass = (pass: string) => Sha256(Ripemd160(pass)).toString('hex')
+    private _256BitsPass = () => Sha256(this._getPasswordClear())
+
+    private _triggerPasswordError = () => {
+        if (this._getPasswordClear() === ''){
+            throw new Error("password is not set")
         }
-        if (this._hashPass(this.getPassword()) !== this.get().passHash()){
-            throw new Error("Wrong password")
-        }
+        this.unlock(this._getPasswordClear())
     }
 
-    setPassword = (pass: string) => {
-        this._password = pass
+    unlock = (password: string) => {
+        if (this._hashPass(password) !== this.get().passHash()){
+            throw new Error("wrong unlocking password")
+        }
+        this._password = password
         return this.action()
     }
 
-    getPassword = () => this._password
-    get256BitsPassword = () => Sha256(this.getPassword())
+    lock = () => {
+        this._password = ""
+        return this.action()
+    }
 
-    set = (mnemonic: string, pass: string) => {
-        this.setPassword(pass)
+    set = (mnemonic: string, unlockingPassword: string) => {
+        if (unlockingPassword.length === 0){
+            throw new Error("unlocking password cannot be empty")
+        } 
+        this.setState({
+            pass_hash: this._hashPass(unlockingPassword)
+        })
+        this.unlock(unlockingPassword)
 
         var mnemoBytes = aes.utils.utf8.toBytes(mnemonic)
-        var aesCtr = new aes.ModeOfOperation.ctr(this.get256BitsPassword())
+        var aesCtr = new aes.ModeOfOperation.ctr(this._256BitsPass())
 
         const mnemonicEncrypted = aesCtr.encrypt(mnemoBytes);
         var encryptedHex = aes.utils.hex.fromBytes(mnemonicEncrypted);
         this.setState({ 
-            pass_hash: this._hashPass(pass),
             mnemonic: encryptedHex,
         })
-        this.get().alias().setState({address: this.get().address()})
+        this.get().alias().setAddress(this.get().address())
         return this.action()   
     }
 
-    isPasswordSet = () => !!this.getPassword()
-    isSet = () => this.state.mnemonic.length > 0
+    is2 = () => {
+        return {
+            unlocked: () => !!this._getPasswordClear(),
+            set: () => this.state.mnemonic.length > 0
+        }
+    }
 
     fetch = () => {
         const alias = async () => {
@@ -107,7 +122,7 @@ export default class KeysModel extends Model {
             const { mnemonic } = this.state
 
             var encryptedBytes = aes.utils.hex.toBytes(mnemonic);
-            var aesCtr = new aes.ModeOfOperation.ctr(this.get256BitsPassword());
+            var aesCtr = new aes.ModeOfOperation.ctr(this._256BitsPass());
             var decryptedBytes = aesCtr.decrypt(encryptedBytes);
             return aes.utils.utf8.fromBytes(decryptedBytes);
         } 

@@ -207,6 +207,15 @@ export class ThreadCollection extends Collection {
         super(initialState, [ThreadModel, ThreadCollection], options)
     }
 
+    reset = () => {
+        this._currentSociety = null
+        this._pageFetched = 0    
+        this._maxReached = false
+        this._targetPKH = ''
+        this._address = ''
+        return this.setState([])
+    }
+
     private _shouldStopExecution = (disablePageSystem: void | boolean) => this._maxReached == true && disablePageSystem != true
     private _throwErrorIfNoSocietySet = () => {
         if (!this._currentSociety){

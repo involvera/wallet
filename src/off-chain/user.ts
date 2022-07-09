@@ -82,6 +82,8 @@ export class UserCollection extends Collection {
         super(initialState, [UserModel, UserCollection], options)
     }
 
+    reset = () => this.setState([])
+
     addOrUpdate = (user: UserModel) => {
         const index = this.findIndex((u: UserModel) => u.get().alias().get().address() === user.get().alias().get().address())
         return index === -1 ? this.push(user) : this.updateAt(user, index)

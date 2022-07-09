@@ -1644,7 +1644,7 @@ const main = () => {
             expect(proposal1.get().layer()).to.eq("Economy")
             expect(proposal1.get().context()).to.eq(null)
             expect(proposal1.get().vote().get().closedAtLH()).to.eq(1)
-            expect(proposal1.get().vote().get().approved()).to.eq(100)
+            expect(proposal1.get().vote().get().approved()).to.eq(1)
             expect(proposal1.get().endAtLH()).to.eq(1)
             expect(proposal1.get().estimatedEndAtTime().toDateString()).to.eq(proposal1.get().createdAt().toDateString())
 
@@ -1665,7 +1665,7 @@ const main = () => {
             expect(proposal2.get().index()).to.eq(2)
             expect(proposal2.get().layer()).to.eq("Constitution")
             expect(proposal2.get().vote().get().closedAtLH()).to.eq(1)
-            expect(proposal2.get().vote().get().approved()).to.eq(100)
+            expect(proposal2.get().vote().get().approved()).to.eq(1)
             expect(proposal2.get().endAtLH()).to.eq(1)
             expect(proposal2.get().estimatedEndAtTime().toDateString()).to.eq(proposal2.get().createdAt().toDateString())
 

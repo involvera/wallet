@@ -61,6 +61,8 @@ export class AliasModel extends Model {
         super(state, options) 
     }
 
+    reset = () => this.setState(DEFAULT_STATE)
+
     getWalletInfo = () => this._walletInfo
 
     sign = (wallet: bip32.BIP32Interface) => {
@@ -137,6 +139,8 @@ export class AliasCollection extends Collection {
     constructor(initialState: any, options: any){
         super(initialState, [AliasModel, AliasCollection], options)
     }
+
+    reset = () => this.setState([])
 
     pullByAddresses = async (addresses: string[]) => {
         try {

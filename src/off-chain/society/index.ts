@@ -121,4 +121,6 @@ export class SocietyCollection extends Collection {
     constructor(state: any[], options:any){
         super(state, options)
     }
+
+    reset = () => this.setState([])
 }

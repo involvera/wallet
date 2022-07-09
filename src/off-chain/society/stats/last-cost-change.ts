@@ -18,6 +18,8 @@ export class LastCostChangeModel extends Model{
         super(state, options)
     }
 
+    reset = () => this.setState(DEFAULT_STATE)
+    
     get = () => {
         return {
             proposalIndex: (): number => this.state.proposal_index,

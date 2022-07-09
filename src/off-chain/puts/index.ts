@@ -206,35 +206,34 @@ export type T_FETCH_FILTER = 'all' | 'lugh' | 'non_lugh'
 
 export class UnserializedPutCollection extends Collection {
 
-    private _pageFetched = {
-        all: 0,
-        lugh: 0,
-        non_lugh: 0
-    }
+    private _pageFetched: any = {}
     
-    private _maxReached = {
-        all: false,
-        lugh: false,
-        non_lugh: false
-    }
+    private _maxReached: any = {}
 
     private _currentSociety: SocietyModel | null = null
 
     constructor(list: IUnSerializedPut[] = [], options: any){
         super(list, [UnserializedPutModel, UnserializedPutCollection], options)
+        this._initClassSettings()
+    }
+
+    private _initClassSettings = () => {
+        this._pageFetched['all'] = 0
+        this._pageFetched['lugh'] = 0
+        this._pageFetched['non_lugh'] = 0
+
+        this._maxReached['all'] = false
+        this._maxReached['lugh'] = false
+        this._maxReached['non_lugh'] = false
+    }
+
+    reset = () => {
+        this._initClassSettings()
+        return this.setState([])
     }
 
     setSociety = (s: SocietyModel) => {
-        this._pageFetched = {
-            all: 0,
-            lugh: 0,
-            non_lugh: 0
-        }
-        this._maxReached = {
-            all: false,
-            lugh: false,
-            non_lugh: false
-        }
+        this._initClassSettings()
         this._currentSociety = s
     }
 
