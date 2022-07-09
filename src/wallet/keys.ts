@@ -5,14 +5,17 @@ import { Buffer } from 'buffer'
 import { GetAddressFromPubKeyHash, ToPubKeyHash, Ripemd160, Sha256 } from 'wallet-util'
 import aes from 'aes-js'
 import { AliasModel, IAlias } from '../off-chain'
+import { DEFAULT_PASS } from '../constant/off-chain'
 
 export interface IKey {
+    passwordSet: boolean | null
     pass_hash: string
     mnemonic: string
     alias: IAlias
 }
 
 const DEFAULT_STATE = {
+    passwordSet: null,
     pass_hash: '',
     mnemonic: '',
     alias: AliasModel.DefaultState
@@ -43,17 +46,17 @@ export default class KeysModel extends Model {
         this.unlock(this._getPasswordClear())
     }
 
-    unlock = (password: string) => {
+    unlock = (password: string = DEFAULT_PASS) => {
         if (this._hashPass(password) !== this.get().passHash()){
             throw new Error("wrong unlocking password")
         }
         this._password = password
-        return this.action()
+        return this.setState({passwordSet: true})
     }
 
     lock = () => {
         this._password = ""
-        return this.action()
+        return this.setState({passwordSet: false})
     }
 
     set = (mnemonic: string, unlockingPassword: string) => {
@@ -79,7 +82,9 @@ export default class KeysModel extends Model {
 
     is2 = () => {
         return {
-            unlocked: () => !!this._getPasswordClear(),
+            noPasswordInteractionDone: () => this.state.passwordSet === null,
+            locked: () => this.state.passwordSet === false,
+            unlocked: () => this.state.passwordSet === true,
             set: () => this.state.mnemonic.length > 0
         }
     }
