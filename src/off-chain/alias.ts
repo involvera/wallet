@@ -95,12 +95,10 @@ export class AliasModel extends Model {
                 data: this.to().string(),
                 timeout: 10_000,
                 validateStatus: function (status) {
-                    return status >= 200 && status < 500;
+                    return status >= 200 && status <= 500;
                 },
             })
-            if (res.status == 200 || res.status == 201){
-                this.setState(res.data).store()
-            }
+            res.status <= 201 && this.setState(res.data).store()
             return res
         } catch (e){
             throw e
