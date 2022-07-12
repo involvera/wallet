@@ -55,7 +55,7 @@ export default class KeysModel extends Model {
         this._password = ""
     }
 
-    set = (mnemonic: string, unlockingPassword: string) => {
+    set = (mnemonic: string, unlockingPassword: string = DEFAULT_PASS) => {
         if (unlockingPassword.length === 0){
             throw new Error("unlocking password cannot be empty")
         } 
