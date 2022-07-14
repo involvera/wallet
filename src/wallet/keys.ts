@@ -32,16 +32,14 @@ export default class KeysModel extends Model {
         })
     }
 
-    private _getPasswordClear = () => this._password
-
     private _hashPass = (pass: string) => Sha256(Ripemd160(pass)).toString('hex')
-    private _256BitsPass = () => Sha256(this._getPasswordClear())
+    private _256BitsPass = () => Sha256(this.get().passwordClear())
 
     private _triggerPasswordError = () => {
-        if (this._getPasswordClear() === ''){
+        if (this.get().passwordClear() === ''){
             throw new Error("password is not set")
         }
-        this.unlock(this._getPasswordClear())
+        this.unlock(this.get().passwordClear())
     }
 
     unlock = (password: string = DEFAULT_PASS) => {
@@ -116,6 +114,7 @@ export default class KeysModel extends Model {
         const pubHash = () => ToPubKeyHash(pub())
         const pubHashHex = () => pubHash().toString('hex')
         const address = () => GetAddressFromPubKeyHash(pubHash())
+        const passwordClear = () => this._password
 
         const mnemonic = () => {
             this._triggerPasswordError()
@@ -145,6 +144,7 @@ export default class KeysModel extends Model {
             derivedPub, address, 
             derivedPubHash, mnemonic,
             contentWallet, alias,
+            passwordClear
         }
     }
 }
