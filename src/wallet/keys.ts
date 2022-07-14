@@ -90,15 +90,8 @@ export default class KeysModel extends Model {
             }
         }
 
-        const aliasIfNotSet = async () => {
-            if (this.get().alias() == null || this.get().alias().get().username() == ''){
-                await alias()
-            }
-        }
-
         return {
             alias,
-            aliasIfNotSet
         }
     }
 

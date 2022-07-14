@@ -77,7 +77,7 @@ export default class Wallet extends Model {
             this.utxos().get().setState(json.utxos || [])
             this.costs().setState(json.costs)
             this.action().store()
-            await this.keys().fetch().aliasIfNotSet()
+            await this.keys().fetch().alias()
         }
     }
 
