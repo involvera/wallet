@@ -5,7 +5,6 @@ import InfoModel from '../wallet/info'
 import { IWalletInfo } from 'community-coin-types'
 import { AliasModel, IAlias } from './alias'
 import config from '../config'
-import { BuildThreadPreviewString } from 'involvera-content-embedding'
 
 export interface IUser {
     alias: IAlias

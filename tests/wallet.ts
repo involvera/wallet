@@ -19,7 +19,7 @@ import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 // conf.setRootAPIOffChainUrl('http://134.122.16.30:3020')
 
 const ADMIN_KEY = '2f72e55b962b6cd66ea70e8b6bd8657d1c87a23a65769213d76dcb5da6abf6b5'
-const SOCIETY_ID= 1
+const SOCIETY_ID = 1
 
 const wallet = new WalletModel({}, { key: 'wallet', connected: true })
 const wallet2 = new WalletModel({}, {key: 'wallet2', connected: true })
@@ -55,7 +55,6 @@ const main = () => {
         initWallets()
         expect(wallet.keys().get().address()).to.eq(wallet.keys().get().alias().get().address())
     })
-
 
     it('refresh wallets', async () => {
         const s = await SocietyModel.fetch(1)

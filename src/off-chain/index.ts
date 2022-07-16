@@ -8,10 +8,9 @@ import {
     IUnSerializedPut
 } from '../off-chain/puts'
 
-
 export { IConstitutionData, ConstitutionModel}  from './constitution'
 export { RuleModel, RuleCollection}  from './constitution/rule'
-export { IProposal, ProposalCollection, ProposalModel }  from './proposal'
+export { IProposal, ProposalCollection, ProposalModel, TLayer, IPreviewProposal }  from './proposal'
 export { VoteModel }  from './proposal/vote'
 export { UserVoteModel  } from './proposal/user-vote'
 export { IAlias, AliasCollection, AliasModel } from './alias'
