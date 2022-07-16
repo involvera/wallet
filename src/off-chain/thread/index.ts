@@ -403,4 +403,10 @@ export class ThreadCollection extends Collection {
         node instanceof ThreadModel ? addNode(node) : node.forEach((p: ThreadModel) => addNode(p))
         return this.action()
     }
+
+    findByPKH = (pkh: string): ThreadModel | undefined  => {
+        const idx = this.findIndex((t: ThreadModel) => t.get().pubKH() === pkh)
+        return idx >= 0 ? this.nodeAt(idx) as ThreadModel : undefined
+    }
+
 }
