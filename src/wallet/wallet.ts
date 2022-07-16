@@ -70,7 +70,6 @@ export default class Wallet extends Model {
         })
         if (response.status == 200){
             const json = response.data
-            
             this.setState({ info: new InfoModel(json.info, this.kids()) })
             this.cch().assignJSONResponse(json.cch)
             this.fees().setState(json.fees)

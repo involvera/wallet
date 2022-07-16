@@ -199,6 +199,7 @@ export class ThreadCollection extends Collection {
 
     private _currentSociety: SocietyModel | null = null
     private _pageFetched = 0    
+    private _threadsFetched = 0
     private _maxReached = false
     private _targetPKH: string = ''
     private _address: string = ''
@@ -210,6 +211,7 @@ export class ThreadCollection extends Collection {
     reset = () => {
         this._currentSociety = null
         this._pageFetched = 0    
+        this._threadsFetched = 0
         this._maxReached = false
         this._targetPKH = ''
         this._address = ''
@@ -244,9 +246,13 @@ export class ThreadCollection extends Collection {
         }
     }
 
+    private _incrementThreadsFetched = (n: number) => this._threadsFetched += n
+    public countThreadsFetched = () => this._threadsFetched
+
 
     setSociety = (s: SocietyModel) => {
         this._pageFetched = 0
+        this._threadsFetched = 0
         this._maxReached = false
         this.setState([])
         this._currentSociety = s
@@ -254,6 +260,7 @@ export class ThreadCollection extends Collection {
 
     setAddress = (address: string) => {
         this._pageFetched = 0
+        this._threadsFetched = 0
         this._maxReached = false
         this.setState([])
         this._address = address
@@ -261,6 +268,7 @@ export class ThreadCollection extends Collection {
 
     setTargetPKH = (target: string) => {
         this._pageFetched = 0
+        this._threadsFetched = 0
         this._maxReached = false
         this.setState([])
         this._targetPKH = target
@@ -306,6 +314,7 @@ export class ThreadCollection extends Collection {
                         reply_count: o.reply_count
                     })
                 }
+                this._incrementThreadsFetched(list.count())
                 this.add(list)
             }
             return response.status
@@ -338,6 +347,7 @@ export class ThreadCollection extends Collection {
                 const json = (response.data || []) as any[]
                 this._updateFetchingInternalData(json.length, MAX_PER_PAGE, disablePageSystem)
                 this.add(new ThreadCollection(json, {}))
+                this._incrementThreadsFetched(json.length)
             }
         } catch (e: any){
             throw new Error(e)
@@ -385,6 +395,7 @@ export class ThreadCollection extends Collection {
                     })
                 }
                 this.add(list)
+                this._incrementThreadsFetched(list.count())
             }
             return response.status
         } catch (e: any){

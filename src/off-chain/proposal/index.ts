@@ -268,6 +268,7 @@ export class ProposalCollection extends Collection {
     private _currentSociety: SocietyModel | null = null
     private _pageFetched = 0    
     private _maxReached = false
+    private _proposalsFetched = 0
 
     constructor(initialState: any, options: any){
         super(initialState, [ProposalModel, ProposalCollection], options)
@@ -275,6 +276,7 @@ export class ProposalCollection extends Collection {
 
     reset = () => {
         this._pageFetched = 0
+        this._proposalsFetched = 0
         this._maxReached = false
         this._currentSociety = null
         return this.setState([])
@@ -282,6 +284,7 @@ export class ProposalCollection extends Collection {
 
     setSociety = (s: SocietyModel) => {
         this._pageFetched = 0
+        this._proposalsFetched = 0
         this._maxReached = false
         this._currentSociety = s
     }
@@ -297,6 +300,10 @@ export class ProposalCollection extends Collection {
             await this.fetchGenesisProposals()
         }
     }
+
+    private _incrementProposalsFetched = (n: number) => this._proposalsFetched += n
+    public countProposalsFetched = () => this._proposalsFetched
+
 
     public fetchGenesisProposals = async () => {
         this._throwErrorIfNoSocietySet()
@@ -387,6 +394,7 @@ export class ProposalCollection extends Collection {
                     })
                 }
                 this.add(list)
+                this._incrementProposalsFetched(list.count())
                 await this._fetchGenesisProposalsIfRequired()
             }
             return response.status
