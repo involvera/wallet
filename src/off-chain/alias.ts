@@ -82,6 +82,23 @@ export class AliasModel extends Model {
         }
     }
 
+    fetchBigPP = async (): Promise<string | null> => {
+        if (!this.get().username())
+            return null        
+        try {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/alias/${this.get().username()}/pp/500`, {
+                method: 'GET',
+                timeout: 10_000,
+            })
+            if (res.status === 200){
+                return res.data || null
+            }
+            return null
+        } catch (e: any){
+            throw new Error(e)
+        }
+    }
+
     fetchWalletInfo = async () => {
         try {
             const wi = await WalletInfoModel.fetch(PubKeyHashFromAddress(this.get().address()).toString('hex'))

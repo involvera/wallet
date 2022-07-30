@@ -2,6 +2,9 @@ import { expect } from 'chai';
 import 'mocha';
 import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
+import fs from 'fs'
+import path from 'path'
+import url from 'url'
 
 import { COIN_UNIT, COUNT_DEFAULT_PROPOSALS, LUGH_AMOUNT, LUGH_EVERY_N_S, MAX_SUPPLY_AMOUNT, N_LUGH_VOTE_DURATION } from '../src/constant';
 import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from 'wallet-util';
@@ -230,13 +233,15 @@ const main = () => {
         expect(alias.get().address()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
         expect(wallet.keys().get().address()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
         alias.setUsername('fantasim')
-        const res = await alias.update(wallet.keys().get().wallet())
+        const res = await alias.updateUsername(wallet.keys().get().wallet(), SOCIETY_ID)
         expect(res.status).to.eq(201)
 
         alias = wallet.keys().get().alias()
         expect(alias.get().address()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
         expect(alias.get().username()).to.eq('fantasim')
         expect(alias.get().pp()).to.eq(null)
+        const urlpp500 = await alias.fetchBigPP()
+        expect(urlpp500).to.eq(null)
     })
 
     it('[OFFCHAIN] Fetch user (Wallet1) 1', async () => {
@@ -471,13 +476,15 @@ const main = () => {
         expect(alias.get().address()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
         expect(wallet2.keys().get().address()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
         alias.setUsername('skily')
-        const res = await alias.update(wallet2.keys().get().wallet())
+        const res = await alias.updateUsername(wallet2.keys().get().wallet(), SOCIETY_ID)
         expect(res.status).to.eq(201)
 
         const alias2 = wallet2.keys().get().alias()
         expect(alias2.get().address()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
         expect(alias2.get().username()).to.eq('skily')
         expect(alias2.get().pp()).to.eq(null)
+        const urlpp500 = await alias.fetchBigPP()
+        expect(urlpp500).to.eq(null)
     })
 
     it('[OFFCHAIN] Fetch user (Wallet2) 1', async () => {
@@ -656,7 +663,7 @@ const main = () => {
         expect(alias.get().address()).to.eq("1KC2hAHD4ekwuzz7szQtQufKKNYoGJ5K6D")
         expect(wallet3.keys().get().address()).to.eq("1KC2hAHD4ekwuzz7szQtQufKKNYoGJ5K6D")
         alias.setUsername('wallet3')
-        const res = await alias.update(wallet3.keys().get().wallet())
+        const res = await alias.updateUsername(wallet3.keys().get().wallet(), SOCIETY_ID)
         expect(res.status).to.eq(201)
 
         const alias2 = wallet3.keys().get().alias()
@@ -665,6 +672,27 @@ const main = () => {
         expect(alias2.get().pp()).to.eq(null)
     })
 
+    it('[OFFCHAIN] Update PP on Wallet 3', async () => {
+        const alias = wallet3.keys().get().alias()
+        expect(alias.get().address()).to.eq("1KC2hAHD4ekwuzz7szQtQufKKNYoGJ5K6D")
+        expect(alias.get().username()).to.eq("wallet3")
+        expect(alias.get().pp()).to.eq(null)
+
+        const f = await fs.readFileSync('./tests/testpp.png')
+        const res = await alias.buildPP(f.toString('base64'))
+        expect(res.status).to.eq(201)
+        const { data } = res
+        
+        const ppRoute = conf.getRootAPIOffChainUrl() + '/asset/64/' + data
+        const pp500Route = conf.getRootAPIOffChainUrl() + '/asset/500/' + data
+        const r = await alias.updatePP({pp: ppRoute, pp500: pp500Route, asset_name: data}, wallet3.keys().get().wallet())
+        expect(r.status).to.eq(200)
+        expect(alias.get().pp()).to.not.eq(null)
+        const urlpp500 = await alias.fetchBigPP()
+        expect(pp500Route).to.eq(urlpp500)
+    })
+
+
     it('[OFFCHAIN] Fetch user (Wallet3) 1', async () => {
         const user = await UserModel.FetchByAddress(SOCIETY_ID, wallet3.keys().get().address(), wallet3.sign().header())
         expect(user).to.not.eq(null)
@@ -672,7 +700,7 @@ const main = () => {
             userList.addOrUpdate(user)
             expect(userList.count()).to.eq(3)
             expect(user.get().alias().get().username()).to.eq('wallet3')
-            expect(user.get().alias().get().pp()).to.eq(null)
+            expect(user.get().alias().get().pp()).to.not.eq(null)
             expect(user.get().info().get().votePowerCount()).to.eq(0)
             expect(user.get().info().get().votePowerPercent(wallet.cch().get().lastHeight())).to.eq(0)
             expect(user.get().info().get().activity().get().lastLughHeight()).to.eq(7)
