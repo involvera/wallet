@@ -50,6 +50,9 @@ export class SocietyModel extends Model {
     static fetch = async (id: number): Promise<SocietyModel|null> => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + '/society/' + id.toString(), {
+                headers: {
+                    'content-type': 'application/json'
+                },
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },
@@ -77,6 +80,9 @@ export class SocietyModel extends Model {
     fetchContributor = async (addr: string) => {
         try {
             const res = await axios(config.getRootAPIChainUrl() + `/wallet/${PubKeyHashFromAddress(addr).toString('hex')}`, {
+                headers: {
+                    'content-type': 'application/json'
+                },
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },

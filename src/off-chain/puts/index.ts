@@ -275,7 +275,7 @@ export class UnserializedPutCollection extends Collection {
         try { 
             const response = await axios(config.getRootAPIOffChainUrl() + '/puts/list/' + this._currentSociety.get().id(), {
                 method: 'GET',
-                headers: Object.assign({}, headerSignature as any, {
+                headers: Object.assign({'content-type': 'application/json'}, headerSignature as any, {
                     offset: disablePageSystem == true ? 0 : this._pageFetched[filter] * MAX_PER_PAGE,
                     filter: {all: 0, lugh: 1, non_lugh: 2}[filter],
                 }),

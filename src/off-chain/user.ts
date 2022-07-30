@@ -23,6 +23,7 @@ export class UserModel extends Model {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/user/name`,  {
                 timeout: 10_000,
+                headers: {'content-type': 'application/json'},
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },
@@ -40,7 +41,7 @@ export class UserModel extends Model {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/user/${societyID}/${address}`,  {
                 timeout: 10_000,
-                headers: headerSig || {},
+                headers: Object.assign({'content-type': 'application/json'}, headerSig || {} as any),
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },

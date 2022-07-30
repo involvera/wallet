@@ -45,6 +45,9 @@ export class ConstitutionModel extends Model {
     fetch = async () => {
         try {
              const res = await axios(config.getRootAPIChainUrl() + '/constitution', { 
+                headers: {
+                    'content-type': 'application/json'
+                },
                 method: 'GET',
                 timeout: 10000,
                 validateStatus: function (status) {

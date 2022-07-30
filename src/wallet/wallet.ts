@@ -237,7 +237,7 @@ export default class Wallet extends Model {
             try {
                 const res = await axios(config.getRootAPIChainUrl() + '/utxos', {
                     method: 'GET',
-                    headers: this.sign().header(),
+                    headers: this.sign().header() as any,
                     timeout: 10000,
                     validateStatus: function (status) {
                         return status >= 200 && status < 500;

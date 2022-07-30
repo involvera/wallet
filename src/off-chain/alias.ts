@@ -27,6 +27,9 @@ export class AliasModel extends Model {
     static fetch = async (address: string): Promise<AliasModel|null> => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + '/alias/address/' + address, {
+                headers: {
+                    'content-type': 'application/json'
+                },
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },
@@ -43,6 +46,9 @@ export class AliasModel extends Model {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + '/alias/' + username, {
                 method: 'HEAD',
+                headers:{
+                    'content-type': 'application/json'
+                },
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },
@@ -65,11 +71,11 @@ export class AliasModel extends Model {
 
     getWalletInfo = () => this._walletInfo
 
-    sign = (wallet: bip32.BIP32Interface) => {
+    sign = (wallet: bip32.BIP32Interface, data: string) => {
         if (this.get().username().length == 0)
             throw new Error("No username set.")
 
-        const sig = BuildSignatureHex(wallet, Buffer.from(this.get().username()))
+        const sig = BuildSignatureHex(wallet, Buffer.from(data))
         return {
             public_key: sig.public_key_hex,
             signature: sig.signature_hex
@@ -78,7 +84,7 @@ export class AliasModel extends Model {
 
     fetchWalletInfo = async () => {
         try {
-            const wi = await WalletInfoModel.fetch( PubKeyHashFromAddress(this.get().address()).toString('hex'))
+            const wi = await WalletInfoModel.fetch(PubKeyHashFromAddress(this.get().address()).toString('hex'))
             if (wi)
                 this._walletInfo = wi
             return wi
@@ -87,12 +93,53 @@ export class AliasModel extends Model {
         }
     }
 
-    update = async (wallet: bip32.BIP32Interface) => {
+    buildPP = async (imageBase64: string) => {
+        const data = JSON.stringify({
+            image: imageBase64
+        })
         try {
-            const res = await axios(config.getRootAPIOffChainUrl() + '/alias', {
+            const res = await axios(config.getRootAPIOffChainUrl() + '/asset/pp', {
                 method: 'POST',
-                headers: Object.assign({ 'content-type': 'application/json'}, this.sign(wallet)),
-                data: this.to().string(),
+                headers: { 'Content-Type': 'application/json' },
+                data,
+                timeout: 10_000,
+                validateStatus: function (status) {
+                    return status >= 200 && status <= 500;
+                },
+            })
+            return {status: res.status, data: res.data}
+        } catch (e: any){
+            return {status: 500, data: e.toString()}
+        }
+    }
+
+    updatePP = async (d: {pp: string, pp500: string, asset_name: string}, wallet: bip32.BIP32Interface) => {
+        try {
+            const data = JSON.stringify(d) 
+            const res = await axios(config.getRootAPIOffChainUrl() + '/alias/pp', {
+                method: 'POST',
+                headers:Object.assign({ 'content-type': 'application/json'}, this.sign(wallet, data)),
+                data,
+                timeout: 10_000,
+                validateStatus: function (status) {
+                    return status >= 200 && status <= 500;
+                }
+            })
+            res.status <= 201 && this.setState({pp: d.pp}).store()
+            return res
+        } catch (e){
+            throw e
+        }
+    }
+
+    updateUsername = async (wallet: bip32.BIP32Interface, origin_sid: number) => {
+        const body = JSON.stringify({ username: this.get().username(), origin_sid })
+        
+        try {
+            const res = await axios(config.getRootAPIOffChainUrl() + '/alias/username', {
+                method: 'POST',
+                headers: Object.assign({ 'content-type': 'application/json'}, this.sign(wallet, body)),
+                data: body,
                 timeout: 10_000,
                 validateStatus: function (status) {
                     return status >= 200 && status <= 500;
@@ -144,7 +191,8 @@ export class AliasCollection extends Collection {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/alias/addresses/${JSON.stringify(addresses)}`,  {
                 headers: {
-                    filter: 'author'
+                    filter: 'author',
+                    'content-type': 'application/json'
                 },
                 timeout: 10_000,
                 validateStatus: function (status) {

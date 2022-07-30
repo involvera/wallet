@@ -65,7 +65,7 @@ export class ProposalModel extends Model {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}/${index}`,  {
                 timeout: 10_000,
-                headers: headerSig || {},
+                headers: Object.assign({'content-type': 'application/json'}, headerSig || {}),
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },
@@ -315,6 +315,7 @@ export class ProposalCollection extends Collection {
         try {
             const response = await axios(config.getRootAPIChainUrl() + `/proposals/genesis`, {
                 timeout: 10000,
+                headers: { 'content-type': 'application/json' },
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },
@@ -362,7 +363,7 @@ export class ProposalCollection extends Collection {
         try {
             const response = await axios(config.getRootAPIOffChainUrl() + `/proposal/${this._currentSociety?.get().id()}`, {
                 method: 'GET',
-                headers: Object.assign({}, headerSignature as any, {
+                headers: Object.assign({'content-type': 'application/json'}, headerSignature as any, {
                     offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE
                 }),
                 timeout: 10000,

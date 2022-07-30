@@ -55,7 +55,7 @@ export class ThreadModel extends Model {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}/${pubkh}`,  {
                 timeout: 10_000,
-                headers: headerSig || {},
+                headers: Object.assign({'content-type': 'application/json'}, headerSig || {}),
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },
@@ -286,7 +286,9 @@ export class ThreadCollection extends Collection {
         try {
             const response = await axios(config.getRootAPIOffChainUrl() + `/thread/${this._currentSociety?.get().id()}/user/${this._address}`, {
                 method: 'GET',
-                headers: Object.assign({}, headerSignature as any, {
+                headers: Object.assign(
+                    {'content-type': 'application/json'}, 
+                    headerSignature as any, {
                     offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE,
                 }),
                 timeout: 10000,
@@ -335,7 +337,7 @@ export class ThreadCollection extends Collection {
         try {
             const response = await axios(config.getRootAPIOffChainUrl() + `/thread/replies/${this._currentSociety?.get().id()}/${this._targetPKH}`, {
                 method: 'GET',
-                headers: Object.assign({}, headerSignature as any, {
+                headers: Object.assign({'content-type': 'application/json'}, headerSignature as any, {
                     offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE
                 }),
                 timeout: 10000,

@@ -1,6 +1,6 @@
 {
   "name": "involvera-wallet-js",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -17,16 +17,14 @@
   "dependencies": {
     "@types/aes-js": "^3.1.1",
     "@types/axios": "^0.14.0",
-    "@types/crypto-js": "^4.1.0",
     "aes-js": "^3.1.2",
-    "axios": "^0.21.1",
+    "axios": "0.24.0",
     "bip32": "^2.0.6",
     "bip39": "^3.0.3",
-    "buffer": "^6.0.3",
     "community-coin-types": "^1.2.0",
-    "encrypt-with-password": "^1.0.0",
     "involvera-content-embedding": "^1.1.7",
     "moment": "^2.29.1",
+    "skynet-js": "^4.3.0",
     "typescript": "^4.5.4",
     "wallet-script": "^1.0.6",
     "wallet-util": "^1.0.4"
@@ -40,6 +38,7 @@
     "@types/mocha": "^8.2.1",
     "acey-node-store": "^1.0.5",
     "chai": "^4.3.0",
+    "fs": "^0.0.1-security",
     "mocha": "^8.3.0",
     "rollup": "^2.46.0",
     "rollup-plugin-node-polyfills": "^0.2.1",
