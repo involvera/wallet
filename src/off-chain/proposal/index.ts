@@ -216,7 +216,7 @@ export class ProposalModel extends Model {
                 if (!content.get().output().get().script().is().proposalScript()){
                     throw new Error("Not a proposal")
                 }
-                return formatToLayer(content.get().output().get().script().proposalContentTypeString() as TProposalType)
+                return formatToLayer(content.get().output().get().script().typeD2() as TProposalType)
             } catch (e){
                 const { layer } = this.state
                 if (!layer)
@@ -225,8 +225,8 @@ export class ProposalModel extends Model {
             }
         }
 
-        const pubKH = (): string => this.state.public_key_hashed
-        const pubKHOrigin = ():string => this.state.pubkh_origin
+        const pubKH = () => new Inv.PubKH(this.state.public_key_hashed)
+        const pubKHOrigin = () => new Inv.PubKH(this.state.pubkh_origin)
 
         const context = (): ICostProposal | IConstitutionProposalUnRaw | null => {
             if (this.state.context){
@@ -317,14 +317,14 @@ export class ProposalCollection extends Collection {
                 for (const o of json){
 
                     const link = new Transaction.KindLinkModel(o.link, {})
-                    const t = link.get().output().get().script().proposalContentTypeString()
+                    const t = link.get().output().get().script().typeD2()
 
                     list.push({
                         sid: this._currentSociety?.get().id() as number,
                         content_link: o.link,
                         index: o.index,
                         created_at: this._currentSociety?.get().created_at() as Date,
-                        public_key_hashed: link.get().output().get().contentPKH().toString('hex'),
+                        public_key_hashed: link.get().output().get().contentPKH().hex(),
                         title: `Genesis ${t?.toLowerCase()}`,
                         content: ['', '', ''],
                         author: {address: '1111111111111111111111111111111111', pp: '/images/involvera.png', username: 'involvera'},

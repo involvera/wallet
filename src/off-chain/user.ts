@@ -5,6 +5,7 @@ import InfoModel from '../wallet/info'
 import { IWalletInfo } from 'community-coin-types'
 import { AliasModel, IAlias } from './alias'
 import config from '../config'
+import { Inv } from 'wallet-util'
 
 export interface IUser {
     alias: IAlias
@@ -37,9 +38,9 @@ export class UserModel extends Model {
         return null
     }
 
-    static FetchByAddress = async (societyID: number, address: string, headerSig: IHeaderSignature | void) => {
+    static FetchByAddress = async (societyID: number, address: Inv.Address, headerSig: IHeaderSignature | void) => {
         try {
-            const res = await axios(config.getRootAPIOffChainUrl() + `/user/${societyID}/${address}`,  {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/user/${societyID}/${address.get()}`,  {
                 timeout: 10_000,
                 headers: Object.assign({'content-type': 'application/json'}, headerSig || {} as any),
                 validateStatus: function (status) {
@@ -51,7 +52,7 @@ export class UserModel extends Model {
             }
             if (res.status == 404){
                 const state = UserModel.DefaultState
-                state.alias.address = address
+                state.alias.address = address.get()
                 return new UserModel(state, {})
             }
         } catch (e: any){
@@ -88,6 +89,6 @@ export class UserCollection extends Collection {
         const index = this.findIndex((u: UserModel) => u.get().alias().get().address().get() === user.get().alias().get().address().get())
         return index === -1 ? this.push(user) : this.updateAt(user, index)
     }
-    findByAddress = (address: string) => this.find((u: UserModel) => u.get().alias().get().address().get() === address) as UserModel
+    findByAddress = (address: Inv.Address) => this.find((u: UserModel) => u.get().alias().get().address().get() === address.get()) as UserModel
 }
 

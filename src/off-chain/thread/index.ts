@@ -49,9 +49,9 @@ export class ThreadModel extends Model {
 
     static DefaultState: IThread = DEFAULT_STATE
 
-    static FetchByPKH = async (societyID: number, pubkh: string, headerSig: IHeaderSignature | void) => {
+    static FetchByPKH = async (societyID: number, pubkh: Inv.PubKH, headerSig: IHeaderSignature | void) => {
         try {
-            const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}/${pubkh}`,  {
+            const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}/${pubkh.hex()}`,  {
                 timeout: 10_000,
                 headers: Object.assign({'content-type': 'application/json'}, headerSig || {}),
                 validateStatus: function (status) {
@@ -173,7 +173,7 @@ export class ThreadModel extends Model {
         const title = (): string => this.state.title
         const content = (): string => this.state.content
         const createdAt = (): Date => this.state.created_at
-        const pubKH = (): string => this.state.public_key_hashed
+        const pubKH = () => new Inv.PubKH(this.state.public_key_hashed)
         const reward = (): ThreadRewardModel => this.state.reward
         const target = (): ThreadModel | ProposalModel | null => this.state.target
 
@@ -191,8 +191,8 @@ export class ThreadCollection extends Collection {
     private _pageFetched = 0    
     private _threadsFetched = 0
     private _maxReached = false
-    private _targetPKH: string = ''
-    private _address: string = ''
+    private _targetPKH: Inv.PubKH | null = null
+    private _address: Inv.Address | null = null
 
     constructor(initialState: any, options: any){
         super(initialState, [ThreadModel, ThreadCollection], options)
@@ -203,8 +203,8 @@ export class ThreadCollection extends Collection {
         this._pageFetched = 0    
         this._threadsFetched = 0
         this._maxReached = false
-        this._targetPKH = ''
-        this._address = ''
+        this._targetPKH = null
+        this._address = null
         return this.setState([])
     }
 
@@ -248,7 +248,7 @@ export class ThreadCollection extends Collection {
         this._currentSociety = s
     }
 
-    setAddress = (address: string) => {
+    setAddress = (address: Inv.Address) => {
         this._pageFetched = 0
         this._threadsFetched = 0
         this._maxReached = false
@@ -256,7 +256,7 @@ export class ThreadCollection extends Collection {
         this._address = address
     }
 
-    setTargetPKH = (target: string) => {
+    setTargetPKH = (target: Inv.PubKH) => {
         this._pageFetched = 0
         this._threadsFetched = 0
         this._maxReached = false
@@ -274,7 +274,7 @@ export class ThreadCollection extends Collection {
         this._throwErrorIfNoAddressSet()
 
         try {
-            const response = await axios(config.getRootAPIOffChainUrl() + `/thread/${this._currentSociety?.get().id()}/user/${this._address}`, {
+            const response = await axios(config.getRootAPIOffChainUrl() + `/thread/${this._currentSociety?.get().id()}/user/${this._address?.get()}`, {
                 method: 'GET',
                 headers: Object.assign(
                     {'content-type': 'application/json'}, 
@@ -325,7 +325,7 @@ export class ThreadCollection extends Collection {
         this._throwErrorIfNoTargetPKHSet()
 
         try {
-            const response = await axios(config.getRootAPIOffChainUrl() + `/thread/replies/${this._currentSociety?.get().id()}/${this._targetPKH}`, {
+            const response = await axios(config.getRootAPIOffChainUrl() + `/thread/replies/${this._currentSociety?.get().id()}/${this._targetPKH?.hex()}`, {
                 method: 'GET',
                 headers: Object.assign({'content-type': 'application/json'}, headerSignature as any, {
                     offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE
@@ -359,7 +359,7 @@ export class ThreadCollection extends Collection {
                 method: 'GET',
                 headers: Object.assign({}, headerSignature as any, {
                     offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE,
-                    target_pkh: this._targetPKH
+                    target_pkh: this._targetPKH?.hex()
                 }),
                 timeout: 10000,
                 validateStatus: function (status) {
@@ -407,8 +407,8 @@ export class ThreadCollection extends Collection {
         return this.action()
     }
 
-    findByPKH = (pkh: string): ThreadModel | undefined  => {
-        const idx = this.findIndex((t: ThreadModel) => t.get().pubKH() === pkh)
+    findByPKH = (pkh: Inv.PubKH): ThreadModel | undefined  => {
+        const idx = this.findIndex((t: ThreadModel) => t.get().pubKH().eq(pkh))
         return idx >= 0 ? this.nodeAt(idx) as ThreadModel : undefined
     }
 

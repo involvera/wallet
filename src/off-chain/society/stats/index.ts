@@ -2,6 +2,7 @@ import { Model } from 'acey'
 import { LastCostChangeModel } from './last-cost-change'
 import { IAlias, AliasCollection } from '../../alias'
 import { ICostHistory } from 'community-coin-types'
+import { Inv } from 'wallet-util'
 
 export interface ISocietyStats {
     last_height: number
@@ -47,8 +48,8 @@ export class SocietyStatsModel extends Model {
             totalProposal: (): number => this.state.total_proposal,
             activeAddresses: (): number => this.state.active_addresses,
             mostActiveAddresses: (): AliasCollection => this.state.most_active_addresses,
-            circulatingSupply: (): string => this.state.circulating_supply, 
-            circulatingVPSupply: (): string => this.state.circulating_vp_supply,
+            circulatingSupply: (): Inv.InvBigInt => new Inv.InvBigInt(BigInt(this.state.circulating_supply)), 
+            circulatingVPSupply: (): Inv.InvBigInt => new Inv.InvBigInt(BigInt(this.state.circulating_vp_supply)),
             lastThreadCostChange: (): LastCostChangeModel => this.state.last_thread_cost_change,
             lastProposalCostChange: (): LastCostChangeModel => this.state.last_proposal_cost_change
         }

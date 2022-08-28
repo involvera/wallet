@@ -7,7 +7,7 @@ import axios from 'axios'
 import { TransactionModel } from './transaction'
 import { Script } from 'wallet-script'
 import { Inv } from 'wallet-util'
-import { InvBigInt } from 'wallet-util/dist/src/involvera-types'
+
 
 const DEFAULT_STATE: IInputUnRaw = {
 	prev_transaction_hash: '',
@@ -33,7 +33,7 @@ export class InputModel extends Model {
 
     get = () => {
         const prevTxHash = (): Inv.TxHash | null => this.state.prev_transaction_hash ? new Inv.TxHash(this.state.prev_transaction_hash) : null
-        const vout = (): Inv.InvBigInt => new InvBigInt(typeof this.state.vout === 'number' ? this.state.vout : -1)
+        const vout = (): Inv.InvBigInt => new Inv.InvBigInt(typeof this.state.vout === 'number' ? this.state.vout : -1)
         const script = () => Script.fromBase64(this.state.script_sig)
 
         return { vout, prevTxHash, script }

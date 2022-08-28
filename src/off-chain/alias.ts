@@ -22,9 +22,9 @@ export class AliasModel extends Model {
 
     _walletInfo: WalletInfoModel | null = null
 
-    static fetch = async (address: string): Promise<AliasModel|null> => {
+    static fetch = async (address: Inv.Address): Promise<AliasModel|null> => {
         try {
-            const res = await axios(config.getRootAPIOffChainUrl() + '/alias/address/' + address, {
+            const res = await axios(config.getRootAPIOffChainUrl() + '/alias/address/' + address.get(), {
                 headers: {
                     'content-type': 'application/json'
                 },
@@ -180,7 +180,7 @@ export class AliasModel extends Model {
         return {
             pp: (): null | string => this.state.pp,
             username: (): string => this.state.username,
-            address: (): Inv.Address => new Inv.Address(this.state.address)
+            address: () => new Inv.Address(this.state.address)
         }
     }
 }

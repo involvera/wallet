@@ -1,5 +1,6 @@
 import { Model } from 'acey'
 import { IKindLinkUnRaw } from 'community-coin-types'
+import { Inv } from 'wallet-util';
 import { OutputModel } from './output';
 
 const DEFAULT_STATE: IKindLinkUnRaw = {
@@ -23,11 +24,11 @@ export class KindLinkModel extends Model {
 
     get = () => {
         return {
-            txID: (): string => this.state.tx_id,
+            txID: () => new Inv.TxHash(this.state.tx_id),
             lh: (): number => this.state.lh,
             vout: (): number => this.state.vout,
             output: (): OutputModel => this.state.output,
-            targetContent: (): string => this.state.target_content
+            targetContent: (): Inv.PubKH | null => this.state.target_content ? new Inv.PubKH(this.state.target_content) : null
         }
     }
 }

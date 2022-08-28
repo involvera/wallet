@@ -85,7 +85,7 @@ export default class KeysModel extends Model {
 
     fetch = () => {
         const alias = async () => {
-            const alias = await AliasModel.fetch(this.get().address().get())
+            const alias = await AliasModel.fetch(this.get().address())
             if (alias){
                 this.setState({ alias: new AliasModel(alias.to().plain(), this.kids()) }).save().store()
             }
