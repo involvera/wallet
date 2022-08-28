@@ -1,10 +1,8 @@
 import { Collection, Model } from "acey";
 import WalletInfoModel from '../wallet/info'
-import * as bip32 from 'bip32'
-import { Buffer } from 'buffer'
-import { BuildSignatureHex, IsAddressValid, PubKeyHashFromAddress } from 'wallet-util'
 import axios from 'axios'
 import config from "../config";
+import { Inv } from "wallet-util";
 
 export interface IAlias {
     pp: string | null,
@@ -71,15 +69,10 @@ export class AliasModel extends Model {
 
     getWalletInfo = () => this._walletInfo
 
-    sign = (wallet: bip32.BIP32Interface, data: string) => {
+    sign = (wallet: Inv.PrivKey, data: string) => {
         if (this.get().username().length == 0)
             throw new Error("No username set.")
-
-        const sig = BuildSignatureHex(wallet, Buffer.from(data))
-        return {
-            public_key: sig.public_key_hex,
-            signature: sig.signature_hex
-        }
+        return wallet.sign(data).get().plain()
     }
 
     fetchBigPP = async (): Promise<string | null> => {
@@ -101,7 +94,7 @@ export class AliasModel extends Model {
 
     fetchWalletInfo = async () => {
         try {
-            const wi = await WalletInfoModel.fetch(PubKeyHashFromAddress(this.get().address()).toString('hex'))
+            const wi = await WalletInfoModel.fetch(this.get().address().toPKH().hex())
             if (wi)
                 this._walletInfo = wi
             return wi
@@ -130,12 +123,12 @@ export class AliasModel extends Model {
         }
     }
 
-    updatePP = async (d: {pp: string, pp500: string, asset_name: string}, wallet: bip32.BIP32Interface) => {
+    updatePP = async (d: {pp: string, pp500: string, asset_name: string}, wallet: Inv.PrivKey) => {
         try {
             const data = JSON.stringify(d) 
             const res = await axios(config.getRootAPIOffChainUrl() + '/alias/pp', {
                 method: 'POST',
-                headers:Object.assign({ 'content-type': 'application/json'}, this.sign(wallet, data)),
+                headers: Object.assign({ 'content-type': 'application/json'}, wallet.sign(data).get().plain() as any),
                 data,
                 timeout: 10_000,
                 validateStatus: function (status) {
@@ -149,13 +142,13 @@ export class AliasModel extends Model {
         }
     }
 
-    updateUsername = async (wallet: bip32.BIP32Interface, origin_sid: number) => {
+    updateUsername = async (wallet: Inv.PrivKey, origin_sid: number) => {
         const body = JSON.stringify({ username: this.get().username(), origin_sid })
         
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + '/alias/username', {
                 method: 'POST',
-                headers: Object.assign({ 'content-type': 'application/json'}, this.sign(wallet, body)),
+                headers: Object.assign({ 'content-type': 'application/json'}, wallet.sign(body).get().plain() as any),
                 data: body,
                 timeout: 10_000,
                 validateStatus: function (status) {
@@ -169,11 +162,7 @@ export class AliasModel extends Model {
         }
     }
 
-    setAddress = (address: string) => {
-        if (!IsAddressValid(address))
-        throw new Error("Wrong address format")
-    return this.setState({ address })
-    }
+    setAddress = (address: string) => this.setState({ address: new Inv.Address(address)})
 
     setUsername = (username: string) => {
         if (!username.match(/^[a-z0-9_]{3,16}$/))
@@ -191,7 +180,7 @@ export class AliasModel extends Model {
         return {
             pp: (): null | string => this.state.pp,
             username: (): string => this.state.username,
-            address: (): string => this.state.address
+            address: (): Inv.Address => new Inv.Address(this.state.address)
         }
     }
 }

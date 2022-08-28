@@ -1,11 +1,9 @@
 import { Model, Collection } from 'acey'
 import {IOutputUnRaw, IOutputRaw } from 'community-coin-types'
-import { Buffer } from 'buffer'
 import { MAX_IS_2_POW_53 } from '../constant/errors'
-import { ScriptEngine, Error } from 'wallet-script'
-import { ByteArrayToB64, DoubleByteArrayToB64Array, EncodeArrayInt, EncodeInt64, 
-	CalcTotalLengthDoubleByteArray, ToArrayBufferFromB64, PubKeyHashHexToUUID
-} from 'wallet-util'
+import { Error, Script } from 'wallet-script'
+import { Inv } from 'wallet-util'
+
 
 const DEFAULT_STATE: IOutputUnRaw = {
 	input_src_idxs: [],
@@ -36,27 +34,27 @@ export class OutputModel extends Model {
 	}
 
     size = (): number => {
-        const raw = this.toRaw().default()
-        let size = raw.value.length
-        size += CalcTotalLengthDoubleByteArray(raw.script)
-		size += CalcTotalLengthDoubleByteArray(raw.input_src_idxs)
+		const { value,input_src_idxs } = this.toRaw().default()
+
+        let size = value.length
+        size += this.get().script().fullSizeOctet()
+		size += Inv.InvBuffer.FromUint8s(...input_src_idxs).length()
         return size
     }
 
 	toRaw = () => {
 		const def = (): IOutputRaw  => {
 			return {
-				input_src_idxs: EncodeArrayInt(this.get().inputSourceIdxs()),
-				value: EncodeInt64(this.get().value()),
+				input_src_idxs: Inv.ArrayInvBigInt.fromNumbers(this.get().inputSourceIdxs()).toArrayBuffer('int16').toDoubleUInt8Array(),
+				value: this.get().value().bytes('uint64').bytes(),
 				script: this.get().script().bytes()
 			}
 		}
 
 		const base64 = () => {
-			const raw = def()
 			return {
-				input_src_idxs: DoubleByteArrayToB64Array(raw.input_src_idxs),
-				value: ByteArrayToB64(raw.value), 
+				input_src_idxs: Inv.ArrayInvBigInt.fromNumbers(this.get().inputSourceIdxs()).toArrayBuffer('int16').toArrayBase64(),
+				value: this.get().value().base64('uint64'),
 				script: this.get().script().base64()
 			}
 		}
@@ -65,32 +63,30 @@ export class OutputModel extends Model {
 	}
 
 	get = () => {
-		const value = (): BigInt => BigInt(this.state.value) 
+		const value = (): Inv.InvBigInt => new Inv.InvBigInt(BigInt(this.state.value))
 		const inputSourceIdxs = (): number[] => this.state.input_src_idxs
 
-		const scriptBase64 = (): string[] => this.state.script
-		const script = () => new ScriptEngine(ToArrayBufferFromB64(scriptBase64()))
+		const script = () => Script.fromBase64(this.state.script)
  		
-		const contentPKH = (): Buffer => {
+		const contentPKH = () => {
 			const s = this.get().script()
-			if (s.is().targetableContent())
+			if (s.is().targetableScript())
 				return s.parse().PKHFromContentScript()
 			throw Error.NOT_A_TARGETABLE_CONTENT
 		}
 
-		const targetedContentPKH = (): Buffer => {
+		const targetedContentPKH = () => {
 			const s = this.get().script()
-			if (s.is().targetedContent())
+			if (s.is().targetingcript())
 				return s.parse().targetPKHFromContentScript()
 			throw Error.NOT_A_TARGETING_CONTENT
 		}
 
-		const pubKH = (): Buffer => this.get().script().parse().PKHFromLockScript()
-		const contentUUID = (): string => PubKeyHashHexToUUID(contentPKH().toString('hex'))
+		const pubKH = () => this.get().script().parse().PKHFromLockScript()
 
 		return {
-			value, inputSourceIdxs, script, scriptBase64,
-			contentPKH, pubKH, targetedContentPKH, contentUUID
+			value, inputSourceIdxs, script,
+			contentPKH, pubKH, targetedContentPKH
 		}
 	}
 
@@ -102,14 +98,12 @@ export class OutputModel extends Model {
 			constitutionProposal: () => script.is().constitutionProposalScript(),
 			costProposal: () => script.is().costProposalScript(),
 			reward: () => script.is().rewardScript(),
-			thread: () => script.is().threadDepth2Script(),
-			rethread: () => script.is().rethreadScript(),
+			thread: () => script.is().threadD2Script(),
+			rethread: () => script.is().rethreadD2Script(),
 			vote: () => script.is().voteScript(),
-			content: () => script.is().threadDepth1Script() || script.is().proposalScript()
+			content: () => script.is().threadD1Script() || script.is().proposalScript()
 		}
 	}
-
-	isValueAbove = (val: BigInt) => val < this.get().value()
 }
 
 export class OutputCollection extends Collection {
@@ -127,10 +121,10 @@ export class OutputCollection extends Collection {
 		return size + this.count()
 	}
 
-	containsToPubKH = (pubKH: Buffer) => {
+	containsToPubKH = (pubKH: Inv.PubKH) => {
 		for (let i = 0; i < this.count(); i++){
 			const out = this.nodeAt(i) as OutputModel
-			if (out.get().pubKH().toString('hex') === pubKH.toString('hex'))
+			if (pubKH.eq(out.get().pubKH()))
 				return true
 		}
 		return false

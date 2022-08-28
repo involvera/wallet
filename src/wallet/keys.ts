@@ -1,11 +1,15 @@
 import { Model } from 'acey'
-import * as bip39 from 'bip39'
-import * as bip32 from 'bip32'
-import { Buffer } from 'buffer'
-import { GetAddressFromPubKeyHash, ToPubKeyHash, Ripemd160, Sha256 } from 'wallet-util'
-import aes from 'aes-js'
 import { AliasModel, IAlias } from '../off-chain'
 import { DEFAULT_PASS } from '../constant/off-chain'
+import { Inv, Lib } from 'wallet-util'
+
+const {
+    Hash: {
+        Sha256,
+        Ripemd160
+    },
+    AES
+} = Lib
 
 export interface IKey {
     pass_hash: string
@@ -24,7 +28,7 @@ export default class KeysModel extends Model {
     static DefaultState: IKey = DEFAULT_STATE
     
     private _password: string = ''
-
+    private _mnemonic: string = ''
     constructor(initialState: IKey = DEFAULT_STATE, options: any){
         super(initialState, options)
         this.setState({
@@ -32,7 +36,7 @@ export default class KeysModel extends Model {
         })
     }
 
-    private _hashPass = (pass: string) => Sha256(Ripemd160(pass)).toString('hex')
+    private _hashPass = (pass: string) => new Inv.InvBuffer(Sha256(Ripemd160(pass))).hex()
     private _256BitsPass = () => Sha256(this.get().passwordClear())
 
     private _triggerPasswordError = () => {
@@ -47,30 +51,27 @@ export default class KeysModel extends Model {
             throw new Error("wrong unlocking password")
         }
         this._password = password
+        AES.decrypt(this._256BitsPass(), Inv.InvBuffer.fromHex(this.state.mnemonic).bytes()).then((val: Uint8Array) => {
+            this._mnemonic = new Inv.InvBuffer(val).hex()
+        })
     }
 
     lock = () => {
         this._password = ""
+        this._mnemonic = ""
     }
 
-    set = (mnemonic: string, unlockingPassword: string = DEFAULT_PASS) => {
+    set = async (mnemonic: string, unlockingPassword: string = DEFAULT_PASS) => {
         if (unlockingPassword.length === 0){
             throw new Error("unlocking password cannot be empty")
         } 
-        this.setState({
-            pass_hash: this._hashPass(unlockingPassword)
-        })
+        //checking error
+        this._mnemonic = new Inv.Mnemonic(mnemonic).get()
+        this.setState({ pass_hash: this._hashPass(unlockingPassword)})
         this.unlock(unlockingPassword)
-
-        var mnemoBytes = aes.utils.utf8.toBytes(mnemonic)
-        var aesCtr = new aes.ModeOfOperation.ctr(this._256BitsPass())
-
-        const mnemonicEncrypted = aesCtr.encrypt(mnemoBytes);
-        var encryptedHex = aes.utils.hex.fromBytes(mnemonicEncrypted);
-        this.setState({ 
-            mnemonic: encryptedHex,
-        })
-        this.get().alias().setAddress(this.get().address())
+        const mnemonicEncrypted = new Inv.InvBuffer(await AES.encrypt(this._256BitsPass(), Inv.InvBuffer.fromRaw(mnemonic).bytes()))
+        this.setState({  mnemonic: mnemonicEncrypted.hex() })
+        this.get().alias().setAddress(this.get().address().get())
         return this.action()   
     }
 
@@ -84,7 +85,7 @@ export default class KeysModel extends Model {
 
     fetch = () => {
         const alias = async () => {
-            const alias = await AliasModel.fetch(this.get().address())
+            const alias = await AliasModel.fetch(this.get().address().get())
             if (alias){
                 this.setState({ alias: new AliasModel(alias.to().plain(), this.kids()) }).save().store()
             }
@@ -98,42 +99,26 @@ export default class KeysModel extends Model {
     get = () => {
         const passHash = (): string => this.state.pass_hash
         const alias = (): AliasModel => this.state.alias 
-        const seed = () => bip39.mnemonicToSeedSync(mnemonic())
-        const master = () => bip32.fromSeed(seed())
-        const wallet = () => master()?.derivePath('m/0/0')
-        const priv = () => wallet().privateKey as Buffer
-        const pub = () =>  wallet().publicKey as Buffer
-        const pubHex = () => pub().toString('hex')
-        const pubHash = () => ToPubKeyHash(pub())
-        const pubHashHex = () => pubHash().toString('hex')
-        const address = () => GetAddressFromPubKeyHash(pubHash())
+        const master = () => mnemonic().wallet()
+        const wallet = () => master().derive('m/0/0')
+        const pub = () => wallet().publicKey()
+        const pubHash = () => pub().hash()
+        const address = () => pubHash().toAddress()
         const passwordClear = () => this._password
 
         const mnemonic = () => {
             this._triggerPasswordError()
-            const { mnemonic } = this.state
-
-            var encryptedBytes = aes.utils.hex.toBytes(mnemonic);
-            var aesCtr = new aes.ModeOfOperation.ctr(this._256BitsPass());
-            var decryptedBytes = aesCtr.decrypt(encryptedBytes);
-            return aes.utils.utf8.fromBytes(decryptedBytes);
+            return new Inv.Mnemonic(this._mnemonic)
         } 
 
-        const derivedPubHash = (index: number): Buffer => ToPubKeyHash(derivedPub(index))
-
-        const contentWallet = (nonce: number): bip32.BIP32Interface => {
-            return master().derivePath('m/1/' + nonce.toString())
-        }
-
-        const derivedPub = (index: number): Buffer => {
-            const m = master().derivePath('m/1/' + index.toString())
-            return m.publicKey
-        }
+        const derivedPubHash = (nonce: number) => derivedPub(nonce).hash()
+        const contentWallet = (nonce: number) => master().derive('m/1/' + nonce.toString())
+        const derivedPub = (nonce: number) => contentWallet(nonce).publicKey()
 
         return {
             passHash,
-            seed, master, wallet, priv, pub, 
-            pubHex, pubHash, pubHashHex,
+             master, wallet, pub, 
+            pubHash,
             derivedPub, address, 
             derivedPubHash, mnemonic,
             contentWallet, alias,

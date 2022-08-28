@@ -2,7 +2,7 @@ import { Model } from 'acey'
 import UserActivityModel from './activity'
 import axios from 'axios'
 import { IWalletInfo } from 'community-coin-types'
-import { formatPercent } from 'wallet-util'
+import { Util } from 'wallet-util'
 import config from '../../config'
 import { CYCLE_IN_LUGH, LUGH_AMOUNT } from '../../constant'
 
@@ -60,7 +60,7 @@ export default class InfoModel extends Model {
         }
 
         const votePowerPercentPretty = (lh: number): string => {
-            return formatPercent(votePowerPercent(lh))
+            return Util.FormatVPPercent(votePowerPercent(lh))
         }
 
         return { 

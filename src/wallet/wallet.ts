@@ -1,11 +1,9 @@
 import { Model } from 'acey'
-import { B64ToByteArray, PubKeyHashFromAddress, Sha256, BuildSignature, NewMnemonic } from 'wallet-util'
-import { Constitution, ScriptEngine } from 'wallet-script'
-import { Buffer } from 'buffer'
+import { Lib, Inv} from 'wallet-util'
+import { Constitution, Script } from 'wallet-script'
 import axios from 'axios'
 import { T_REWARD } from 'community-coin-types'
 
-// import AuthContract from './auth-contract'
 import FeesModel from './fees'
 import CostsModel from './costs'
 import KeysModel from './keys'
@@ -41,7 +39,7 @@ export default class Wallet extends Model {
     }
 
     generateRandomSeed = () => {
-        this.keys().set(NewMnemonic(), DEFAULT_PASS)
+        this.keys().set(Inv.Mnemonic.random().get(), DEFAULT_PASS)
         return this.action()
     }
 
@@ -105,7 +103,7 @@ export default class Wallet extends Model {
                 await this.synchronize()
                 const contentNonce = this.info().get().contentNonce() + 1
     
-                const script = new ScriptEngine([]).append().applicationProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce)) 
+                const script = Script.build().applicationProposal(contentNonce, this.keys().get().derivedPubHash(contentNonce)) 
 
                 const builder = new TxBuild({ 
                     wallet: this,
@@ -115,11 +113,11 @@ export default class Wallet extends Model {
                 return await builder.newTx()
             }
 
-            const cost = async (threadCost: BigInt, proposalCost: BigInt) => {
+            const cost = async (threadCost: Inv.InvBigInt, proposalCost: Inv.InvBigInt) => {
                 await this.synchronize()
                 const contentNonce = this.info().get().contentNonce() + 1
 
-                const script = new ScriptEngine([]).append().costProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), threadCost, proposalCost)
+                const script = Script.build().costProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), threadCost, proposalCost)
 
                 const builder = new TxBuild({ 
                     wallet: this,
@@ -133,7 +131,7 @@ export default class Wallet extends Model {
                 await this.synchronize()
                 const contentNonce = this.info().get().contentNonce() + 1
 
-                const script = new ScriptEngine([]).append().constitutionProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), constitution) 
+                const script = Script.build().constitutionProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), constitution) 
                 
                 const builder = new TxBuild({ 
                     wallet: this,
@@ -146,10 +144,10 @@ export default class Wallet extends Model {
             return { constitution, application, cost }
         }
 
-        const toAddress = async (address: string, amount: number): Promise<TransactionModel | null> => {
+        const toAddress = async (address: Inv.Address, amount: number): Promise<TransactionModel | null> => {
             await this.synchronize()
 
-            const script = new ScriptEngine([]).append().lockScript(PubKeyHashFromAddress(address))
+            const script = Script.build().lockScript(address.toPKH())
 
             const builder = new TxBuild({ 
                 wallet: this,
@@ -164,7 +162,7 @@ export default class Wallet extends Model {
             await this.synchronize()
             const contentNonce = this.info().get().contentNonce() + 1
 
-            const script = new ScriptEngine([]).append().threadScript(contentNonce, this.keys().get().derivedPubHash(contentNonce))
+            const script = Script.build().threadScript(contentNonce, this.keys().get().derivedPubHash(contentNonce))
             
             const builder = new TxBuild({ 
                 wallet: this,
@@ -175,12 +173,12 @@ export default class Wallet extends Model {
             return await builder.newTx()
         }
 
-        const rethread = async (targetPKH: Buffer) => {
+        const rethread = async (targetPKH: Inv.PubKH) => {
             await this.synchronize()
             const contentNonce = this.info().get().contentNonce() + 1
             const contentPKH = this.keys().get().derivedPubHash(contentNonce)
 
-            const script = new ScriptEngine([]).append().rethreadScript(contentNonce, contentPKH, targetPKH)
+            const script = Script.build().rethreadScript(contentNonce, contentPKH, targetPKH)
 
             const builder = new TxBuild({ 
                 wallet: this,
@@ -195,8 +193,8 @@ export default class Wallet extends Model {
             await this.synchronize()
             const targetPKH = thread.get().contentLink().get().output().get().contentPKH()
     
-            const scriptReward = new ScriptEngine([]).append().rewardScript(targetPKH, 1)
-            const scriptDistribution = new ScriptEngine([]).append().lockScript(PubKeyHashFromAddress(thread.get().author().get().address()))
+            const scriptReward = Script.build().rewardScript(targetPKH, 1)
+            const scriptDistribution = Script.build().lockScript(thread.get().author().get().address().toPKH())
             
             const cost = this.costs().get()[rewardType]()
             const burned = Math.floor(BURNING_RATIO * cost)
@@ -211,9 +209,9 @@ export default class Wallet extends Model {
             return await builder.newTx()
         }
 
-        const vote = async (targetPKH: Buffer, accept: boolean) => {
+        const vote = async (targetPKH: Inv.PubKH, accept: boolean) => {
             await this.synchronize()
-            const script = new ScriptEngine([]).append().voteScript(targetPKH, accept)
+            const script = Script.build().voteScript(targetPKH, accept)
 
             const builder = new TxBuild({ 
                 wallet: this,
@@ -256,23 +254,23 @@ export default class Wallet extends Model {
     }
 
     sign = () => {
-        const value = (val: Buffer) => BuildSignature(this.keys().get().priv(), val)
-
+        const value = (d: Uint8Array | string) => this.keys().get().wallet().sign(d)
         const transaction = async (tx: TransactionModel) => {
 
             const n = await tx.get().inputs().fetchPrevTxList(this.sign().header(), this.utxos().get())
             n > 0 && this.utxos().get().action().store()
 
             tx.get().inputs().forEach((input: InputModel) => {
-                const utxo = this.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash(), input.get().vout())
+                const utxo = this.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash()?.hex() || '', input.get().vout().number())
                 if (!utxo)
                     throw new Error("Unfound UTXO")
                 const prevTx = utxo.get().tx() as TransactionModel
                 
-                input.setState({ script_sig: new ScriptEngine([]).append().unlockScript(
-                    Buffer.from(this.sign().value(prevTx.get().hash())), 
-                    this.keys().get().pub() 
-                ).base64()  })                
+                input.setState({ 
+                    script_sig: Script.build().unlockScript(
+                        value(prevTx.get().hash().bytes()), 
+                        this.keys().get().pub()).base64() 
+                })
             })
             return true
         }
@@ -288,11 +286,11 @@ export default class Wallet extends Model {
                 let day = now.getUTCDate().toString()
                 day = day.length == 1 ? '0' + day : day
 
-                const toSignStr = this.keys().get().pubHex() + `${year}-${month}-${day}`
+                const toSignStr = this.keys().get().pub().hex() + `${year}-${month}-${day}`
 
                 return {
-                    pubkey: this.keys().get().pubHex(),
-                    signature: value(Sha256(toSignStr)).toString('hex')
+                    pubkey: this.keys().get().pub().hex(),
+                    signature: new Inv.Signature(Inv.Signature.formatSignatureContent(toSignStr)).hex()
                 }
             }
         }

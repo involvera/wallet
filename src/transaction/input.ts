@@ -1,13 +1,13 @@
 import { Collection, Model } from 'acey'
 import config from '../config'
 import { IInputRaw, IInputUnRaw } from 'community-coin-types'
-import { ScriptEngine } from 'wallet-script'
-import { Buffer } from 'buffer'
-import { ByteArrayToB64, EncodeInt, CalcTotalLengthDoubleByteArray, ToArrayBufferFromB64 } from 'wallet-util'
 import { IHeaderSignature } from '../wallet'
 import { UTXOCollection, UTXOModel } from './utxo'
 import axios from 'axios'
 import { TransactionModel } from './transaction'
+import { Script } from 'wallet-script'
+import { Inv } from 'wallet-util'
+import { InvBigInt } from 'wallet-util/dist/src/involvera-types'
 
 const DEFAULT_STATE: IInputUnRaw = {
 	prev_transaction_hash: '',
@@ -26,38 +26,32 @@ export class InputModel extends Model {
     size = (): number => {
         const raw = this.toRaw().default()
         let size = raw.prev_transaction_hash.length
-        size += CalcTotalLengthDoubleByteArray(raw.script_sig)
+        size += Script.new(raw.script_sig).fullSizeOctet()
         size += raw.vout.length
         return size
     }
 
     get = () => {
-        const prevTxHash = (): string => this.state.prev_transaction_hash || ''
-        const vout = (): number => {
-            if (typeof this.state.vout === 'number')
-                return this.state.vout
-            return -1
-        }
-        const scriptBase64 = (): string[] => this.state.script_sig
-        const script = () => new ScriptEngine(ToArrayBufferFromB64(scriptBase64()))
+        const prevTxHash = (): Inv.TxHash | null => this.state.prev_transaction_hash ? new Inv.TxHash(this.state.prev_transaction_hash) : null
+        const vout = (): Inv.InvBigInt => new InvBigInt(typeof this.state.vout === 'number' ? this.state.vout : -1)
+        const script = () => Script.fromBase64(this.state.script_sig)
 
-        return { vout, prevTxHash, scriptBase64, script }
+        return { vout, prevTxHash, script }
     }
 
     toRaw = () => {
         const def = (): IInputRaw => {
             return {
-                prev_transaction_hash: Buffer.from(this.get().prevTxHash(), 'hex'),
-                vout: EncodeInt(BigInt(this.get().vout())),
+                prev_transaction_hash: this.get().prevTxHash()?.bytes() || new Uint8Array(),
+                vout: this.get().vout().bytes('int16').bytes(),
                 script_sig: this.get().script().bytes()
             }
         }
 
         const base64 = () => {
-            const raw = def()
             return {
-                prev_transaction_hash: ByteArrayToB64(raw.prev_transaction_hash),
-                vout: ByteArrayToB64(raw.vout), 
+                prev_transaction_hash: this.get().prevTxHash()?.base64() || "",
+                vout: this.get().vout().base64('int16'),
                 script_sig: this.get().script().base64()
             }
         }

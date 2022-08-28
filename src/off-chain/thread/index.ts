@@ -1,9 +1,6 @@
 import axios from 'axios'
 import { IHeaderSignature, IKindLinkUnRaw, IThreadReward  } from 'community-coin-types'
-import * as bip32 from 'bip32'
-import { Buffer } from 'buffer'
 import { Model, Collection } from "acey";
-import { BuildSignatureHex } from 'wallet-util'
 import { KindLinkModel } from "../../transaction";
 import config from '../../config'
 import { AliasModel, IAlias } from '../alias';
@@ -11,6 +8,7 @@ import { ThreadRewardModel } from './thread-rewards'
 import { SocietyModel } from '../society';
 import { IParsedPreview, StringToParsedPreview } from 'involvera-content-embedding';
 import { IProposal, ProposalModel } from '../proposal';
+import { Inv } from 'wallet-util';
 
 export interface IPreviewThread {
     preview_code: string
@@ -128,21 +126,13 @@ export class ThreadModel extends Model {
         }))
     }
 
-    sign = (wallet: bip32.BIP32Interface) => {
-        const sig = BuildSignatureHex(wallet, Buffer.from(this.get().content()))
-        return {
-            public_key: sig.public_key_hex,
-            signature: sig.signature_hex
-        }
-    }
-    
-    broadcast = async (wallet: bip32.BIP32Interface) => {
+    broadcast = async (wallet: Inv.PrivKey) => {
         try {
             const body = Object.assign({
                 title: this.get().title(),
                 content: this.get().content(),
                 sid: this.get().societyID(),
-            }, this.sign(wallet))
+            }, wallet.sign(this.get().content()).get().plain())
 
             const res = await axios(config.getRootAPIOffChainUrl() + '/thread', {
                 method: 'POST',

@@ -1,15 +1,14 @@
 import moment from 'moment'
 import axios from 'axios'
-import { Buffer } from 'buffer'
-import * as bip32 from 'bip32'
 import { Collection, Model } from "acey";
-import { BuildSignatureHex } from 'wallet-util'
 import { 
     IConstitutionProposalUnRaw, ICostProposal, IUserVote, 
     IKindLinkUnRaw,IVoteSummary, IContentLink 
 } from 'community-coin-types'
 import { StringToParsedPreview } from 'involvera-content-embedding'
-import { TProposalType, Constant } from 'wallet-script'
+import { Constant } from 'wallet-script'
+import { TProposalType } from 'wallet-script/dist/src/content-code'
+import { Inv } from 'wallet-util'
 
 import config from "../../config";
 import { KindLinkModel } from '../../transaction/kind-link'
@@ -86,8 +85,8 @@ export class ProposalModel extends Model {
         return new ProposalModel({sid, content, title} as any, {})
     }
 
-    constructor(state: undefined | null | IProposal = DEFAULT_STATE, options: any){
-        super(state, options) 
+    constructor(state: IProposal = DEFAULT_STATE, options: any){
+        super(state || DEFAULT_STATE, options) 
         state && this.setState(Object.assign(state, { 
             content_link: state.content_link ? new KindLinkModel(state.content_link, this.kids()) : null,
             vote: state.vote ? new VoteModel(state.vote, this.kids()) : null, 
@@ -102,43 +101,35 @@ export class ProposalModel extends Model {
             user_vote: new UserVoteModel(uVote, this.kids())
         })
     }
-    
-    sign = (wallet: bip32.BIP32Interface) => {
-        const sig = BuildSignatureHex(wallet, Buffer.from(this.get().dataToSign()))
-        return {
-            public_key: sig.public_key_hex,
-            signature: sig.signature_hex
+
+    broadcast = async (wallet: Inv.PrivKey) => {
+        const body = Object.assign({
+            title: this.get().title(),
+            content:  this.get().dataToSign(),
+            sid: this.get().societyID(),
+        }, wallet.sign(this.get().dataToSign()).get().plain())
+
+        try {
+            const res = await axios(`${config.getRootAPIOffChainUrl()}/proposal`, {
+                method: 'post',
+                headers: { 'Content-Type': 'application/json' },
+                data: JSON.stringify(body),
+                timeout: 10_000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            })
+            const state = res.data
+            res.status == 201 && this.setState(Object.assign(state, {
+                content_link: new KindLinkModel(state.content_link, this.kids()),
+                vote: new VoteModel(state.vote, this.kids()), 
+                author: new AliasModel(state.author, this.kids()),
+                created_at: new Date(state.created_at)
+            }))
+            return res
+        } catch (e: any){
+            return e.toString()
         }
-    }
-
-    broadcast = async (wallet: bip32.BIP32Interface) => {
-            const body = Object.assign({
-                title: this.get().title(),
-                content:  this.get().dataToSign(),
-                sid: this.get().societyID(),
-            }, this.sign(wallet))
-
-            try {
-                const res = await axios(`${config.getRootAPIOffChainUrl()}/proposal`, {
-                    method: 'post',
-                    headers: { 'Content-Type': 'application/json' },
-                    data: JSON.stringify(body),
-                    timeout: 10_000,
-                    validateStatus: function (status) {
-                        return status >= 200 && status < 500;
-                    },
-                })
-                const state = res.data
-                res.status == 201 && this.setState(Object.assign(state, {
-                    content_link: new KindLinkModel(state.content_link, this.kids()),
-                    vote: new VoteModel(state.vote, this.kids()), 
-                    author: new AliasModel(state.author, this.kids()),
-                    created_at: new Date(state.created_at)
-                }))
-                return res
-            } catch (e: any){
-                return e.toString()
-            }
     }
 
     is2 = () => {

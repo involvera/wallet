@@ -1,4 +1,5 @@
 import { Collection, Model } from 'acey'
+import { Inv } from 'wallet-util'
 
 export interface IContributorStats { 
     content_nonce: number
@@ -32,7 +33,7 @@ export class ContributorModel extends Model {
 
     get = () => {
         return {
-            addr: (): string => this.state.addr,
+            addr: (): Inv.Address => new Inv.Address(this.state.addr),
             position: (): number => this.state.position,
             sid: (): number => this.state.sid,
             contentNonce: (): number => this.state.content_nonce,

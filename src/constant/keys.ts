@@ -1,1 +1,1 @@
-export const TXID_LENGTH = 32
+// export const TXID_LENGTH = 32

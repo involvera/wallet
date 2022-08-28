@@ -1,15 +1,16 @@
 import axios from 'axios'
 import { ITransactionUnRaw, ITransactionRaw, IOutputRaw, IInputRaw } from 'community-coin-types'
 import { Collection, Model } from 'acey'
+import { Inv, Lib } from 'wallet-util'
+
 import { OutputCollection, OutputModel } from './output'
 import { InputModel, InputCollection } from './input'
 import WalletModel from '../wallet/wallet'
-
-import { ByteArrayToB64, EncodeInt, EncodeInt64, IsUUID, Sha256, UUIDToPubKeyHashHex } from 'wallet-util'
-import { BILLED_SIGNATURE_LENGTH, TXID_LENGTH } from '../constant'
-import { Constant } from 'wallet-script'
-
 import config from '../config'
+
+const {
+    Sha256
+} = Lib.Hash
 
 const DEFAULT_STATE: ITransactionUnRaw = {
     lh: 0,
@@ -22,12 +23,7 @@ export class TransactionModel extends Model {
 
     static DefaultState: ITransactionUnRaw = DEFAULT_STATE
 
-    static FetchTX = async (hashOrUUID: string) => {
-
-        let hash = hashOrUUID
-        if (IsUUID(hashOrUUID)){
-            hash = UUIDToPubKeyHashHex(hashOrUUID)
-        }
+    static FetchTX = async (hash: string) => {
         const response = await axios(config.getRootAPIChainUrl() + '/transaction/' + hash, {
             timeout: 10000,
             validateStatus: function (status) {
@@ -82,13 +78,12 @@ export class TransactionModel extends Model {
         }
     }
 
-    isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as InputModel).get().prevTxHash().length == 0
+    isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as InputModel).get().prevTxHash()?.length() == 0
 
     get = () => {
-        const time = (): number => this.state.t
-        const lughHeight = (): number => this.state.lh
-        const hash = () => Sha256(this.to().string())
-        const hashHex = () => hash().toString('hex')
+        const time = () => Inv.InvBigInt.fromNumber(this.state.t)
+        const lughHeight = () => Inv.InvBigInt.fromNumber(this.state.lh)
+        const hash = () => new Inv.TxHash(Sha256(this.to().string()))
         const inputs = (): InputCollection => this.state.inputs
         const outputs = (): OutputCollection => this.state.outputs
 
@@ -97,9 +92,9 @@ export class TransactionModel extends Model {
             size -= this.get().inputs().size()
 
             const countInputs = this.get().inputs().count()
-            const scriptSize = countInputs + (countInputs * Constant.PUBK_LENGTH) + (countInputs * BILLED_SIGNATURE_LENGTH) + (countInputs * 2)
+            const scriptSize = countInputs + (countInputs * Inv.PubKey.LENGTH) + (countInputs * Inv.Signature.LENGTH_MAX) + (countInputs * 2)
             const voutSize = countInputs * 4
-            const prevTxHashSize = countInputs * TXID_LENGTH
+            const prevTxHashSize = countInputs * Inv.TxHash.LENGTH
 
             const billedInputsSize = scriptSize + voutSize + prevTxHashSize
             size += billedInputsSize
@@ -114,7 +109,6 @@ export class TransactionModel extends Model {
         return {
             time, lughHeight,
             hash, inputs, outputs,
-            hashHex, 
             billedSize,
             fees,
         }
@@ -136,21 +130,20 @@ export class TransactionModel extends Model {
             }
     
             return {
-                lh: EncodeInt(BigInt(this.get().lughHeight())),
-                t: EncodeInt64(BigInt(this.get().time())),
+                lh: this.get().lughHeight().bytes('uint32').bytes(),
+                t: this.get().time().bytes('uint64').bytes(),
                 inputs,
                 outputs
             }
         }
 
         const base64 = () => {
-            const raw = def()
             const inputs = this.get().inputs()
             const outputs = this.get().outputs()
 
             return {
-                lh: ByteArrayToB64(raw.lh), 
-                t: ByteArrayToB64(raw.t), 
+                lh: this.get().lughHeight().base64('uint32'),
+                t: this.get().time().base64('uint64'),
                 inputs: inputs.map((inp: InputModel) => inp.toRaw().base64()),
                 outputs: outputs.map((out: OutputModel) => out.toRaw().base64())
             }

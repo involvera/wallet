@@ -1,20 +1,19 @@
 import { CANT_SEND_0_VALUE, LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
-import { ScriptEngine } from "wallet-script";
-import { Buffer } from 'buffer'
 import {  OutputModel, OutputCollection, TransactionModel, UTXOModel, UTXOCollection } from "../transaction"
-import { PubKeyHashFromAddress, CalculateOutputValueFromMelted } from "wallet-util";
+import { Util } from "wallet-util";
 import WalletModel from './wallet'
+import { Script } from "wallet-script";
 
 export interface ITXBuild {
     wallet:         WalletModel
 	amount_required: number[]
-	scripts:             Buffer[][]
+	scripts:             Uint8Array[][]
 }
 
 export default class TxBuild {
 
     private amount_required: number[]
-    private scripts:             Buffer[][]
+    private scripts:             Uint8Array[][]
     private wallet: WalletModel
 
     constructor(txb: ITXBuild){
@@ -35,8 +34,7 @@ export default class TxBuild {
     totalAmount = () => this.amount_required.reduce((accumulator: number, currentValue: number) => accumulator + currentValue)
 
     private _addTXFeesToBuild = (fees: number) => {
-        const lockScript = new ScriptEngine([])
-        lockScript.append().lockScript(PubKeyHashFromAddress(this.wallet.fees().get().addressToSend()))
+        const lockScript = Script.build().lockScript(this.wallet.fees().get().addressToSend().toPKH())
         this.amount_required.push(fees)
         this.scripts.push(lockScript.bytes())       
     }
@@ -122,21 +120,19 @@ export default class TxBuild {
 
         const refreshCurrentRealAmountToSend = (val: number) => {
             const mr = (utxos.nodeAt(utxoIndex) as UTXOModel).get().meltedValueRatio(CCHList)
-            currentRealAmountToSend = currentRealAmountToSend + Number(CalculateOutputValueFromMelted(val, mr))
+            currentRealAmountToSend = currentRealAmountToSend + Number(Util.CalculateOutputValueFromMelted(val, mr))
         }
 
         const pushOutput = (toIndex: number, fromIdx: number, toIdx: number) => {
             const inputIdxLength = toIdx - fromIdx + 1
-            const script = new ScriptEngine(this.scripts[toIndex])
+            const script = Script.new(this.scripts[toIndex])
             outputs.push(OutputModel.NewOutput(currentRealAmountToSend, newIntArrayFilled(inputIdxLength, fromIdx), script.base64() ).to().plain())
         }
 
         const pushSurplusOutput = (lastUTXOIdx: number) => {
-            const script = new ScriptEngine([])
-            script.append().lockScript(this.wallet.keys().get().pubHash())
-            
+            const lockScript = Script.build().lockScript(this.wallet.keys().get().pubHash())
             const totalUsed = outputs.get().totalValue()
-            outputs.push(OutputModel.NewOutput(Number(utxos.get().totalValue()-totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), script.base64()).to().plain())
+            outputs.push(OutputModel.NewOutput(Number(utxos.get().totalValue()-totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), lockScript.base64()).to().plain())
         }
 
         const totalInEscrow = utxos.get().totalMeltedValue(CCHList)

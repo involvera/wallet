@@ -9,7 +9,7 @@ import Costs from '../../wallet/costs'
 import { IConstitutionData } from '../constitution'
 import { SocietyStatsModel,ISocietyStats } from './stats'
 import { IContributorStats, ContributorCollection } from './contributor'
-import { PubKeyHashFromAddress } from "wallet-util";
+import { Inv } from "wallet-util";
 
 export interface ISociety {
     id: number
@@ -79,7 +79,7 @@ export class SocietyModel extends Model {
 
     fetchContributor = async (addr: string) => {
         try {
-            const res = await axios(config.getRootAPIChainUrl() + `/wallet/${PubKeyHashFromAddress(addr).toString('hex')}`, {
+            const res = await axios(config.getRootAPIChainUrl() + `/wallet/${new Inv.Address(addr).toPKH().hex()}`, {
                 headers: {
                     'content-type': 'application/json'
                 },
@@ -125,7 +125,7 @@ export class SocietyModel extends Model {
 
 export class SocietyCollection extends Collection {
     constructor(state: any[], options:any){
-        super(state, options)
+        super(state, [SocietyModel, SocietyCollection], options)
     }
 
     reset = () => this.setState([])

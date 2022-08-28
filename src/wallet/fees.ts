@@ -1,5 +1,6 @@
 import { Model } from 'acey'
 import axios from 'axios'
+import { Inv } from 'wallet-util'
 import config from '../config'
 
 export default class FeesModel extends Model {
@@ -10,7 +11,7 @@ export default class FeesModel extends Model {
     
     get = () => {
         const feePerByte = (): number => this.state.fee_per_byte 
-        const addressToSend = (): string => this.state.address
+        const addressToSend = (): Inv.Address => new Inv.Address(this.state.address)
 
         return { feePerByte, addressToSend }
     }

@@ -1,8 +1,7 @@
 import { Collection, Model } from 'acey'
-import { Buffer } from 'buffer'
 import { IPubKH, ILink, IValue, REWARD0_KEY, REWARD1_KEY, REWARD2_KEY, UPVOTE_KEY } from 'community-coin-types'
 import { COIN_UNIT, /* CYCLE_IN_LUGH */ } from '../../constant';
-import { /* CalculateOutputMeltedValue,*/ GetAddressFromPubKeyHash } from 'wallet-util';
+import {  Inv } from 'wallet-util';
 import axios from 'axios'
 import config from '../../config'
 import { IHeaderSignature } from '../../wallet/wallet';
@@ -90,7 +89,7 @@ export class UnserializedPutModel extends Model {
                 const amIFrom = this.get().pkh().get().sender() === pkh
 
                 const toAddr = (hexPKH: string) => {
-                    const addr = GetAddressFromPubKeyHash(Buffer.from(hexPKH, 'hex'))
+                    const addr = Inv.PubKH.fromHex(hexPKH).toAddress().get()
                     if (!this.get().otherPartyAlias())
                         return addr
 

@@ -1,7 +1,11 @@
 import { Model } from "acey";
 import { IVoteSummary } from 'community-coin-types'
-import { formatPercent } from 'wallet-util'
+import { Util } from 'wallet-util'
 
+const { 
+    FormatVPPercent
+} = Util
+ 
 const DEFAULT_STATE: IVoteSummary = {
     approved: -1,
     declined: -1,
@@ -31,12 +35,12 @@ export class VoteModel extends Model {
             approvedPercent: (): number => this.get().approved() * 100,
             approvedPercentPretty: (): string => {
                 const percent = this.get().approvedPercent()
-                return percent < 1 ? '<1%' : formatPercent(this.get().approvedPercent())
+                return percent < 1 ? '<1%' : FormatVPPercent(this.get().approvedPercent())
             },
             declinedPercent: (): number => this.get().declined() * 100,
             declinedPercentPretty: (): string => {
                 const percent = this.get().declinedPercent()
-                return percent < 1 ? '<1%' : formatPercent(this.get().declinedPercent())
+                return percent < 1 ? '<1%' : FormatVPPercent(this.get().declinedPercent())
             },
             approved: (): number => this.state.approved,
             declined: (): number => this.state.declined,
