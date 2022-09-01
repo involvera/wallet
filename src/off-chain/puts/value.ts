@@ -1,5 +1,6 @@
 import { Model } from 'acey' 
 import { IValue } from 'community-coin-types'
+import { Inv } from 'wallet-util'
 
 const DEFAULT_VALUE: IValue = {
     at_time: 0,
@@ -16,8 +17,8 @@ export default class ValueModel extends Model {
 
     get = () => {
         return {
-            atCreationTime: (): number => this.state.at_time,
-            now: (): number => this.state.now
+            atCreationTime: (): Inv.InvBigInt => new Inv.InvBigInt(this.state.at_time),
+            now: () => new Inv.InvBigInt(this.state.now)
         }
     }
 

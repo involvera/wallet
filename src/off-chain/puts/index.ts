@@ -79,7 +79,7 @@ export class UnserializedPutModel extends Model {
         let action = ''
         let from = ''
         let to: string | number = ''
-        const amount = `${this.get().pkh().get().sender() == pkh ? '-' : '+'}${parseFloat((Number(this.get().value()) / COIN_UNIT).toFixed(2)).toLocaleString('en')}`
+        const amount = `${this.get().pkh().get().sender() == pkh ? '-' : '+'}${parseFloat(parseFloat(this.get().value().divDecimals(COIN_UNIT)).toFixed(2)).toLocaleString('en')}`
 
         if (this.isRegularTx()){
             if (this.isLughTx()){
@@ -187,7 +187,7 @@ export class UnserializedPutModel extends Model {
             pkh,
             link,
             index,
-            value: (): number => (this.state.value as ValueModel).get().atCreationTime(),
+            value: () => (this.state.value as ValueModel).get().atCreationTime(),
             txID: (): string => this.state.tx_id,
             createdAt: () => new Date(this.state.time),
             height: (): number => this.state.lh,

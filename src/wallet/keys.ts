@@ -52,7 +52,7 @@ export default class KeysModel extends Model {
         }
         this._password = password
         AES.decrypt(this._256BitsPass(), Inv.InvBuffer.fromHex(this.state.mnemonic).bytes()).then((val: Uint8Array) => {
-            this._mnemonic = new Inv.InvBuffer(val).hex()
+            this._mnemonic = new Inv.InvBuffer(val).toString()
         })
     }
 
@@ -71,7 +71,7 @@ export default class KeysModel extends Model {
         this.unlock(unlockingPassword)
         const mnemonicEncrypted = new Inv.InvBuffer(await AES.encrypt(this._256BitsPass(), Inv.InvBuffer.fromRaw(mnemonic).bytes()))
         this.setState({  mnemonic: mnemonicEncrypted.hex() })
-        this.get().alias().setAddress(this.get().address().get())
+        this.get().alias().setAddress(this.get().address())
         return this.action()   
     }
 
@@ -96,32 +96,33 @@ export default class KeysModel extends Model {
         }
     }
 
+
     get = () => {
         const passHash = (): string => this.state.pass_hash
+        const mnemonic = () => {
+            this._triggerPasswordError()
+            return new Inv.Mnemonic(this._mnemonic)
+        } 
         const alias = (): AliasModel => this.state.alias 
-        const master = () => mnemonic().wallet()
-        const wallet = () => master().derive('m/0/0')
+        const wallet = () => mnemonic().wallet()
         const pub = () => wallet().publicKey()
         const pubHash = () => pub().hash()
         const address = () => pubHash().toAddress()
         const passwordClear = () => this._password
 
-        const mnemonic = () => {
-            this._triggerPasswordError()
-            return new Inv.Mnemonic(this._mnemonic)
-        } 
-
-        const derivedPubHash = (nonce: number) => derivedPub(nonce).hash()
-        const contentWallet = (nonce: number) => master().derive('m/1/' + nonce.toString())
-        const derivedPub = (nonce: number) => contentWallet(nonce).publicKey()
+        const contentWallet = (nonce: number) => mnemonic().deriveForContent(nonce)
+        const contentPubKey = (nonce: number) => contentWallet(nonce).publicKey()
 
         return {
+            mnemonic,
             passHash,
-             master, wallet, pub, 
+            wallet, 
+            pub, 
             pubHash,
-            derivedPub, address, 
-            derivedPubHash, mnemonic,
-            contentWallet, alias,
+            address, 
+            contentWallet,
+            contentPubKey, 
+            alias,
             passwordClear
         }
     }

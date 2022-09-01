@@ -10,13 +10,13 @@ export default class FeesModel extends Model {
     }
     
     get = () => {
-        const feePerByte = (): number => this.state.fee_per_byte 
+        const feePerByte = () => new Inv.InvBigInt(this.state.fee_per_byte)
         const addressToSend = (): Inv.Address => new Inv.Address(this.state.address)
 
         return { feePerByte, addressToSend }
     }
 
-    isSet = () => this.get().feePerByte() > 0
+    isSet = () => this.get().feePerByte().gt(0)
 
     fetch = async () => {
        try {

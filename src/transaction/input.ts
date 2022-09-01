@@ -32,10 +32,9 @@ export class InputModel extends Model {
     }
 
     get = () => {
-        const prevTxHash = (): Inv.TxHash | null => this.state.prev_transaction_hash ? new Inv.TxHash(this.state.prev_transaction_hash) : null
+        const prevTxHash = (): Inv.TxHash | null => this.state.prev_transaction_hash ? Inv.TxHash.fromHex(this.state.prev_transaction_hash) : null
         const vout = (): Inv.InvBigInt => new Inv.InvBigInt(typeof this.state.vout === 'number' ? this.state.vout : -1)
-        const script = () => Script.fromBase64(this.state.script_sig)
-
+        const script = () => Script.new(this.state.script_sig, 'base64')
         return { vout, prevTxHash, script }
     }
 
@@ -67,14 +66,8 @@ export class InputCollection extends Collection {
         super(initialState, [InputModel, InputCollection], options)
     }
 
-    size = (): number => {
-		let size = 0
-		for (let i = 0; i < this.count(); i++){
-			const out = this.nodeAt(i) as InputModel
-			size += out.size()
-		}
-		return size + this.count()
-	}
+    size = (): number => this.reduce((accumulator: number, inp: InputModel) => accumulator += inp.size(), 0) + this.count()
+
 
     prevTxIDndVoutList = (): {tx_id: string, vout: number}[] => {
         return this.map((i: InputModel) => {

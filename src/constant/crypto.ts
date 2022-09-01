@@ -1,7 +1,9 @@
-export const COIN_UNIT = 100_000_000
-export const LUGH_AMOUNT = 100_000 * COIN_UNIT
+import { Inv } from "wallet-util"
+
+export const COIN_UNIT = new Inv.InvBigInt(100_000_000)
+export const LUGH_AMOUNT = COIN_UNIT.mul(100_000)
 export const CYCLE_IN_LUGH = 1_459
-export const MAX_SUPPLY_AMOUNT = BigInt(LUGH_AMOUNT) * BigInt(CYCLE_IN_LUGH)
+export const MAX_SUPPLY_AMOUNT = LUGH_AMOUNT.mul(CYCLE_IN_LUGH)
 export const BURNING_RATIO = 0.7
 // export const BILLED_SIGNATURE_LENGTH = 72
 export const LUGH_EVERY_N_S = 8 * 3_600

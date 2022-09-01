@@ -162,7 +162,7 @@ export class AliasModel extends Model {
         }
     }
 
-    setAddress = (address: string) => this.setState({ address: new Inv.Address(address)})
+    setAddress = (address: Inv.Address) => this.setState({ address: address.get()})
 
     setUsername = (username: string) => {
         if (!username.match(/^[a-z0-9_]{3,16}$/))

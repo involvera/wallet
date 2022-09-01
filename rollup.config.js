@@ -10,18 +10,15 @@ import pkg from './package.json'
 
 const config = {
     input: './index.ts',
-    external: [ 'acey', 'axios', 'bip39', 'bip32', 'wallet-util', 'wallet-script', 'moment'],
+    external: [ 'acey', 'axios', 'wallet-util', 'wallet-script', 'moment'],
     output: [
         {
             globals: {
                 'acey': 'acey',
                 'axios': 'axios',
-                'bip39': 'bip39',
-                'bip32': 'bip32',
                 'moment': 'moment',
                 'wallet-util': 'wallet-util',
                 'wallet-script': 'wallet-script',
-                'buffer': 'buffer',
             },
             file: pkg.main,
             format: 'umd',

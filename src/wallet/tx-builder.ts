@@ -1,19 +1,23 @@
 import { CANT_SEND_0_VALUE, LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
 import {  OutputModel, OutputCollection, TransactionModel, UTXOModel, UTXOCollection } from "../transaction"
-import { Util } from "wallet-util";
+import { Inv } from "wallet-util";
 import WalletModel from './wallet'
 import { Script } from "wallet-script";
 
 export interface ITXBuild {
     wallet:         WalletModel
-	amount_required: number[]
+	amount_required: Inv.InvBigInt[]
 	scripts:             Uint8Array[][]
+}
+
+export const CalculateOutputValueFromMelted = (meltedAmount: Inv.InvBigInt, meltedRatio: number): Inv.InvBigInt => {
+    return Inv.InvBigInt.ceil(meltedAmount.divDecimals(meltedRatio))
 }
 
 export default class TxBuild {
 
-    private amount_required: number[]
-    private scripts:             Uint8Array[][]
+    private amount_required: Inv.InvBigInt[]
+    private scripts:           Uint8Array[][]
     private wallet: WalletModel
 
     constructor(txb: ITXBuild){
@@ -26,17 +30,18 @@ export default class TxBuild {
         if (this.amount_required.length != this.scripts.length){
             throw WRONG_TX_BUILDER_STRUCTURE_ERROR
         }
-        if (this.totalAmount() <= 0){
+        //<= 0
+        if (this.totalAmount().lwe(0)){
             throw CANT_SEND_0_VALUE
         }
     }
 
-    totalAmount = () => this.amount_required.reduce((accumulator: number, currentValue: number) => accumulator + currentValue)
+    totalAmount = () => this.amount_required.reduce((accumulator: Inv.InvBigInt, currentValue: Inv.InvBigInt) => accumulator.add(currentValue))
 
-    private _addTXFeesToBuild = (fees: number) => {
+    private _addTXFeesToBuild = (fees: Inv.InvBigInt) => {
         const lockScript = Script.build().lockScript(this.wallet.fees().get().addressToSend().toPKH())
         this.amount_required.push(fees)
-        this.scripts.push(lockScript.bytes())       
+        this.scripts.push(lockScript.bytes())
     }
 
     private _removeLastOutput = () => {
@@ -45,12 +50,10 @@ export default class TxBuild {
     }
 
     private _makeTxWithFees = (tx: TransactionModel): UTXOCollection => {
-        const fees = tx.get().billedSize() * this.wallet.fees().get().feePerByte()
-        
+        const fees = tx.get().billedSize().mul(this.wallet.fees().get().feePerByte())
         this._addTXFeesToBuild(fees)
         const { utxos, outputs } = this._generateMeltingPuts()
         const inputs = utxos.toInputs()
-
 
         const shouldRecall = inputs.count() != tx.get().inputs().count() || outputs.count() != tx.get().outputs().count()
 
@@ -65,7 +68,7 @@ export default class TxBuild {
         return utxos
     }
 
-    setupUTXOs = (amountRequired: number) => {
+    setupUTXOs = (amountRequired: Inv.InvBigInt) => {
         const availableUTXOs = this.wallet.utxos().get().get().requiredList(amountRequired, this.wallet.cch().get().list())
         const totalEscrow = availableUTXOs.get().totalMeltedValue(this.wallet.cch().get().list())
         if (totalEscrow < amountRequired){
@@ -92,6 +95,8 @@ export default class TxBuild {
         if (await this.wallet.sign().transaction(tx)){
             return tx
         }
+
+
         return null
     }
 
@@ -102,7 +107,7 @@ export default class TxBuild {
         const nInputs = utxos.count()
         const CCHList = this.wallet.cch().get().list()
 
-        let currentRealAmountToSend: number = 0 
+        let currentRealAmountToSend = new Inv.InvBigInt(0) 
         let toIndex = 0
         let utxoIndex = 0
     
@@ -118,9 +123,9 @@ export default class TxBuild {
             return (utxos.nodeAt(index) as UTXOModel).get().meltedValue(CCHList)
         }
 
-        const refreshCurrentRealAmountToSend = (val: number) => {
+        const refreshCurrentRealAmountToSend = (val: Inv.InvBigInt) => {
             const mr = (utxos.nodeAt(utxoIndex) as UTXOModel).get().meltedValueRatio(CCHList)
-            currentRealAmountToSend = currentRealAmountToSend + Number(Util.CalculateOutputValueFromMelted(val, mr))
+            currentRealAmountToSend.addEq(CalculateOutputValueFromMelted(val, mr))
         }
 
         const pushOutput = (toIndex: number, fromIdx: number, toIdx: number) => {
@@ -132,7 +137,7 @@ export default class TxBuild {
         const pushSurplusOutput = (lastUTXOIdx: number) => {
             const lockScript = Script.build().lockScript(this.wallet.keys().get().pubHash())
             const totalUsed = outputs.get().totalValue()
-            outputs.push(OutputModel.NewOutput(Number(utxos.get().totalValue()-totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), lockScript.base64()).to().plain())
+            outputs.push(OutputModel.NewOutput(utxos.get().totalValue().sub(totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), lockScript.base64()).to().plain())
         }
 
         const totalInEscrow = utxos.get().totalMeltedValue(CCHList)
@@ -140,40 +145,42 @@ export default class TxBuild {
         let totalToSendLeft = totalToSend
         let amountsLeftToTakeInCurrentUTXO = getMeltedValueAtUTXOIndex(utxoIndex)
 
-        while (totalToSendLeft > 0){
+        //>0
+        while (totalToSendLeft.gt(0)){
             let fromUTXOIdx = utxoIndex
             let meltedAmountLeftToSendInCurrentOutput = amounts[toIndex]
-            currentRealAmountToSend = 0
+            currentRealAmountToSend = new Inv.InvBigInt(0)
 
-            while (meltedAmountLeftToSendInCurrentOutput > 0){
-
-                if (meltedAmountLeftToSendInCurrentOutput > amountsLeftToTakeInCurrentUTXO){
+            console.log(totalToSendLeft.big(), meltedAmountLeftToSendInCurrentOutput.big())
+            //>0
+            while (meltedAmountLeftToSendInCurrentOutput.gt(0)){
+                if (meltedAmountLeftToSendInCurrentOutput.gt(amountsLeftToTakeInCurrentUTXO)){
                     refreshCurrentRealAmountToSend(amountsLeftToTakeInCurrentUTXO)
-                    meltedAmountLeftToSendInCurrentOutput -= amountsLeftToTakeInCurrentUTXO
-                    totalToSendLeft -= amountsLeftToTakeInCurrentUTXO
+                    meltedAmountLeftToSendInCurrentOutput.subEq(amountsLeftToTakeInCurrentUTXO)
+                    totalToSendLeft.subEq(amountsLeftToTakeInCurrentUTXO)
                     utxoIndex++
                     amountsLeftToTakeInCurrentUTXO = getMeltedValueAtUTXOIndex(utxoIndex)
-                } else if (meltedAmountLeftToSendInCurrentOutput == amountsLeftToTakeInCurrentUTXO) {
+                } else if (meltedAmountLeftToSendInCurrentOutput.eq(amountsLeftToTakeInCurrentUTXO)) {
                     refreshCurrentRealAmountToSend(amountsLeftToTakeInCurrentUTXO)
-                    meltedAmountLeftToSendInCurrentOutput -= amountsLeftToTakeInCurrentUTXO
-                    totalToSendLeft -= amountsLeftToTakeInCurrentUTXO
+                    meltedAmountLeftToSendInCurrentOutput.subEq(amountsLeftToTakeInCurrentUTXO)
+                    totalToSendLeft.subEq(amountsLeftToTakeInCurrentUTXO)
                     pushOutput(toIndex, fromUTXOIdx, utxoIndex)
                     if (utxoIndex+1 < nInputs) {
                         utxoIndex++
                         toIndex++
                         amountsLeftToTakeInCurrentUTXO = getMeltedValueAtUTXOIndex(utxoIndex)
                     }
-                } else if (meltedAmountLeftToSendInCurrentOutput < amountsLeftToTakeInCurrentUTXO){
+                } else if (meltedAmountLeftToSendInCurrentOutput.lw(amountsLeftToTakeInCurrentUTXO)){
                     refreshCurrentRealAmountToSend(meltedAmountLeftToSendInCurrentOutput)
-                    amountsLeftToTakeInCurrentUTXO -= meltedAmountLeftToSendInCurrentOutput
-                    totalToSendLeft -= meltedAmountLeftToSendInCurrentOutput
-                    meltedAmountLeftToSendInCurrentOutput = 0        
+                    amountsLeftToTakeInCurrentUTXO.subEq(meltedAmountLeftToSendInCurrentOutput)
+                    totalToSendLeft.subEq(meltedAmountLeftToSendInCurrentOutput)
+                    meltedAmountLeftToSendInCurrentOutput = new Inv.InvBigInt(0)
                     pushOutput(toIndex, fromUTXOIdx, utxoIndex)   
                     toIndex++         
                 }
             }
             
-            if (totalToSendLeft == 0 && totalInEscrow > totalToSend) {
+            if (totalToSendLeft.eq(0) && totalInEscrow.gt(totalToSend)) {
                 pushSurplusOutput(utxoIndex)
             }
         }

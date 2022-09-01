@@ -81,13 +81,13 @@ export class TransactionModel extends Model {
     isLugh = () => this.get().inputs().count() == 1 && this.get().inputs().nodeAt(0) && (this.get().inputs().nodeAt(0) as InputModel).get().prevTxHash()?.length() == 0
 
     get = () => {
-        const time = () => Inv.InvBigInt.fromNumber(this.state.t)
-        const lughHeight = () => Inv.InvBigInt.fromNumber(this.state.lh)
+        const time = () => new Inv.InvBigInt(this.state.t)
+        const lughHeight = () => new Inv.InvBigInt(this.state.lh)
         const hash = () => new Inv.TxHash(Sha256(this.to().string()))
         const inputs = (): InputCollection => this.state.inputs
         const outputs = (): OutputCollection => this.state.outputs
 
-        const billedSize = (): number => {
+        const billedSize = (): Inv.InvBigInt => {
             let size = this.size()
             size -= this.get().inputs().size()
 
@@ -99,12 +99,10 @@ export class TransactionModel extends Model {
             const billedInputsSize = scriptSize + voutSize + prevTxHashSize
             size += billedInputsSize
 
-            return size
+            return new Inv.InvBigInt(size)
         }
 
-        const fees = (feePerByte: number): number => {
-            return billedSize() * feePerByte
-        }
+        const fees = (feePerByte: Inv.InvBigInt): Inv.InvBigInt => billedSize().mul(feePerByte)
 
         return {
             time, lughHeight,

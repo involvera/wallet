@@ -15,13 +15,13 @@ export class OutputModel extends Model {
 
 	static DefaultState: IOutputUnRaw = DEFAULT_STATE
 
-	static NewOutput = (value: number, InputSrcIdxs: number[], script: string[]) => {
-		if (value > Math.pow(2, 53))
+	static NewOutput = (value: Inv.InvBigInt, InputSrcIdxs: number[], script: string[]) => {
+		if (value.gt(Math.pow(2, 53)))
 			throw MAX_IS_2_POW_53
 		
 		const out: IOutputUnRaw = {
 			input_src_idxs: InputSrcIdxs,
-			value,
+			value: value.number(),
 			script
 		}
 		return new OutputModel(out, {})
@@ -66,7 +66,7 @@ export class OutputModel extends Model {
 		const value = (): Inv.InvBigInt => new Inv.InvBigInt(BigInt(this.state.value))
 		const inputSourceIdxs = (): number[] => this.state.input_src_idxs
 
-		const script = () => Script.fromBase64(this.state.script)
+		const script = () => Script.new(this.state.script, 'base64')
  		
 		const contentPKH = () => {
 			const s = this.get().script()
@@ -111,17 +111,9 @@ export class OutputCollection extends Collection {
         super(initialState, [OutputModel, OutputCollection], options)
     }
 
+	size = (): number => this.reduce((accumulator: number, out: OutputModel) => accumulator += out.size(), 0) + this.count()
 
-	size = (): number => {
-		let size = 0
-		for (let i = 0; i < this.count(); i++){
-			const out = this.nodeAt(i) as OutputModel
-			size += out.size()
-		}
-		return size + this.count()
-	}
-
-	containsToPubKH = (pubKH: Inv.PubKH) => {
+	containsPKHInLockScript = (pubKH: Inv.PubKH) => {
 		for (let i = 0; i < this.count(); i++){
 			const out = this.nodeAt(i) as OutputModel
 			if (pubKH.eq(out.get().pubKH()))
@@ -141,13 +133,7 @@ export class OutputCollection extends Collection {
 	}
 
 	get = () => {
-		const totalValue = () => {
-			let total = BigInt(0)
-            this.map((out: OutputModel) => {
-				total += BigInt(out.get().value() as any)
-            })
-            return total
-		}
+		const totalValue = () => this.reduce((accumulator: Inv.InvBigInt, out: OutputModel) => accumulator.add(out.get().value()), new Inv.InvBigInt(0))
 		return { totalValue }
 	}
 }

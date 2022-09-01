@@ -3,6 +3,7 @@ import axios from 'axios'
 import { ICostProposal }  from 'community-coin-types'
 import { Model } from 'acey'
 import config from '../config'
+import { Inv } from 'wallet-util'
 
 const DEFAULT_STATE: ICostProposal = {
     thread: 0, 
@@ -21,15 +22,15 @@ export default class CostsModel extends Model {
         super(initialState, options)
     }
 
-    isSet = (): boolean => this.get().thread() > 0
+    isSet = (): boolean => this.get().thread().gt(0)
 
     get = () => {
-        const thread = (): number => this.state.thread
-        const proposal = (): number => this.state.proposal
-        const upvote = (): number => this.state.upvote
-        const reward0 = (): number => this.state.reward0
-        const reward1 = (): number => this.state.reward1
-        const reward2 = (): number => this.state.reward2
+        const thread = () => new Inv.InvBigInt(this.state.thread)
+        const proposal = () => new Inv.InvBigInt(this.state.proposal)
+        const upvote = () => new Inv.InvBigInt(this.state.upvote)
+        const reward0 = () => new Inv.InvBigInt(this.state.reward0)
+        const reward1 = () => new Inv.InvBigInt(this.state.reward1)
+        const reward2 = () => new Inv.InvBigInt(this.state.reward2)
 
         return {
             proposal, upvote, thread,

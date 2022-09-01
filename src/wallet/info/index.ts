@@ -2,7 +2,7 @@ import { Model } from 'acey'
 import UserActivityModel from './activity'
 import axios from 'axios'
 import { IWalletInfo } from 'community-coin-types'
-import { Util } from 'wallet-util'
+import { Inv, Util } from 'wallet-util'
 import config from '../../config'
 import { CYCLE_IN_LUGH, LUGH_AMOUNT } from '../../constant'
 
@@ -46,22 +46,22 @@ export default class InfoModel extends Model {
 
     get = () => {
         const contentNonce = (): number => this.state.content_nonce 
-        const balance = (): number => this.state.balance
-        const votePowerCount = (): number => this.state.vote_power_count
-        const rewardsReceivedLast90D = (): number => this.state.rewards_received_270
+        const balance = () => new Inv.InvBigInt(this.state.balance)
+        const votePowerCount = () => new Inv.InvBigInt(this.state.vote_power_count)
+        const rewardsReceivedLast90D = () => new Inv.InvBigInt(this.state.rewards_received_270)
         const contributorRank = (): number => this.state.position
         const activity = (): UserActivityModel => this.state.activity
         
         const votePowerPercent = (lh: number): number => {
-            const total_vp = Math.min(CYCLE_IN_LUGH, lh) * (LUGH_AMOUNT / 10)
+
+            
+            const total_vp = Math.min(CYCLE_IN_LUGH, lh) * (LUGH_AMOUNT.number() / 10)
             if (total_vp === 0)
                 return 0
-            return ((votePowerCount() / 10) / total_vp) * 100
+            return ((votePowerCount().number() / 10) / total_vp) * 100
         }
 
-        const votePowerPercentPretty = (lh: number): string => {
-            return Util.FormatVPPercent(votePowerPercent(lh))
-        }
+        const votePowerPercentPretty = (lh: number): string => Util.FormatVPPercent(votePowerPercent(lh))
 
         return { 
             activity, contentNonce, balance, votePowerCount, 

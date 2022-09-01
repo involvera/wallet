@@ -19,6 +19,12 @@ import { BURNING_RATIO } from '../constant'
 import { ThreadModel } from '../off-chain'
 import { DEFAULT_PASS, DEFAULT_PASS_HASH } from '../constant/off-chain'
 
+const{
+    Hash: {
+        Sha256
+    }
+} = Lib
+
 export interface IHeaderSignature {
     pubkey: string
     signature: string
@@ -57,30 +63,34 @@ export default class Wallet extends Model {
     }
 
     synchronize = async () => {
-        const response = await axios(config.getRootAPIChainUrl() + '/wallet', {
-            headers: Object.assign(this.sign().header() as any, {
-                last_cch: this.cch().get().last(),
-            }),
-            validateStatus: function (status) {
-                return status >= 200 && status < 500;
-            },
-            timeout: 10000,
-        })
-        if (response.status == 200){
-            const json = response.data
-            this.setState({ info: new InfoModel(json.info, this.kids()) })
-            this.cch().assignJSONResponse(json.cch)
-            this.fees().setState(json.fees)
-            this.utxos().get().setState(json.utxos || [])
-            this.costs().setState(json.costs)
-            this.action().store()
-            await this.keys().fetch().alias()
+        try {
+            const response = await axios(config.getRootAPIChainUrl() + '/wallet', {
+                headers: Object.assign(this.sign().header() as any, {
+                    last_cch: this.cch().get().last(),
+                }),
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+                timeout: 10000,
+            })
+            if (response.status == 200){
+                const json = response.data
+                this.setState({ info: new InfoModel(json.info, this.kids()) })
+                this.cch().assignJSONResponse(json.cch)
+                this.fees().setState(json.fees)
+                this.utxos().get().setState(json.utxos || [])
+                this.costs().setState(json.costs)
+                this.action().store()
+                await this.keys().fetch().alias()
+            }
+        } catch (e){
+            console.log(e)
         }
     }
 
     public is2 = () => {
         const generatedWallet = () => this.keys().get().passHash() === DEFAULT_PASS_HASH
-        const activeWallet = () => this.info().get().votePowerCount() > 0 || this.balance() > 0
+        const activeWallet = () => this.info().get().votePowerCount().gt(0) || this.balance().gt(0)
 
         return {
             generatedWallet,
@@ -92,7 +102,7 @@ export default class Wallet extends Model {
     public fees = (): FeesModel => this.state.fees
     public costs = (): CostsModel => this.state.costs
     public info = (): InfoModel => this.state.info
-    public balance = (): number => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
+    public balance = (): Inv.InvBigInt => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
     public cch = (): CCHModel => this.state.cch
 
     buildTX = () => {
@@ -103,7 +113,7 @@ export default class Wallet extends Model {
                 await this.synchronize()
                 const contentNonce = this.info().get().contentNonce() + 1
     
-                const script = Script.build().applicationProposal(contentNonce, this.keys().get().derivedPubHash(contentNonce)) 
+                const script = Script.build().applicationProposal(contentNonce, this.keys().get().contentPubKey(contentNonce).hash()) 
 
                 const builder = new TxBuild({ 
                     wallet: this,
@@ -117,7 +127,7 @@ export default class Wallet extends Model {
                 await this.synchronize()
                 const contentNonce = this.info().get().contentNonce() + 1
 
-                const script = Script.build().costProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), threadCost, proposalCost)
+                const script = Script.build().costProposalScript(contentNonce, this.keys().get().contentPubKey(contentNonce).hash(), threadCost, proposalCost)
 
                 const builder = new TxBuild({ 
                     wallet: this,
@@ -131,7 +141,7 @@ export default class Wallet extends Model {
                 await this.synchronize()
                 const contentNonce = this.info().get().contentNonce() + 1
 
-                const script = Script.build().constitutionProposalScript(contentNonce, this.keys().get().derivedPubHash(contentNonce), constitution) 
+                const script = Script.build().constitutionProposalScript(contentNonce, this.keys().get().contentPubKey(contentNonce).hash(), constitution) 
                 
                 const builder = new TxBuild({ 
                     wallet: this,
@@ -144,7 +154,7 @@ export default class Wallet extends Model {
             return { constitution, application, cost }
         }
 
-        const toAddress = async (address: Inv.Address, amount: number): Promise<TransactionModel | null> => {
+        const toAddress = async (address: Inv.Address, amount: Inv.InvBigInt): Promise<TransactionModel | null> => {
             await this.synchronize()
 
             const script = Script.build().lockScript(address.toPKH())
@@ -162,7 +172,7 @@ export default class Wallet extends Model {
             await this.synchronize()
             const contentNonce = this.info().get().contentNonce() + 1
 
-            const script = Script.build().threadScript(contentNonce, this.keys().get().derivedPubHash(contentNonce))
+            const script = Script.build().threadScript(contentNonce, this.keys().get().contentPubKey(contentNonce).hash())
             
             const builder = new TxBuild({ 
                 wallet: this,
@@ -176,7 +186,7 @@ export default class Wallet extends Model {
         const rethread = async (targetPKH: Inv.PubKH) => {
             await this.synchronize()
             const contentNonce = this.info().get().contentNonce() + 1
-            const contentPKH = this.keys().get().derivedPubHash(contentNonce)
+            const contentPKH = this.keys().get().contentPubKey(contentNonce).hash()
 
             const script = Script.build().rethreadScript(contentNonce, contentPKH, targetPKH)
 
@@ -197,8 +207,8 @@ export default class Wallet extends Model {
             const scriptDistribution = Script.build().lockScript(thread.get().author().get().address().toPKH())
             
             const cost = this.costs().get()[rewardType]()
-            const burned = Math.floor(BURNING_RATIO * cost)
-            const distributed = cost - burned
+            const burned = cost.mul(BURNING_RATIO * 10).div(10)
+            const distributed = cost.sub(burned)
 
             const builder = new TxBuild({ 
                 wallet: this,
@@ -215,7 +225,7 @@ export default class Wallet extends Model {
 
             const builder = new TxBuild({ 
                 wallet: this,
-                amount_required: [1],
+                amount_required: [new Inv.InvBigInt(1)],
                 scripts: [script.bytes()]
             })
         
@@ -265,7 +275,6 @@ export default class Wallet extends Model {
                 if (!utxo)
                     throw new Error("Unfound UTXO")
                 const prevTx = utxo.get().tx() as TransactionModel
-                
                 input.setState({ 
                     script_sig: Script.build().unlockScript(
                         value(prevTx.get().hash().bytes()), 
@@ -287,10 +296,10 @@ export default class Wallet extends Model {
                 day = day.length == 1 ? '0' + day : day
 
                 const toSignStr = this.keys().get().pub().hex() + `${year}-${month}-${day}`
-
+                const sigPlain = this.keys().get().wallet().sign(toSignStr).get().plain()
                 return {
-                    pubkey: this.keys().get().pub().hex(),
-                    signature: new Inv.Signature(Inv.Signature.formatSignatureContent(toSignStr)).hex()
+                    pubkey: sigPlain.public_key,
+                    signature: sigPlain.signature
                 }
             }
         }

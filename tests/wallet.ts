@@ -3,20 +3,21 @@ import 'mocha';
 import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
 import fs from 'fs'
-import path from 'path'
-import url from 'url'
-
+import { Constitution, Script } from 'wallet-script';
+import { Inv } from 'wallet-util'
 import { COIN_UNIT, COUNT_DEFAULT_PROPOSALS, LUGH_AMOUNT, LUGH_EVERY_N_S, MAX_SUPPLY_AMOUNT, N_LUGH_VOTE_DURATION } from '../src/constant';
-import { DecodeBaseUUID, EncodeBaseUUID, IsAddressValid, PubKeyHashFromAddress } from 'wallet-util';
 import { WalletModel } from '../src/wallet'
 import { UnserializedPutCollection, UnserializedPutModel } from '../src/off-chain/puts';
-import { Constitution } from 'wallet-script';
 import { OutputModel } from '../src/transaction';
 import { ThreadModel, ProposalModel, SocietyModel, RuleModel, ThreadCollection, ProposalCollection, UserModel,UserCollection } from '../src/off-chain';
 import axios from 'axios';
 import conf from '../src/config'
 import { IConstitutionProposalUnRaw, ICostProposal, REWARD0_KEY, REWARD2_KEY, REWARD1_KEY, UPVOTE_KEY } from 'community-coin-types'
 import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
+
+const {
+    InvBuffer
+} = Inv
 
 // conf.setRootAPIChainUrl('http://134.122.16.30:8080')
 // conf.setRootAPIOffChainUrl('http://134.122.16.30:3020')
@@ -34,10 +35,13 @@ const wallet3Puts = new UnserializedPutCollection([], {connected: true, key: 'wa
 
 const userList = new UserCollection([], {connected: true, key: 'users'})
 
-const initWallets = () => {
-    wallet.keys().set("film dirt damage apart carry horse enroll carry power prison flush bulb", "coucou").store()
-    wallet2.keys().set("social brief stool panel scene whale pledge tribe domain proof essence clog", "coucou").store()
-    wallet3.keys().set("horse flush dirt carry scene whale pledge tribe domain proof essence mail", "coucou").store()
+const initWallets = async () => {
+    const w = await wallet.keys().set("film dirt damage apart carry horse enroll carry power prison flush bulb", "coucou")
+    w.store()
+    const w2 = await wallet2.keys().set("social brief stool panel scene whale pledge tribe domain proof essence clog", "coucou")
+    w2.store()
+    const w3 = await wallet3.keys().set("toy elder edge wait antique approve carry prize acid believe human shine", "coucou")
+    w3.store()
 }
 
 const main = () => {
@@ -55,8 +59,8 @@ const main = () => {
     it('initialisation', async () => {
         config.setStoreEngine(new LocalStorage('./db'))
         await config.done()
-        initWallets()
-        expect(wallet.keys().get().address()).to.eq(wallet.keys().get().alias().get().address())
+        await initWallets()
+        expect(wallet.keys().get().address().get()).to.eq(wallet.keys().get().alias().get().address().get())
     })
 
     it('refresh wallets', async () => {
@@ -71,54 +75,47 @@ const main = () => {
         await wallet2.synchronize()
         await wallet3.synchronize()
 
-        expect(wallet.keys().get().address()).to.eq(wallet.keys().get().alias().get().address())
-        expect(wallet2.keys().get().address()).to.eq(wallet2.keys().get().alias().get().address())
-        expect(wallet3.keys().get().address()).to.eq(wallet3.keys().get().alias().get().address())
+        expect(wallet.keys().get().address().get()).to.eq(wallet.keys().get().alias().get().address().get())
+        expect(wallet2.keys().get().address().get()).to.eq(wallet2.keys().get().alias().get().address().get())
+        expect(wallet3.keys().get().address().get()).to.eq(wallet3.keys().get().alias().get().address().get())
 
         await walletPuts.fetch(wallet.sign().header(), true).all()
         await wallet2Puts.fetch(wallet2.sign().header(), true).all()
         await wallet3Puts.fetch(wallet3.sign().header(), true).all()
     })
 
-
     it('[ONCHAIN] Wallet1 -> Fetch and check UTXOS: ', () => {
         const CCHList = wallet.cch().get().list()
         const utxos = wallet.utxos().get().get()
-
-        expect(utxos.totalMeltedValue(CCHList)).to.equal(11594360380420)
-        expect(wallet.balance()).to.equal(11594360380420)
-        expect(utxos.totalValue()).to.equal(BigInt(11615704225793))
-        const list = utxos.requiredList(Number(MAX_SUPPLY_AMOUNT), CCHList)
+        expect(utxos.totalMeltedValue(CCHList).big()).to.equal(13001154805507n)
+        expect(wallet.balance().big()).to.equal(13001154805507n)
+        expect(utxos.totalValue().big()).to.equal(BigInt(13022498650880n))
+        const list = utxos.requiredList(MAX_SUPPLY_AMOUNT, CCHList)
         expect(list.count()).to.equal(7)
         expect(utxos.listUnFetchedTxHash().length).to.eq(7)
     });
 
-
     it('Wallet1 -> Check Address: ', () => {
-        expect(wallet.keys().get().address()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
-        expect(Buffer.compare(PubKeyHashFromAddress(wallet.keys().get().address()), wallet.keys().get().pubHash())).to.eq(0)
-        expect(IsAddressValid(wallet.keys().get().address())).to.eq(true)
-        expect(wallet.keys().get().mnemonic()).to.eq("film dirt damage apart carry horse enroll carry power prison flush bulb")
-        const uuid = EncodeBaseUUID(wallet.keys().get().pubHash())
-        expect(DecodeBaseUUID(uuid).toString('hex')).to.eq(wallet.keys().get().pubHashHex())
+        expect(wallet.keys().get().address().get()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
+        expect(wallet.keys().get().mnemonic().get()).to.eq("film dirt damage apart carry horse enroll carry power prison flush bulb")
     })
 
     it('Wallet1 -> Check Costs: ', () => {
-        expect(wallet.costs().get().thread()).to.eq(LUGH_AMOUNT / 200)
-        expect(wallet.costs().get().proposal()).to.eq(LUGH_AMOUNT / 20)
+        expect(wallet.costs().get().thread().big()).to.eq(LUGH_AMOUNT.div(200).big())
+        expect(wallet.costs().get().proposal().big()).to.eq(LUGH_AMOUNT.div(20).big())
     })
 
     it('[ONCHAIN] Wallet1 -> Check Puts/Info: ', () => {
         expect(walletPuts.count()).to.eq(5)
-        expect(wallet.info().get().votePowerCount()).to.eq(11763937282229)
-        expect(wallet.info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('14.705')
+        expect(wallet.info().get().votePowerCount().big()).to.eq(13170731707316n)
+        expect(wallet.info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('16.463')
         expect(wallet.info().get().activity().get().lastLughHeight()).to.eq(7)
         const activity = wallet.info().get().activity().get().activity()
         expect(activity.length).to.eq(3) 
         expect(activity[0]).to.eq(0) 
         expect(activity[1]).to.eq(3) 
         expect(activity[2]).to.eq(0)
-        expect(wallet.info().get().rewardsReceivedLast90D()).to.eq(1800000004)
+        expect(wallet.info().get().rewardsReceivedLast90D().big()).to.eq(1800000004n)
         expect(wallet.info().get().contributorRank()).to.eq(1)
     })
 
@@ -129,10 +126,10 @@ const main = () => {
             userList.addOrUpdate(user)
             expect(userList.count()).to.eq(1)
             expect(user.get().alias().get().username()).to.eq('')
-            expect(user.get().info().get().votePowerCount()).to.eq(11763937282229)
-            expect(user.get().info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('14.705')
+            expect(user.get().info().get().votePowerCount().big()).to.eq(13170731707316n)
+            expect(user.get().info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('16.463')
             expect(user.get().info().get().activity().get().lastLughHeight()).to.eq(7)
-            expect(user.get().info().get().rewardsReceivedLast90D()).to.eq(1800000004)
+            expect(user.get().info().get().rewardsReceivedLast90D().big()).to.eq(1800000004n)
             expect(user.get().info().get().contributorRank()).to.eq(1)
             const activity = user.get().info().get().activity().get().activity()
             expect(activity.length).to.eq(3) 
@@ -141,7 +138,8 @@ const main = () => {
             expect(activity[2]).to.eq(0)
         }
     })
-    
+
+
     it('[OFFCHAIN] Wallet1 -> create a thread failed 1/3', async () => {
         const p = ThreadModel.NewContent(1, "", "Content of my thread")
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce() + 1))
@@ -157,7 +155,7 @@ const main = () => {
     })
 
     it('[ONCHAIN] Wallet1 sends some coins to Wallet2 ', async () => {
-        const total = Math.floor(wallet.balance() / 10)
+        const total = wallet.balance().div(10)
         const balanceBefore = wallet.balance()
         const tx = await wallet.buildTX().toAddress(wallet2.keys().get().address(), total)
         expect(tx).not.eq(null)
@@ -165,8 +163,8 @@ const main = () => {
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
             await wallet2.synchronize()
-            expect(wallet2.balance()).to.eq(total)
-            expect(wallet.balance()).to.eq(balanceBefore-total-tx.get().fees(wallet.fees().get().feePerByte())-1)
+            expect(wallet2.balance().big()).to.eq(total.big())
+            expect(wallet.balance().big()).to.eq(balanceBefore.sub(total).sub(tx.get().fees(wallet.fees().get().feePerByte())).sub(1).big())
 
             await walletPuts.fetch(wallet.sign().header(), true).all()
             await wallet2Puts.fetch(wallet2.sign().header(), true).all()
@@ -175,18 +173,20 @@ const main = () => {
             expect(wallet2Puts.count()).to.eq(1)
 
             const lastPut1 = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
-            expect(lastPut1.get().value()).to.eq(total)
-            expect(lastPut1.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
-            expect(lastPut1.get().pkh().get().recipient()).to.eq(wallet2.keys().get().pubHashHex())
-            expect(lastPut1.get().txID()).to.eq(tx.get().hashHex())
+            expect(lastPut1.get().value().big()).to.eq(total.big())
+            expect(lastPut1.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHash().hex())
+            expect(lastPut1.get().pkh().get().recipient()).to.eq(wallet2.keys().get().pubHash().hex())
+            expect(lastPut1.get().txID()).to.eq(tx.get().hash().hex())
             
             const lastPut2 = wallet2Puts.first() as UnserializedPutModel
             expect(lastPut2.get().value()).to.eq(total)
-            expect(lastPut2.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
-            expect(lastPut2.get().pkh().get().recipient()).to.eq(wallet2.keys().get().pubHashHex())
-            expect(lastPut2.get().txID()).to.eq(tx.get().hashHex())
+            expect(lastPut2.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHash().hex())
+            expect(lastPut2.get().pkh().get().recipient()).to.eq(wallet2.keys().get().pubHash().hex())
+            expect(lastPut2.get().txID()).to.eq(tx.get().hash().hex())
         }
     })
+
+    /*s
 
     it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 1/4', async () => {
         const p = ProposalModel.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3"])
@@ -354,7 +354,7 @@ const main = () => {
         const proposal = await ProposalModel.FetchByIndex(SOCIETY_ID, 10, wallet.sign().header())
         expect(proposal).not.eq(undefined)
         if (proposal){
-            const tx = await wallet.buildTX().vote(Buffer.from(proposal.get().pubKH(), 'hex'), true)
+            const tx = await wallet.buildTX().vote(proposal.get().pubKH(), true)
             expect(tx).not.eq(null)
             if (tx){
                 const response = await tx.broadcast(wallet)
@@ -418,7 +418,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent0)
         expect(thread).not.eq(null)
         if (thread){
-            const tx = await wallet.buildTX().rethread(Buffer.from(thread.get().pubKH(), 'hex'))
+            const tx = await wallet.buildTX().rethread(thread.get().pubKH())
             const balance = wallet.balance()
             expect(tx).not.eq(null)
             if (tx){
@@ -1312,7 +1312,7 @@ const main = () => {
     it('[ONCHAIN] Wallet1 -> create a rethread on Proposal', async () => {
         const proposal = await ProposalModel.FetchByIndex(1, 10)
         expect(proposal).not.eq(undefined)
-        const tx = await wallet.buildTX().rethread(proposal?.get().contentLink().get().output().get().contentPKH() as Buffer)
+        const tx = await wallet.buildTX().rethread(proposal?.get().contentLink().get().output().get().contentPKH().toString('hex') as string)
         const balance = wallet.balance()
         expect(tx).not.eq(null)
         if (tx){
@@ -1462,7 +1462,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, "0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet.buildTX().rethread(Buffer.from(thread.get().pubKH(), 'hex'))
+            const tx = await wallet.buildTX().rethread(thread.get().pubKH())
             const balance = wallet.balance()
             expect(tx).not.eq(null)
             if (tx){
@@ -1760,6 +1760,7 @@ const main = () => {
             expect(consti[0].content == "No rules.")
         }
     })
+    */
 
 }
 

@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { ITransactionUnRaw, IOutputUnRaw } from 'community-coin-types'
 import { Collection, Model } from 'acey'
-import { Inv, Util } from 'wallet-util'
+import { Inv } from 'wallet-util'
 import config from '../config'
 
 import { OutputModel } from './output'
@@ -17,6 +17,10 @@ export interface IUTXO {
     tx: null | ITransactionUnRaw 
     mr: number
     cch: string
+}
+
+export const CalculateOutputMeltedValue = (amount: Inv.InvBigInt, meltedRatio: number): Inv.InvBigInt => {
+    return new Inv.InvBigInt(amount.mulDecimals(meltedRatio))
 }
 
 export class UTXOModel extends Model {
@@ -54,7 +58,7 @@ export class UTXOModel extends Model {
             return r
         }
 
-        const meltedValue = (CCHList: string[]) => Util.CalculateOutputMeltedValue(output().get().value().big(), meltedValueRatio(CCHList))
+        const meltedValue = (CCHList: string[]) => new Inv.InvBigInt(CalculateOutputMeltedValue(output().get().value(), meltedValueRatio(CCHList)))
 
         return { 
             meltedValue, meltedValueRatio,
@@ -73,7 +77,7 @@ export class UTXOCollection extends Collection {
     toInputs = () => {
         return new InputCollection(
             this.map((utxo: UTXOModel) => {
-                return {prev_transaction_hash: utxo.get().txID(), vout: utxo.get().idx(), script_sig: new Uint8Array([]) }
+                return {prev_transaction_hash: utxo.get().txID().hex(), vout: utxo.get().idx(), script_sig: [] as string[] }
             }),
             {}
         )
@@ -82,7 +86,7 @@ export class UTXOCollection extends Collection {
     removeUTXOsFromInputs = (inputs: InputCollection) => {
         inputs.map((i: InputModel) => {
             this.deleteBy((utxo: UTXOModel) => {
-                return utxo.get().txID().eq(i.get().prevTxHash()) && utxo.get().idx() == i.get().vout().number()
+                return utxo.get().txID().eq(i.get().prevTxHash()) && utxo.get().idx() === i.get().vout().number()
             })
         })
         return this.action()
@@ -111,7 +115,7 @@ export class UTXOCollection extends Collection {
         const listUnFetchedTxHash = (): string[] => {
             return this.map((u: UTXOModel) => {
                 if (!u.get().tx())
-                    return u.get().txID()
+                    return u.get().txID().hex()
                 return null
             }).filter(e => !!e)
         }
@@ -124,34 +128,23 @@ export class UTXOCollection extends Collection {
             return UTXOByTxHash(txHashHex)?.find((utxo: UTXOModel) => utxo.get().idx() === vout) as UTXOModel
         }
 
-        const requiredList = (amountRequired: number, CCHList: string[]): UTXOCollection => {
+        const requiredList = (amountRequired: Inv.InvBigInt, CCHList: string[]): UTXOCollection => {
             let ret: UTXOModel[] = []
-            let amountGot = 0
+            let amountGot = new Inv.InvBigInt(0)
 
             for (let i = 0; i < this.count(); i++){
-                ret.push(this.nodeAt(i) as UTXOModel)
-                amountGot += (this.nodeAt(i) as UTXOModel).get().meltedValue(CCHList)
-                if (amountGot > amountRequired) 
+                const utxo = (this.nodeAt(i) as UTXOModel)
+                ret.push(utxo)
+                amountGot = amountGot.add(utxo.get().meltedValue(CCHList))
+                //amountGot > amountRequired
+                if (amountGot.gt(amountRequired))
                     break
             }
             return this.newCollection(ret) as UTXOCollection
         }
 
-        const totalValue = () => {
-            let total = BigInt(0)
-            this.map((utxo: UTXOModel) => {
-                total += BigInt(utxo.get().output().get().value() as any)
-            })
-            return total
-        }
-
-        const totalMeltedValue = (CCHList: string[]) => {
-            let total = 0
-            this.map((utxo: UTXOModel) => {
-                total += utxo.get().meltedValue(CCHList)
-            })
-            return total
-        }
+        const totalValue = (): Inv.InvBigInt => this.reduce((accumulator: Inv.InvBigInt, utxo: UTXOModel) => accumulator.add(utxo.get().output().get().value()), new Inv.InvBigInt(0))
+        const totalMeltedValue = (CCHList: string[]): Inv.InvBigInt => this.reduce((accumulator: Inv.InvBigInt, utxo: UTXOModel) => accumulator.add(utxo.get().meltedValue(CCHList)), new Inv.InvBigInt(0))
 
         return { 
             totalMeltedValue, requiredList, 

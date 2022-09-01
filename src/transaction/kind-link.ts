@@ -24,7 +24,7 @@ export class KindLinkModel extends Model {
 
     get = () => {
         return {
-            txID: () => new Inv.TxHash(this.state.tx_id),
+            txID: () => Inv.TxHash.fromHex(this.state.tx_id),
             lh: (): number => this.state.lh,
             vout: (): number => this.state.vout,
             output: (): OutputModel => this.state.output,
