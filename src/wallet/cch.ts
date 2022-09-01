@@ -21,7 +21,6 @@ export default class CCHModel extends Model {
 
     fetch = async (wallet: WalletModel) => {
         if (wallet.utxos().get().count() > 0){
-            // await wallet.auth().refresh()
             try {
                 const res = await axios(config.getRootAPIChainUrl() + '/cch', {
                     headers: Object.assign({}, wallet.sign().header() as any, {last_cch: this.get().last() }),

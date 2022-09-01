@@ -11,7 +11,7 @@ import { Inv } from 'wallet-util'
 
 const DEFAULT_STATE: IInputUnRaw = {
 	prev_transaction_hash: '',
-	vout: -2,
+	vout: -1,
 	script_sig: []
 }
 
@@ -33,7 +33,7 @@ export class InputModel extends Model {
 
     get = () => {
         const prevTxHash = (): Inv.TxHash | null => this.state.prev_transaction_hash ? Inv.TxHash.fromHex(this.state.prev_transaction_hash) : null
-        const vout = (): Inv.InvBigInt => new Inv.InvBigInt(typeof this.state.vout === 'number' ? this.state.vout : -1)
+        const vout = (): number => typeof this.state.vout === 'number' ? this.state.vout : -1
         const script = () => Script.new(this.state.script_sig, 'base64')
         return { vout, prevTxHash, script }
     }
@@ -42,7 +42,7 @@ export class InputModel extends Model {
         const def = (): IInputRaw => {
             return {
                 prev_transaction_hash: this.get().prevTxHash()?.bytes() || new Uint8Array(),
-                vout: this.get().vout().bytes('int16').bytes(),
+                vout: new Inv.InvBigInt(this.get().vout()).bytes('int16').bytes(),
                 script_sig: this.get().script().bytes()
             }
         }
@@ -50,7 +50,7 @@ export class InputModel extends Model {
         const base64 = () => {
             return {
                 prev_transaction_hash: this.get().prevTxHash()?.base64() || "",
-                vout: this.get().vout().base64('int16'),
+                vout: new Inv.InvBigInt(this.get().vout()).base64('int16'),
                 script_sig: this.get().script().base64()
             }
         }
@@ -72,7 +72,7 @@ export class InputCollection extends Collection {
     prevTxIDndVoutList = (): {tx_id: string, vout: number}[] => {
         return this.map((i: InputModel) => {
             return {
-                tx_id: i.get().prevTxHash(),
+                tx_id: i.get().prevTxHash()?.hex(),
                 vout: i.get().vout()
             }
         })
@@ -89,7 +89,7 @@ export class InputCollection extends Collection {
         if (utxos.length == 0)
             return 0
         try { 
-                const listTxIDs = utxos.map((u) => u.get().txID())
+                const listTxIDs = utxos.map((u) => u.get().txID().hex())
                 const response = await axios(config.getRootAPIChainUrl() + '/transactions/list', {
                     headers: Object.assign({}, headerSignature as any, {list: listTxIDs.join(',') }),
                     timeout: 10000,

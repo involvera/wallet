@@ -266,12 +266,11 @@ export default class Wallet extends Model {
     sign = () => {
         const value = (d: Uint8Array | string) => this.keys().get().wallet().sign(d)
         const transaction = async (tx: TransactionModel) => {
-
             const n = await tx.get().inputs().fetchPrevTxList(this.sign().header(), this.utxos().get())
             n > 0 && this.utxos().get().action().store()
 
             tx.get().inputs().forEach((input: InputModel) => {
-                const utxo = this.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash()?.hex() || '', input.get().vout().number())
+                const utxo = this.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash()?.hex() || '', input.get().vout())
                 if (!utxo)
                     throw new Error("Unfound UTXO")
                 const prevTx = utxo.get().tx() as TransactionModel

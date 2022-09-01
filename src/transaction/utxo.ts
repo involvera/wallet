@@ -58,7 +58,7 @@ export class UTXOModel extends Model {
             return r
         }
 
-        const meltedValue = (CCHList: string[]) => new Inv.InvBigInt(CalculateOutputMeltedValue(output().get().value(), meltedValueRatio(CCHList)))
+        const meltedValue = (CCHList: string[]) => CalculateOutputMeltedValue(output().get().value(), meltedValueRatio(CCHList))
 
         return { 
             meltedValue, meltedValueRatio,
@@ -86,7 +86,7 @@ export class UTXOCollection extends Collection {
     removeUTXOsFromInputs = (inputs: InputCollection) => {
         inputs.map((i: InputModel) => {
             this.deleteBy((utxo: UTXOModel) => {
-                return utxo.get().txID().eq(i.get().prevTxHash()) && utxo.get().idx() === i.get().vout().number()
+                return utxo.get().txID().eq(i.get().prevTxHash()) && utxo.get().idx() === i.get().vout()
             })
         })
         return this.action()
@@ -135,8 +135,7 @@ export class UTXOCollection extends Collection {
             for (let i = 0; i < this.count(); i++){
                 const utxo = (this.nodeAt(i) as UTXOModel)
                 ret.push(utxo)
-                amountGot = amountGot.add(utxo.get().meltedValue(CCHList))
-                //amountGot > amountRequired
+                amountGot.addEq(utxo.get().meltedValue(CCHList))
                 if (amountGot.gt(amountRequired))
                     break
             }
