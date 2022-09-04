@@ -16,8 +16,16 @@ export class LinkModel extends Model {
 
     get = () => {
         return {
-            from: (): string => this.state.from,
-            to: (): string => this.state.to
+            from: (): string | number => {
+                if (isNaN(parseInt(this.state.from)))
+                    return this.state.from as string
+                return parseInt(this.state.from)
+            },
+            to: (): string | number => {
+                if (isNaN(parseInt(this.state.to)))
+                    return this.state.to as string
+                return parseInt(this.state.to)    
+            }
         }
     }
 }

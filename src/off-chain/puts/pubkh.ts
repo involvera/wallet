@@ -1,5 +1,6 @@
 import { Model } from 'acey' 
 import { IPubKH } from 'community-coin-types'
+import { Inv } from 'wallet-util'
 
 const DEFAULT_VALUE: IPubKH = {
     sender: '',
@@ -16,8 +17,8 @@ export class PubKHModel extends Model {
 
     get = () => {
         return {
-            sender: (): string => this.state.sender,
-            recipient: (): string => this.state.recipient
+            sender: (): Inv.PubKH | null => this.state.sender ? Inv.PubKH.fromHex(this.state.sender) : null,
+            recipient: (): Inv.PubKH | null => this.state.recipient ? Inv.PubKH.fromHex(this.state.recipient) : null
         }
     }
 }

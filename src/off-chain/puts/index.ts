@@ -69,27 +69,27 @@ export class UnserializedPutModel extends Model {
     isProposal = () => this.isConstitutionProposal() || this.isCostProposal() || this.isApplicationProposal()
 
     isVote = () => this.isAcceptedVote() || this.isDeclinedVote()
-    isThread = () => this.get().extraData() === "" && this.get().contentPKH() != ""
-    isRethread = () => this.get().extraData() === "" && this.get().contentPKH() != "" && this.get().contentPKHTargeted() != ""
+    isThread = () => this.get().extraData() === "" && !!this.get().contentPKH()
+    isRethread = () => this.get().extraData() === "" && !!this.get().contentPKH() && !!this.get().contentPKHTargeted()
     
-    isRegularTx = () => this.get().extraData() == "" && this.get().contentPKH() == "" && this.get().contentPKHTargeted() == ""
-    isLughTx = () => this.isRegularTx() && this.get().pkh().get().sender() == ""
+    isRegularTx = () => this.get().extraData() == "" && !this.get().contentPKH() && !this.get().contentPKHTargeted()
+    isLughTx = () => this.isRegularTx() && !this.get().pkh().get().sender()
 
-    pretty = (pkh: string) => {
+    pretty = (pkh: Inv.PubKH) => {
         let action = ''
         let from = ''
         let to: string | number = ''
-        const amount = `${this.get().pkh().get().sender() == pkh ? '-' : '+'}${parseFloat(parseFloat(this.get().value().divDecimals(COIN_UNIT)).toFixed(2)).toLocaleString('en')}`
+        const amount = `${this.get().pkh().get().sender()?.eq(pkh) ? '-' : '+'}${parseFloat(parseFloat(this.get().value().divDecimals(COIN_UNIT)).toFixed(2)).toLocaleString('en')}`
 
         if (this.isRegularTx()){
             if (this.isLughTx()){
                 const lStr = this.get().height().toString()
                 from = 'L'+'000000'.slice(0, 6 - lStr.length) + lStr
             } else {
-                const amIFrom = this.get().pkh().get().sender() === pkh
+                const amIFrom = this.get().pkh().get().sender()?.eq(pkh)
 
-                const toAddr = (hexPKH: string) => {
-                    const addr = Inv.PubKH.fromHex(hexPKH).toAddress().get()
+                const toAddr = (pkh: Inv.PubKH) => {
+                    const addr = pkh.toAddress().get()
                     if (!this.get().otherPartyAlias())
                         return addr
 
@@ -97,8 +97,8 @@ export class UnserializedPutModel extends Model {
                     return a.get().username() || addr
                 }
 
-                from = amIFrom ? 'You' : toAddr(this.get().pkh().get().sender())
-                to = !amIFrom ? 'you' : toAddr(this.get().pkh().get().recipient())
+                from = amIFrom ? 'You' : toAddr(this.get().pkh().get().sender() as Inv.PubKH)
+                to = !amIFrom ? 'you' : toAddr(this.get().pkh().get().recipient() as Inv.PubKH)
                 action = 'sent to'
             }
         } else {
@@ -109,18 +109,18 @@ export class UnserializedPutModel extends Model {
             } else if (this.isThread()){
                 from = ''
                 action = 'New thread created : '
-                to = this.get().contentPKH()
+                to = this.get().contentPKH()?.hex() as string
             } else if (this.isRethread()){
                 from = 'You'
                 action = 'replied to'
-                to = this.get().contentPKHTargeted()
+                to = this.get().contentPKHTargeted()?.hex() as string
             } else if (this.isProposal()){
                 action = `New ${this.get().extraData()} proposal`
                 to = this.get().indexProposalTargeted()
             } else if (this.isReward()){
                 from = 'You'
                 action = this.isUpvote() ? 'upvoted' : 'rewarded'
-                to = this.get().contentPKHTargeted()
+                to = this.get().contentPKHTargeted()?.hex() as string
             } 
         }
 
@@ -164,20 +164,28 @@ export class UnserializedPutModel extends Model {
         }
         */
 
-        const contentPKH = (): string => link().get().from()
+        const contentPKH = () => {
+            const from = link().get().from()
+            if (typeof from === 'string'){
+                return Inv.PubKH.fromHex(from)
+            }
+            return null
+        }
         
-        const contentPKHTargeted = (): string => {
-            if (!this.isProposal() && !this.isVote())
-                return link().get().to()
-            return ""
+        const contentPKHTargeted = () => {
+            const to = link().get().to()
+            if (typeof to === 'string'){
+                return Inv.PubKH.fromHex(to)
+            }
+            return null
         }
         
         //Only usable method for proposal and vote puts.
         const indexProposalTargeted = (): number => {
             if (this.isProposal())
-                return parseInt(link().get().from())
+                return link().get().from() as number
             if (this.isVote())
-                return parseInt(link().get().to())
+                return link().get().to() as number
             return -1
         }
         
@@ -188,7 +196,7 @@ export class UnserializedPutModel extends Model {
             link,
             index,
             value: () => (this.state.value as ValueModel).get().atCreationTime(),
-            txID: (): string => this.state.tx_id,
+            txID: (): Inv.TxHash => Inv.TxHash.fromHex(this.state.tx_id),
             createdAt: () => new Date(this.state.time),
             height: (): number => this.state.lh,
             contentPKH,
@@ -243,8 +251,8 @@ export class UnserializedPutCollection extends Collection {
 
 
     get = () => {
-        const inputs = (pkhHex: string): UnserializedPutCollection => this.filter((p: UnserializedPutModel) => p.get().pkh().get().sender() == pkhHex) as UnserializedPutCollection
-        const outputs = (pkhHex: string): UnserializedPutCollection => this.filter((p: UnserializedPutModel) => p.get().pkh().get().recipient() == pkhHex) as UnserializedPutCollection
+        const inputs = (pkh: Inv.PubKH): UnserializedPutCollection => this.filter((p: UnserializedPutModel) => p.get().pkh().get().sender()?.eq(pkh)) as UnserializedPutCollection
+        const outputs = (pkh: Inv.PubKH): UnserializedPutCollection => this.filter((p: UnserializedPutModel) => p.get().pkh().get().recipient()?.eq(pkh)) as UnserializedPutCollection
         return {
             inputs, outputs,
         }

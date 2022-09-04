@@ -17,7 +17,7 @@ export default class ValueModel extends Model {
 
     get = () => {
         return {
-            atCreationTime: (): Inv.InvBigInt => new Inv.InvBigInt(this.state.at_time),
+            atCreationTime: () => new Inv.InvBigInt(this.state.at_time),
             now: () => new Inv.InvBigInt(this.state.now)
         }
     }

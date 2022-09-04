@@ -51,6 +51,7 @@ export default class TxBuild {
 
     private _makeTxWithFees = (tx: TransactionModel): UTXOCollection => {
         const fees = tx.get().fees(this.wallet.fees().get().feePerByte())
+
         this._addTXFeesToBuild(fees)
         const { utxos, outputs } = this._generateMeltingPuts()
         const inputs = utxos.toInputs()
@@ -71,8 +72,9 @@ export default class TxBuild {
     setupUTXOs = (amountRequired: Inv.InvBigInt) => {
         const availableUTXOs = this.wallet.utxos().get().get().requiredList(amountRequired, this.wallet.cch().get().list())
         const totalEscrow = availableUTXOs.get().totalMeltedValue(this.wallet.cch().get().list())
-        if (totalEscrow.lw(amountRequired))
-            throw NOT_ENOUGH_FUNDS_ERROR
+        if (totalEscrow.lw(amountRequired)){
+            throw NOT_ENOUGH_FUNDS_ERROR            
+        }
         return availableUTXOs
     }
 
@@ -97,7 +99,7 @@ export default class TxBuild {
     _generateMeltingPuts = () => {
         let outputs = new OutputCollection([], {})
         const utxos = this.setupUTXOs(this.totalAmount())
-        const amounts = this.amount_required
+        const amounts = this.amount_required.slice()
         const nInputs = utxos.count()
         const CCHList = this.wallet.cch().get().list()
 
@@ -141,7 +143,7 @@ export default class TxBuild {
         //>0
         while (totalToSendLeft.gt(0)){
             let fromUTXOIdx = utxoIndex
-            let meltedAmountLeftToSendInCurrentOutput = amounts[toIndex]
+            let meltedAmountLeftToSendInCurrentOutput = new Inv.InvBigInt(amounts[toIndex])
             currentRealAmountToSend = new Inv.InvBigInt(0)
 
             //>0

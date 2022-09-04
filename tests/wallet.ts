@@ -151,7 +151,7 @@ const main = () => {
         const p = ThreadModel.NewContent(1, "", "Content of my thread")
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(404)
-        expect(res.data.error).to.eq("You need to create an alias on your address before adding content.")
+        expect(res.data.error).to.eq("you need to create an alias on your address before adding content")
     })
 
     it('[ONCHAIN] Wallet1 sends some coins to Wallet2 ', async () => {
@@ -174,15 +174,15 @@ const main = () => {
 
             const lastPut1 = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
             expect(lastPut1.get().value().big()).to.eq(total.big())
-            expect(lastPut1.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHash().hex())
-            expect(lastPut1.get().pkh().get().recipient()).to.eq(wallet2.keys().get().pubHash().hex())
-            expect(lastPut1.get().txID()).to.eq(tx.get().hash().hex())
+            expect(lastPut1.get().pkh().get().sender()?.hex()).to.eq(wallet.keys().get().pubHash().hex())
+            expect(lastPut1.get().pkh().get().recipient()?.hex()).to.eq(wallet2.keys().get().pubHash().hex())
+            expect(lastPut1.get().txID().hex()).to.eq(tx.get().hash().hex())
             
             const lastPut2 = wallet2Puts.first() as UnserializedPutModel
             expect(lastPut2.get().value().big()).to.eq(total.big())
-            expect(lastPut2.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHash().hex())
-            expect(lastPut2.get().pkh().get().recipient()).to.eq(wallet2.keys().get().pubHash().hex())
-            expect(lastPut2.get().txID()).to.eq(tx.get().hash().hex())
+            expect(lastPut2.get().pkh().get().sender()?.hex()).to.eq(wallet.keys().get().pubHash().hex())
+            expect(lastPut2.get().pkh().get().recipient()?.hex()).to.eq(wallet2.keys().get().pubHash().hex())
+            expect(lastPut2.get().txID().hex()).to.eq(tx.get().hash().hex())
         }
     })
 
@@ -193,7 +193,6 @@ const main = () => {
         expect(res.data.error).to.eq("Not Found")
     })
 
-    /*
     it('[ONCHAIN] Wallet1 -> create a proposal : application', async () => {
         const balance = wallet.balance()
         const tx = await wallet.buildTX().proposal().application()
@@ -202,14 +201,15 @@ const main = () => {
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
             await walletPuts.fetch(wallet.sign().header(), true).all()
-            expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte())-1)
+            expect(wallet.balance().big()).to.eq(balance.sub(wallet.costs().get().proposal()).sub(tx.get().fees(wallet.fees().get().feePerByte())).sub(1).big())
             expect(walletPuts.count()).to.eq(7)
             const lastPut = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
-            expect(Number(lastPut.get().value())).to.eq(wallet.costs().get().proposal())
-            expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
+            expect(lastPut.get().value().big()).to.eq(wallet.costs().get().proposal().big())
+            expect(lastPut.get().pkh().get().sender()?.hex()).to.eq(wallet.keys().get().pubHash().hex())
             expect(lastPut.isProposal()).to.eq(true)
             expect(lastPut.isApplicationProposal() ).to.eq(true)
-            expect(lastPut.get().contentPKH()).to.not.eq("")
+            expect(lastPut.get().contentPKH()).to.eq(null)
+            expect(lastPut.get().indexProposalTargeted()).to.eq(8)
         }
     })
 
@@ -217,32 +217,32 @@ const main = () => {
         const p = ProposalModel.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(406)
-        expect(res.data.error).to.eq("Wrong length of content.")
+        expect(res.data.error).to.eq("wrong length of content")
     })
-    
+
     it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 3/4', async () => {
         const p = ProposalModel.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3", "Content 4"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(404)
-        expect(res.data.error).to.eq("You need to create an alias on your address before adding content.")
+        expect(res.data.error).to.eq("you need to create an alias on your address before adding content")
     })
 
     it('[OFFCHAIN] Create an alias on Wallet 1', async () => {        
         let alias = wallet.keys().get().alias()
-        expect(alias.get().address()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
-        expect(wallet.keys().get().address()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
+        expect(alias.get().address().get()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
+        expect(wallet.keys().get().address().get()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
         alias.setUsername('fantasim')
         const res = await alias.updateUsername(wallet.keys().get().wallet(), SOCIETY_ID)
         expect(res.status).to.eq(201)
 
         alias = wallet.keys().get().alias()
-        expect(alias.get().address()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
+        expect(alias.get().address().get()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
         expect(alias.get().username()).to.eq('fantasim')
         expect(alias.get().pp()).to.eq(null)
         const urlpp500 = await alias.fetchBigPP()
         expect(urlpp500).to.eq(null)
     })
-
+    /*
     it('[OFFCHAIN] Fetch user (Wallet1) 1', async () => {
         const user = await UserModel.FetchByAddress(SOCIETY_ID, wallet.keys().get().address(), wallet.sign().header())
         expect(user).to.not.eq(null)

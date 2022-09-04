@@ -63,7 +63,7 @@ export class TransactionModel extends Model {
                 data: this.toRaw().base64(),
                 timeout: 15000,
                 validateStatus: function (status) {
-                    return status >= 200 && status < 500;
+                    return status >= 200 && status <= 500;
                 },
             })
             if (response.status === 201){
