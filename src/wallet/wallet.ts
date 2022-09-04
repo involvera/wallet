@@ -10,7 +10,7 @@ import KeysModel from './keys'
 import CCHModel from './cch'
 import InfoModel from './info'
 
-import { InputModel, TransactionModel, UTXOCollection } from '../transaction'
+import { InputModel, OutputModel, TransactionModel, UTXOCollection } from '../transaction'
 
 import config from '../config'
 import TxBuild from './tx-builder' 
@@ -269,17 +269,16 @@ export default class Wallet extends Model {
             const n = await tx.get().inputs().fetchPrevTxList(this.sign().header(), this.utxos().get())
             n > 0 && this.utxos().get().action().store()
 
-            tx.get().inputs().forEach((input: InputModel) => {
+            const inputs = tx.get().inputs()
+            for (let i = 0; i < inputs.count(); i++){
+                const input = inputs.nodeAt(i) as InputModel
                 const utxo = this.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash()?.hex() || '', input.get().vout())
                 if (!utxo)
                     throw new Error("Unfound UTXO")
                 const prevTx = utxo.get().tx() as TransactionModel
-                input.setState({ 
-                    script_sig: Script.build().unlockScript(
-                        value(prevTx.get().hash().bytes()), 
-                        this.keys().get().pub()).base64() 
-                })
-            })
+                const script_sig = Script.build().unlockScript(value(prevTx.get().hash().bytes()), this.keys().get().pub()).base64() 
+                input.setState({ script_sig })
+            }
             return true
         }
         

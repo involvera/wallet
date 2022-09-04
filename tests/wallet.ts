@@ -164,7 +164,7 @@ const main = () => {
             expect(response.status).to.eq(201)
             await wallet2.synchronize()
             expect(wallet2.balance().big()).to.eq(total.big())
-            expect(wallet.balance().big()).to.eq(balanceBefore.sub(total).sub(tx.get().fees(wallet.fees().get().feePerByte())).sub(1).big())
+            expect(wallet.balance().big()).to.eq(balanceBefore.sub(total).sub(tx.get().fees(wallet.fees().get().feePerByte())).big())
 
             await walletPuts.fetch(wallet.sign().header(), true).all()
             await wallet2Puts.fetch(wallet2.sign().header(), true).all()
@@ -179,14 +179,12 @@ const main = () => {
             expect(lastPut1.get().txID()).to.eq(tx.get().hash().hex())
             
             const lastPut2 = wallet2Puts.first() as UnserializedPutModel
-            expect(lastPut2.get().value()).to.eq(total)
+            expect(lastPut2.get().value().big()).to.eq(total.big())
             expect(lastPut2.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHash().hex())
             expect(lastPut2.get().pkh().get().recipient()).to.eq(wallet2.keys().get().pubHash().hex())
             expect(lastPut2.get().txID()).to.eq(tx.get().hash().hex())
         }
     })
-
-    /*s
 
     it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 1/4', async () => {
         const p = ProposalModel.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3"])
@@ -195,6 +193,7 @@ const main = () => {
         expect(res.data.error).to.eq("Not Found")
     })
 
+    /*
     it('[ONCHAIN] Wallet1 -> create a proposal : application', async () => {
         const balance = wallet.balance()
         const tx = await wallet.buildTX().proposal().application()

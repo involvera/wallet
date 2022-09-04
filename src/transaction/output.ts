@@ -38,23 +38,23 @@ export class OutputModel extends Model {
 
         let size = value.length
         size += this.get().script().fullSizeOctet()
-		size += Inv.InvBuffer.FromUint8s(...input_src_idxs).length()
+		size += Inv.InvBuffer.FromUint8s(...input_src_idxs).length() + input_src_idxs.length
         return size
     }
 
 	toRaw = () => {
 		const def = (): IOutputRaw  => {
 			return {
-				input_src_idxs: Inv.ArrayInvBigInt.fromNumbers(this.get().inputSourceIdxs()).toArrayBuffer('int16').toDoubleUInt8Array(),
-				value: this.get().value().bytes('uint64').bytes(),
+				input_src_idxs: Inv.ArrayInvBigInt.fromNumbers(this.get().inputSourceIdxs()).toArrayBuffer('int32').toDoubleUInt8Array(),
+				value: this.get().value().bytes('int64').bytes(),
 				script: this.get().script().bytes()
 			}
 		}
 
 		const base64 = () => {
 			return {
-				input_src_idxs: Inv.ArrayInvBigInt.fromNumbers(this.get().inputSourceIdxs()).toArrayBuffer('int16').toArrayBase64(),
-				value: this.get().value().base64('uint64'),
+				input_src_idxs: Inv.ArrayInvBigInt.fromNumbers(this.get().inputSourceIdxs()).toArrayBuffer('int32').toArrayBase64(),
+				value: this.get().value().base64('int64'),
 				script: this.get().script().base64()
 			}
 		}
@@ -111,7 +111,7 @@ export class OutputCollection extends Collection {
         super(initialState, [OutputModel, OutputCollection], options)
     }
 
-	size = (): number => this.reduce((accumulator: number, out: OutputModel) => accumulator += out.size(), 0) + this.count()
+	size = (): number => this.reduce((accumulator: number, out: OutputModel) => accumulator + out.size(), 0) + this.count()
 
 	containsPKHInLockScript = (pubKH: Inv.PubKH) => {
 		for (let i = 0; i < this.count(); i++){

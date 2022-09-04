@@ -7,6 +7,7 @@ import { OutputCollection, OutputModel } from './output'
 import { InputModel, InputCollection } from './input'
 import WalletModel from '../wallet/wallet'
 import config from '../config'
+import { Script } from 'wallet-script'
 
 const {
     Sha256
@@ -88,17 +89,8 @@ export class TransactionModel extends Model {
         const outputs = (): OutputCollection => this.state.outputs
 
         const billedSize = (): Inv.InvBigInt => {
-            let size = this.size()
-            size -= this.get().inputs().size()
-
-            const countInputs = this.get().inputs().count()
-            const scriptSize = countInputs + (countInputs * Inv.PubKey.LENGTH) + (countInputs * Inv.Signature.LENGTH_MAX) + (countInputs * 2)
-            const voutSize = countInputs * 4
-            const prevTxHashSize = countInputs * Inv.TxHash.LENGTH
-
-            const billedInputsSize = scriptSize + voutSize + prevTxHashSize
-            size += billedInputsSize
-
+            let size = this.size() - this.get().inputs().size()
+            size += this.get().inputs().count() * (Inv.Signature.LENGTH_MAX + Inv.PubKey.LENGTH) + this.get().inputs().count()
             return new Inv.InvBigInt(size)
         }
 
@@ -114,36 +106,20 @@ export class TransactionModel extends Model {
 
     toRaw = () => {
         const def = (): ITransactionRaw => {
-            let inputs: IInputRaw[] = []
-            let outputs: IOutputRaw[] = []
-    
-            for (let i = 0; i < this.get().inputs().count(); i++){
-                const input = this.get().inputs().nodeAt(i) as InputModel 
-                inputs.push(input.toRaw().default())
-            }
-    
-            for (let i = 0; i < this.get().outputs().count(); i++){
-                const output = this.get().outputs().nodeAt(i) as OutputModel 
-                outputs.push(output.toRaw().default())
-            }
-    
             return {
-                lh: this.get().lughHeight().bytes('uint32').bytes(),
-                t: this.get().time().bytes('uint64').bytes(),
-                inputs,
-                outputs
+                lh: this.get().lughHeight().bytes('int32').bytes(),
+                t: this.get().time().bytes('int64').bytes(),
+                inputs: this.get().inputs().map((input: InputModel) => input.toRaw().default()),
+                outputs: this.get().outputs().map((out: OutputModel) => out.toRaw().default())
             }
         }
 
         const base64 = () => {
-            const inputs = this.get().inputs()
-            const outputs = this.get().outputs()
-
             return {
-                lh: this.get().lughHeight().base64('uint32'),
-                t: this.get().time().base64('uint64'),
-                inputs: inputs.map((inp: InputModel) => inp.toRaw().base64()),
-                outputs: outputs.map((out: OutputModel) => out.toRaw().base64())
+                lh: this.get().lughHeight().base64('int32'),
+                t: this.get().time().base64('int64'),
+                inputs: this.get().inputs().map((inp: InputModel) => inp.toRaw().base64()),
+                outputs: this.get().outputs().map((out: OutputModel) => out.toRaw().base64())
             }
         }
 
@@ -152,13 +128,8 @@ export class TransactionModel extends Model {
 
     toString = () => {
         const plain = this.to().plain()
-        for (let i = 0; i < plain.inputs.length; i++){
-            plain.inputs[i].script_sig = (this.get().inputs().nodeAt(i) as InputModel).get().script().toString()
-        }
-
-        for (let i = 0; i < plain.outputs.length; i++){
-            plain.outputs[i].script = (this.get().outputs().nodeAt(i) as OutputModel).get().script().toString()
-        }
+        plain.inputs = plain.inputs.map((e: any) => Script.fromBase64(e.script_sig).pretty())
+        plain.outputs = plain.outputs.map((e: any) => Script.fromBase64(e.script).pretty())
         return plain
     }
 

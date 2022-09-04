@@ -42,7 +42,7 @@ export class InputModel extends Model {
         const def = (): IInputRaw => {
             return {
                 prev_transaction_hash: this.get().prevTxHash()?.bytes() || new Uint8Array(),
-                vout: new Inv.InvBigInt(this.get().vout()).bytes('int16').bytes(),
+                vout: new Inv.InvBigInt(this.get().vout()).bytes('int32').bytes(),
                 script_sig: this.get().script().bytes()
             }
         }
@@ -50,7 +50,7 @@ export class InputModel extends Model {
         const base64 = () => {
             return {
                 prev_transaction_hash: this.get().prevTxHash()?.base64() || "",
-                vout: new Inv.InvBigInt(this.get().vout()).base64('int16'),
+                vout: new Inv.InvBigInt(this.get().vout()).base64('int32'),
                 script_sig: this.get().script().base64()
             }
         }
@@ -66,8 +66,7 @@ export class InputCollection extends Collection {
         super(initialState, [InputModel, InputCollection], options)
     }
 
-    size = (): number => this.reduce((accumulator: number, inp: InputModel) => accumulator += inp.size(), 0) + this.count()
-
+    size = (): number => this.reduce((accumulator: number, inp: InputModel) => accumulator + inp.size(), 0) + this.count()
 
     prevTxIDndVoutList = (): {tx_id: string, vout: number}[] => {
         return this.map((i: InputModel) => {

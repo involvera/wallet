@@ -20,7 +20,7 @@
     "involvera-content-embedding": "^1.1.8",
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
-    "wallet-script": "^1.1.3",
+    "wallet-script": "^1.1.7",
     "wallet-util": "^1.2.1"
   },
   "devDependencies": {
