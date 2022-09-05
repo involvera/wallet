@@ -37,9 +37,9 @@ export class ContributorModel extends Model {
             position: (): number => this.state.position,
             sid: (): number => this.state.sid,
             contentNonce: (): number => this.state.content_nonce,
-            votePowerCount: (): number => this.state.vote_power_count,
-            rewardsReceivedLast3Months: (): number => this.state.rewards_received_270,
-            balance: (): number => this.state.balance
+            votePowerCount: (): Inv.InvBigInt => new Inv.InvBigInt(this.state.vote_power_count),
+            rewardsReceivedLast3Months: (): Inv.InvBigInt => new Inv.InvBigInt(this.state.rewards_received_270),
+            balance: (): Inv.InvBigInt  => new Inv.InvBigInt(this.state.balance)
         }
     }
 
@@ -50,8 +50,8 @@ export class ContributorCollection extends Collection {
         super(state, [ContributorModel, ContributorCollection], options)
     }
 
-    findByAddress = (addr: string): ContributorModel | undefined => {
-        return this.find({ addr }) as ContributorModel | undefined
+    findByAddress = (addr: Inv.Address): ContributorModel | undefined => {
+        return this.find({ addr: addr.get() }) as ContributorModel | undefined
     }
 
     reset = () => this.setState([])

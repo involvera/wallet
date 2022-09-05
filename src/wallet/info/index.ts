@@ -42,10 +42,10 @@ export default class InfoModel extends Model {
         })
     }
     
-    iterateTotalContent = (n: number) => this.setState({content_nonce: this.get().contentNonce() + n})
+    iterateTotalContent = (n: number) => this.setState({content_nonce: this.get().contentNonce().number() + n})
 
     get = () => {
-        const contentNonce = (): number => this.state.content_nonce 
+        const contentNonce = (): Inv.InvBigInt => new Inv.InvBigInt(this.state.content_nonce) 
         const balance = () => new Inv.InvBigInt(this.state.balance)
         const votePowerCount = () => new Inv.InvBigInt(this.state.vote_power_count)
         const rewardsReceivedLast90D = () => new Inv.InvBigInt(this.state.rewards_received_270)

@@ -225,8 +225,8 @@ export class ProposalModel extends Model {
             }
         }
 
-        const pubKH = () => Inv.PubKH.fromHex(this.state.public_key_hashed)
-        const pubKHOrigin = () => Inv.PubKH.fromHex(this.state.pubkh_origin)
+        const pubKH = () => this.state.public_key_hashed ? Inv.PubKH.fromHex(this.state.public_key_hashed) : null
+        const pubKHOrigin = () => this.state.pubkh_origin ? Inv.PubKH.fromHex(this.state.pubkh_origin) : null
 
         const context = (): ICostProposal | IConstitutionProposalUnRaw | null => {
             if (this.state.context){

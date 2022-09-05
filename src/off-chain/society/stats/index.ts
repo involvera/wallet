@@ -48,8 +48,8 @@ export class SocietyStatsModel extends Model {
             totalProposal: (): number => this.state.total_proposal,
             activeAddresses: (): number => this.state.active_addresses,
             mostActiveAddresses: (): AliasCollection => this.state.most_active_addresses,
-            circulatingSupply: (): Inv.InvBigInt => new Inv.InvBigInt(BigInt(this.state.circulating_supply)), 
-            circulatingVPSupply: (): Inv.InvBigInt => new Inv.InvBigInt(BigInt(this.state.circulating_vp_supply)),
+            circulatingSupply: (): Inv.InvBigInt => new Inv.InvBigInt(this.state.circulating_supply), 
+            circulatingVPSupply: (): Inv.InvBigInt => new Inv.InvBigInt(this.state.circulating_vp_supply),
             lastThreadCostChange: (): LastCostChangeModel => this.state.last_thread_cost_change,
             lastProposalCostChange: (): LastCostChangeModel => this.state.last_proposal_cost_change
         }

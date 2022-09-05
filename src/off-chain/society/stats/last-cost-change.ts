@@ -1,5 +1,6 @@
 import { Model } from 'acey'
 import { ICostHistory } from 'community-coin-types'
+import { Inv } from 'wallet-util'
 
 const DEFAULT_STATE: ICostHistory = {
     proposal_index: 0,
@@ -25,9 +26,9 @@ export class LastCostChangeModel extends Model{
             proposalIndex: (): number => this.state.proposal_index,
             fromLH: (): number => this.state.from_lh,
             validatedAtTime: (): number => this.state.validated_at_time,
-            validatedAtTxHeight: (): number => this.state.validated_at_tx_height,
-            threadCost: (): number => this.state.thread_cost,
-            proposalCost: (): number => this.state.proposal_cost
+            validatedAtTxHeight: (): Inv.InvBigInt => new Inv.InvBigInt(this.state.validated_at_tx_height),
+            threadCost: (): Inv.InvBigInt => new Inv.InvBigInt(this.state.thread_cost),
+            proposalCost: (): Inv.InvBigInt  => new Inv.InvBigInt(this.state.proposal_cost)
         }
     }
 }

@@ -77,9 +77,9 @@ export class SocietyModel extends Model {
         })
     }
 
-    fetchContributor = async (addr: string) => {
+    fetchContributor = async (addr: Inv.Address) => {
         try {
-            const res = await axios(config.getRootAPIChainUrl() + `/wallet/${new Inv.Address(addr).toPKH().hex()}`, {
+            const res = await axios(config.getRootAPIChainUrl() + `/wallet/${addr.toPKH().hex()}`, {
                 headers: {
                     'content-type': 'application/json'
                 },
@@ -88,8 +88,8 @@ export class SocietyModel extends Model {
                 },
             })
             if (res.status == 200){
-                const idx = this.get().contributors().findIndex({ addr: addr })
-                const d = Object.assign({addr, sid: this.get().id()}, res.data)
+                const idx = this.get().contributors().findIndex({ addr: addr.get() })
+                const d = Object.assign({addr: addr.get(), sid: this.get().id()}, res.data)
                 idx == -1 ? this.get().contributors().push(d) : this.get().contributors().updateAt(d, idx)
             }
             return res

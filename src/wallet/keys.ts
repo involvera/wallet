@@ -110,8 +110,8 @@ export default class KeysModel extends Model {
         const address = () => pubHash().toAddress()
         const passwordClear = () => this._password
 
-        const contentWallet = (nonce: number) => mnemonic().deriveForContent(nonce)
-        const contentPubKey = (nonce: number) => contentWallet(nonce).publicKey()
+        const contentWallet = (nonce: Inv.InvBigInt) => mnemonic().deriveForContent(nonce.number())
+        const contentPubKey = (nonce: Inv.InvBigInt) => contentWallet(nonce).publicKey()
 
         return {
             mnemonic,

@@ -111,7 +111,7 @@ export default class Wallet extends Model {
             
             const application = async () => {
                 await this.synchronize()
-                const contentNonce = this.info().get().contentNonce() + 1
+                const contentNonce = this.info().get().contentNonce().add(1)
     
                 const script = Script.build().applicationProposal(contentNonce, this.keys().get().contentPubKey(contentNonce).hash()) 
 
@@ -125,7 +125,7 @@ export default class Wallet extends Model {
 
             const cost = async (threadCost: Inv.InvBigInt, proposalCost: Inv.InvBigInt) => {
                 await this.synchronize()
-                const contentNonce = this.info().get().contentNonce() + 1
+                const contentNonce = this.info().get().contentNonce().add(1)
 
                 const script = Script.build().costProposalScript(contentNonce, this.keys().get().contentPubKey(contentNonce).hash(), threadCost, proposalCost)
 
@@ -139,7 +139,7 @@ export default class Wallet extends Model {
 
             const constitution = async (constitution: Constitution.TConstitution) => {
                 await this.synchronize()
-                const contentNonce = this.info().get().contentNonce() + 1
+                const contentNonce = this.info().get().contentNonce().add(1)
 
                 const script = Script.build().constitutionProposalScript(contentNonce, this.keys().get().contentPubKey(contentNonce).hash(), constitution) 
                 
@@ -170,7 +170,7 @@ export default class Wallet extends Model {
 
         const thread = async () => {
             await this.synchronize()
-            const contentNonce = this.info().get().contentNonce() + 1
+            const contentNonce = this.info().get().contentNonce().add(1)
 
             const script = Script.build().threadScript(contentNonce, this.keys().get().contentPubKey(contentNonce).hash())
             
@@ -185,7 +185,7 @@ export default class Wallet extends Model {
 
         const rethread = async (targetPKH: Inv.PubKH) => {
             await this.synchronize()
-            const contentNonce = this.info().get().contentNonce() + 1
+            const contentNonce = this.info().get().contentNonce().add(1)
             const contentPKH = this.keys().get().contentPubKey(contentNonce).hash()
 
             const script = Script.build().rethreadScript(contentNonce, contentPKH, targetPKH)
@@ -207,7 +207,7 @@ export default class Wallet extends Model {
             const scriptDistribution = Script.build().lockScript(thread.get().author().get().address().toPKH())
             
             const cost = this.costs().get()[rewardType]()
-            const burned = cost.mul(BURNING_RATIO * 10).div(10)
+            const burned = new Inv.InvBigInt(cost.mulDecimals(BURNING_RATIO))
             const distributed = cost.sub(burned)
 
             const builder = new TxBuild({ 
