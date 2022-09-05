@@ -83,7 +83,7 @@ export class TransactionModel extends Model {
 
     get = () => {
         const time = () => new Inv.InvBigInt(this.state.t)
-        const lughHeight = () => new Inv.InvBigInt(this.state.lh)
+        const lughHeight = (): number =>this.state.lh
         const hash = () => new Inv.TxHash(Sha256(this.to().string()))
         const inputs = (): InputCollection => this.state.inputs
         const outputs = (): OutputCollection => this.state.outputs
@@ -107,7 +107,7 @@ export class TransactionModel extends Model {
     toRaw = () => {
         const def = (): ITransactionRaw => {
             return {
-                lh: this.get().lughHeight().bytes('int32').bytes(),
+                lh: new Inv.InvBigInt(this.get().lughHeight()).bytes('int32').bytes(),
                 t: this.get().time().bytes('int64').bytes(),
                 inputs: this.get().inputs().map((input: InputModel) => input.toRaw().default()),
                 outputs: this.get().outputs().map((out: OutputModel) => out.toRaw().default())
@@ -116,7 +116,7 @@ export class TransactionModel extends Model {
 
         const base64 = () => {
             return {
-                lh: this.get().lughHeight().base64('int32'),
+                lh: new Inv.InvBigInt(this.get().lughHeight()).base64('int32'),
                 t: this.get().time().base64('int64'),
                 inputs: this.get().inputs().map((inp: InputModel) => inp.toRaw().base64()),
                 outputs: this.get().outputs().map((out: OutputModel) => out.toRaw().base64())

@@ -139,7 +139,6 @@ const main = () => {
         }
     })
 
-
     it('[OFFCHAIN] Wallet1 -> create a thread failed 1/3', async () => {
         const p = ThreadModel.NewContent(1, "", "Content of my thread")
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce() + 1))
@@ -242,7 +241,8 @@ const main = () => {
         const urlpp500 = await alias.fetchBigPP()
         expect(urlpp500).to.eq(null)
     })
-    /*
+
+
     it('[OFFCHAIN] Fetch user (Wallet1) 1', async () => {
         const user = await UserModel.FetchByAddress(SOCIETY_ID, wallet.keys().get().address(), wallet.sign().header())
         expect(user).to.not.eq(null)
@@ -251,10 +251,10 @@ const main = () => {
             expect(userList.count()).to.eq(1)
             expect(user.get().alias().get().username()).to.eq('fantasim')
             expect(user.get().alias().get().pp()).to.eq(null)
-            expect(user.get().info().get().votePowerCount()).to.eq(11763937282229)
-            expect(user.get().info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('14.705')
+            expect(user.get().info().get().votePowerCount().big()).to.eq(13170731707316n)
+            expect(user.get().info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('16.463')
             expect(user.get().info().get().activity().get().lastLughHeight()).to.eq(7)
-            expect(user.get().info().get().rewardsReceivedLast90D()).to.eq(1800000004)
+            expect(user.get().info().get().rewardsReceivedLast90D().big()).to.eq(1800000004n)
             expect(user.get().info().get().contributorRank()).to.eq(1)
             const activity = user.get().info().get().activity().get().activity()
             expect(activity.length).to.eq(3) 
@@ -263,6 +263,7 @@ const main = () => {
             expect(activity[2]).to.eq(0)
         }
     })
+
 
     it('[OFFCHAIN] Wallet1 -> create a proposal application content', async () => {
         const p = ProposalModel.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3", "Content 4"])
@@ -274,8 +275,9 @@ const main = () => {
         const p = ProposalModel.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3", "Content 4"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(401)
-        expect(res.data.error).to.eq("Proposal is already recorded.")
+        expect(res.data.error).to.eq("proposal is already recorded")
     })
+
 
     it('[ONCHAIN] Wallet1 -> create a proposal : constitution', async () => {
         const balance = wallet.balance()
@@ -289,15 +291,15 @@ const main = () => {
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
             await walletPuts.fetch(wallet.sign().header(), true).all()
-            expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte())-1)
+            expect(wallet.balance().big()).to.eq(balance.sub(wallet.costs().get().proposal()).sub(tx.get().fees(wallet.fees().get().feePerByte())).sub(1).big())
             expect(walletPuts.count()).to.eq(8)
             
             const lastPut = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
-            expect(lastPut.get().value()).to.eq(wallet.costs().get().proposal()+2)
-            expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
+            expect(lastPut.get().value().big()).to.eq(wallet.costs().get().proposal().big())
+            expect(lastPut.get().pkh().get().sender()?.hex()).to.eq(wallet.keys().get().pubHash().hex())
             expect(lastPut.isProposal()).to.eq(true)
             expect(lastPut.isConstitutionProposal() ).to.eq(true)
-            expect(lastPut.get().contentPKH()).to.not.eq("")
+            expect(lastPut.get().contentPKH()).to.eq(null)
             expect(lastPut.get().indexProposalTargeted()).to.be.greaterThan(0)
         }
     })
@@ -306,7 +308,7 @@ const main = () => {
         const p = ProposalModel.NewContent(1, "This is the title of a constitution proposal", ["Content 1", "Content 2", "Content 3", "Content 4"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(406)
-        expect(res.data.error).to.eq("Wrong length of content.")
+        expect(res.data.error).to.eq("wrong length of content")
     })
 
     it('[OFFCHAIN] Wallet1 -> create a proposal constitution content', async () => {
@@ -316,7 +318,7 @@ const main = () => {
     })
 
     it('[ONCHAIN] Wallet1 -> create a proposal : costs', async () => {
-        const tx = await wallet.buildTX().proposal().cost(BigInt(-1), BigInt(COIN_UNIT * 2000))
+        const tx = await wallet.buildTX().proposal().cost(new Inv.InvBigInt(-1), COIN_UNIT.mul(2000))
         const balance = wallet.balance()
         expect(tx).not.eq(null)
         if (tx){
@@ -324,14 +326,14 @@ const main = () => {
             expect(response.status).to.eq(201)
             const out = tx.get().outputs().nodeAt(0) as OutputModel
             await walletPuts.fetch(wallet.sign().header(), true).all()
-            expect(wallet.balance()).to.eq(balance-wallet.costs().get().proposal()-tx.get().fees(wallet.fees().get().feePerByte()) - 2)
+            expect(wallet.balance().big()).to.eq(balance.sub(wallet.costs().get().proposal()).sub(tx.get().fees(wallet.fees().get().feePerByte())).sub(2).big())
             expect(walletPuts.count()).to.eq(9)
             const lastPut = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
-            expect(lastPut.get().value()).to.eq(wallet.costs().get().proposal())
-            expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
+            expect(lastPut.get().value().big()).to.eq(wallet.costs().get().proposal().big())
+            expect(lastPut.get().pkh().get().sender()?.hex()).to.eq(wallet.keys().get().pubHash().hex())
             expect(lastPut.isProposal()).to.eq(true)
             expect(lastPut.isCostProposal() ).to.eq(true)
-            expect(lastPut.get().contentPKH()).to.not.eq("")
+            expect(lastPut.get().contentPKH()).to.eq(null)
             expect(lastPut.get().indexProposalTargeted()).to.be.greaterThan(0)
         }
     })
@@ -340,7 +342,7 @@ const main = () => {
         const p = ProposalModel.NewContent(1, "This is the title of a cost proposal", ["Content 1", "Content 2", "Content 3", "Content 4"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(406)
-        expect(res.data.error).to.eq("Wrong length of content.")
+        expect(res.data.error).to.eq("wrong length of content")
     })
 
     it('[OFFCHAIN] Wallet1 -> create a proposal cost content', async () => {
@@ -362,7 +364,8 @@ const main = () => {
         }
     })
 
-    let pkhContent0 = ""
+
+    let pkhContent0: Inv.PubKH
     it('[ONCHAIN] Wallet1 -> create a thread', async () => {
         const tx = await wallet.buildTX().thread()
         const balance = wallet.balance()
@@ -371,17 +374,17 @@ const main = () => {
         if (tx){
             const response = await tx.broadcast(wallet)
             const out = tx.get().outputs().nodeAt(0) as OutputModel
-            pkhContent0 = out.get().contentPKH().toString('hex')
+            pkhContent0 = out.get().contentPKH()
             expect(response.status).to.eq(201)
             await walletPuts.fetch(wallet.sign().header(), true).all()
             expect(walletPuts.count()).to.eq(10)
-            expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte())-2)
+            expect(wallet.balance().big()).to.eq(balance.sub(wallet.costs().get().thread()).sub(tx.get().fees(wallet.fees().get().feePerByte())).sub(1).big())
             const lastPut = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
-            expect(lastPut.get().value()).to.eq(wallet.costs().get().thread())
-            expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
+            expect(lastPut.get().value().big()).to.eq(wallet.costs().get().thread().big())
+            expect(lastPut.get().pkh().get().sender()?.hex()).to.eq(wallet.keys().get().pubHash().hex())
             expect(lastPut.isThread()).to.eq(true)
             expect(lastPut.isRethread()).to.eq(false)
-            expect(lastPut.get().contentPKHTargeted()).to.eq("")
+            expect(lastPut.get().contentPKHTargeted()).to.eq(null)
             expect(lastPut.get().indexProposalTargeted()).to.eq(-1)
         }
     })
@@ -399,7 +402,7 @@ const main = () => {
         expect(p.get().author().get().username()).to.eq('fantasim')
         expect(p.get().author().get().pp()).to.eq(null)
         expect(p.get().societyID()).to.eq(1)
-        expect(p.get().pubKH()).to.eq(pkhContent0)
+        expect(p.get().pubKH().hex()).to.eq(pkhContent0.hex())
         expect(p.get().replyCount()).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward0()).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward1()).to.eq(0)
@@ -411,8 +414,8 @@ const main = () => {
         expect(p.get().reward().get().userReward().get().countUpvote()).to.eq(0)
         await timeout(1000)
     })
-
-    let pkhContent2 = ""
+    
+    let pkhContent2: Inv.PubKH
     it('[ONCHAIN] Wallet1 -> create a rethread on Thread', async () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent0)
         expect(thread).not.eq(null)
@@ -423,27 +426,26 @@ const main = () => {
             if (tx){
                 const response = await tx.broadcast(wallet)
                 const out = tx.get().outputs().nodeAt(0) as OutputModel
-                pkhContent2 = out.get().contentPKH().toString('hex')
+                pkhContent2 = out.get().contentPKH()
                 expect(response.status).to.eq(201)
                 await walletPuts.fetch(wallet.sign().header(), true).all()
                 expect(walletPuts.count()).to.eq(11)
-                expect(wallet.balance()).to.eq(balance-wallet.costs().get().thread()-tx.get().fees(wallet.fees().get().feePerByte())-1)
+                expect(wallet.balance().big()).to.eq(balance.sub(wallet.costs().get().thread()).sub(tx.get().fees(wallet.fees().get().feePerByte()).add(1)).big())
                 const lastPut = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
-                expect(lastPut.get().value()).to.eq(wallet.costs().get().thread())
-                expect(lastPut.get().pkh().get().sender()).to.eq(wallet.keys().get().pubHashHex())
+                expect(lastPut.get().value().big()).to.eq(wallet.costs().get().thread().big())
+                expect(lastPut.get().pkh().get().sender()?.hex()).to.eq(wallet.keys().get().pubHash().hex())
                 expect(lastPut.isThread()).to.eq(true)
                 expect(lastPut.isRethread()).to.eq(true)
-                expect(lastPut.get().contentPKH()).to.eq(pkhContent2)
-                expect(lastPut.get().contentPKHTargeted()).to.eq(thread.get().pubKH())
+                expect(lastPut.get().contentPKH()?.hex()).to.eq(pkhContent2.hex())
+                expect(lastPut.get().contentPKHTargeted()?.hex()).to.eq(thread.get().pubKH().hex())
                 expect(lastPut.get().indexProposalTargeted()).to.eq(-1)
             }
         }
     })
 
-
     it('[OFFCHAIN] Wallet1 -> create a rethread on Thread', async () => {
         const title = `This is a title.`
-        const content = `Here my favorite Thread: https://involvera.com/involvera/thread/${pkhContent0} \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10`
+        const content = `Here my favorite Thread: https://involvera.com/involvera/thread/${pkhContent0.hex()} \n and these are the 3 proposals I like:\n1. https://involvera.com/involvera/proposal/8\n2. https://involvera.com/involvera/proposal/9\n3. https://involvera.com/involvera/proposal/10`
         const p = ThreadModel.NewContent(1, title, content)
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
         expect(res.status).to.eq(201)
@@ -454,12 +456,12 @@ const main = () => {
         expect(target.get().author().get().username()).to.eq('fantasim')
         expect(target.get().author().get().pp()).to.eq(null)
         expect(target.get().target()).to.eq(null)
-        expect(target.get().pubKH()).to.eq(pkhContent0)
+        expect(target.get().pubKH().hex()).to.eq(pkhContent0.hex())
         expect(p.get().title()).to.eq(title)
         expect(p.get().content()).to.eq(content)
         expect(p.get().replyCount()).to.eq(0)
         expect(p.get().societyID()).to.eq(1)
-        expect(p.get().pubKH()).to.eq(pkhContent2)
+        expect(p.get().pubKH().hex()).to.eq(pkhContent2.hex())
         expect(p.get().reward().get().threadReward().get().countReward0()).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward1()).to.eq(0)
         expect(p.get().reward().get().threadReward().get().countReward2()).to.eq(0)
@@ -472,14 +474,14 @@ const main = () => {
 
     it('[OFFCHAIN] Create an alias on Wallet 2', async () => {
         const alias = wallet2.keys().get().alias()
-        expect(alias.get().address()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
-        expect(wallet2.keys().get().address()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
+        expect(alias.get().address().get()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
+        expect(wallet2.keys().get().address().get()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
         alias.setUsername('skily')
         const res = await alias.updateUsername(wallet2.keys().get().wallet(), SOCIETY_ID)
         expect(res.status).to.eq(201)
 
         const alias2 = wallet2.keys().get().alias()
-        expect(alias2.get().address()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
+        expect(alias2.get().address().get()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
         expect(alias2.get().username()).to.eq('skily')
         expect(alias2.get().pp()).to.eq(null)
         const urlpp500 = await alias.fetchBigPP()
@@ -494,11 +496,11 @@ const main = () => {
             expect(userList.count()).to.eq(2)
             expect(user.get().alias().get().username()).to.eq('skily')
             expect(user.get().alias().get().pp()).to.eq(null)
-            expect(user.get().info().get().votePowerCount()).to.eq(0)
+            expect(user.get().info().get().votePowerCount().number()).to.eq(0)
             expect(user.get().info().get().votePowerPercent(wallet.cch().get().lastHeight())).to.eq(0)
             expect(user.get().info().get().activity().get().lastLughHeight()).to.eq(7)
-            expect(user.get().info().get().rewardsReceivedLast90D()).to.eq(0)
-            expect(user.get().info().get().contributorRank()).to.eq(168)
+            expect(user.get().info().get().rewardsReceivedLast90D().number()).to.eq(0)
+            expect(user.get().info().get().contributorRank()).to.eq(150)
             const activity = user.get().info().get().activity().get().activity()
             expect(activity.length).to.eq(3) 
             expect(activity[0]).to.eq(0) 
@@ -506,6 +508,7 @@ const main = () => {
             expect(activity[2]).to.eq(0)
         }
     })
+
 
     let lastReaction = {tx_id: '', vout: -1}
     it('[ONCHAIN] Wallet2 -> create a reward : upvote', async () => {
@@ -518,33 +521,37 @@ const main = () => {
             expect(tx).not.eq(null)
             if (tx){
                 const response = await tx.broadcast(wallet2)
+                console.log(response.data)
                 expect(response.status).to.eq(201)
-                lastReaction = {tx_id: tx.get().hashHex(), vout: 0}
+                lastReaction = {tx_id: tx.get().hash().hex(), vout: 0}
                 await wallet.synchronize()
 
                 await walletPuts.fetch(wallet.sign().header(), true).all()
                 await wallet2Puts.fetch(wallet2.sign().header(), true).all()
 
                 expect(wallet2Puts.count()).to.eq(2)
-                expect(wallet2.balance()).to.eq(balance-wallet2.costs().get().upvote()-tx.get().fees(wallet2.fees().get().feePerByte())-1)
+                expect(wallet2.balance().big()).to.eq(balance.sub(wallet2.costs().get().upvote()).sub(tx.get().fees(wallet2.fees().get().feePerByte())).sub(1).big())
 
-                expect(balance2).to.eq(wallet.balance()-(wallet.costs().get().upvote() * 0.3)-1)
+                expect(balance2.big()).to.eq(wallet.balance().sub(wallet.costs().get().upvote().mulDecimals(0.3)).sub(1).big())
                 expect(walletPuts.count()).to.eq(11)
 
                 const p = wallet2Puts.last() as UnserializedPutModel
                 expect(p.get().contentPKHTargeted()).to.eq(pkhContent0)
-                expect(p.get().value()).to.eq(wallet2.costs().get().upvote()) 
-                expect(p.get().txID()).to.eq(tx.get().hashHex())
+                expect(p.get().value().big()).to.eq(wallet2.costs().get().upvote().big()) 
+                expect(p.get().txID().hex()).to.eq(tx.get().hash().hex())
                 expect(p.get().height()).to.eq(tx.get().lughHeight())
                 expect(p.isReward()).to.eq(true)
                 expect(p.isUpvote()).to.eq(true)
                 expect(p.isReward2()).to.eq(false)
                 expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
                 expect(p.get().otherPartyAlias()?.get().pp()).to.eq(wallet.keys().get().alias().get().pp())
-                expect(p.get().otherPartyAlias()?.get().address()).to.eq(wallet.keys().get().alias().get().address())
+                expect(p.get().otherPartyAlias()?.get().address().get()).to.eq(wallet.keys().get().alias().get().address().get())
             }
         }
     })
+
+    /*
+
 
     it('[ONCHAIN] Wallet2 -> create a reward : reaction0', async () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)

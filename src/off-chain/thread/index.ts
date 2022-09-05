@@ -173,7 +173,7 @@ export class ThreadModel extends Model {
         const title = (): string => this.state.title
         const content = (): string => this.state.content
         const createdAt = (): Date => this.state.created_at
-        const pubKH = () => new Inv.PubKH(this.state.public_key_hashed)
+        const pubKH = () => Inv.PubKH.fromHex(this.state.public_key_hashed)
         const reward = (): ThreadRewardModel => this.state.reward
         const target = (): ThreadModel | ProposalModel | null => this.state.target
 

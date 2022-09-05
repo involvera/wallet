@@ -116,7 +116,7 @@ export class ProposalModel extends Model {
                 data: JSON.stringify(body),
                 timeout: 10_000,
                 validateStatus: function (status) {
-                    return status >= 200 && status < 500;
+                    return status >= 200 && status <= 500;
                 },
             })
             const state = res.data
@@ -225,8 +225,8 @@ export class ProposalModel extends Model {
             }
         }
 
-        const pubKH = () => new Inv.PubKH(this.state.public_key_hashed)
-        const pubKHOrigin = () => new Inv.PubKH(this.state.pubkh_origin)
+        const pubKH = () => Inv.PubKH.fromHex(this.state.public_key_hashed)
+        const pubKHOrigin = () => Inv.PubKH.fromHex(this.state.pubkh_origin)
 
         const context = (): ICostProposal | IConstitutionProposalUnRaw | null => {
             if (this.state.context){
