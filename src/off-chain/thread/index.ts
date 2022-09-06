@@ -358,9 +358,8 @@ export class ThreadCollection extends Collection {
             const response = await axios(config.getRootAPIOffChainUrl() + `/thread/${this._currentSociety?.get().id()}`, {
                 method: 'GET',
                 headers: Object.assign({}, headerSignature as any, {
-                    offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE,
-                    target_pkh: this._targetPKH?.hex()
-                }),
+                    offset: disablePageSystem == true ? 0 : this._pageFetched * MAX_PER_PAGE
+                }, this._targetPKH ? { target_pkh: this._targetPKH.hex() } : {}),
                 timeout: 10000,
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;

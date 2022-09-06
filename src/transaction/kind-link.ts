@@ -28,7 +28,7 @@ export class KindLinkModel extends Model {
             lh: (): number => this.state.lh,
             vout: (): number => this.state.vout,
             output: (): OutputModel => this.state.output,
-            targetContent: (): Inv.PubKH | null => this.state.target_content ? new Inv.PubKH(this.state.target_content) : null
+            targetContent: (): Inv.PubKH | null => this.state.target_content ? Inv.PubKH.fromHex(this.state.target_content) : null
         }
     }
 }

@@ -315,7 +315,6 @@ export class ProposalCollection extends Collection {
                 const list = new ProposalCollection([], {})
                 const json = (response.data || []) as IContentLink[]
                 for (const o of json){
-
                     const link = new Transaction.KindLinkModel(o.link, {})
                     const t = link.get().output().get().script().typeD2()
 
@@ -327,7 +326,7 @@ export class ProposalCollection extends Collection {
                         public_key_hashed: link.get().output().get().contentPKH().hex(),
                         title: `Genesis ${t?.toLowerCase()}`,
                         content: ['', '', ''],
-                        author: {address: '1111111111111111111111111111111111', pp: '/images/involvera.png', username: 'involvera'},
+                        author: {address: Inv.Address.random().get(), pp: '/images/involvera.png', username: 'involvera'},
                         pubkh_origin: Constant.PUBKEY_H_BURNER,
                         user_vote: null,
                         vote: {closed_at_lh: 1, approved: 1, declined: 0},
