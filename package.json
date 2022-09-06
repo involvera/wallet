@@ -17,7 +17,7 @@
   "dependencies": {
     "axios": "0.24.0",
     "community-coin-types": "^1.2.1",
-    "involvera-content-embedding": "^1.1.8",
+    "involvera-content-embedding": "^1.1.9",
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
     "wallet-script": "^1.1.8",
@@ -39,8 +39,8 @@
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-typescript2": "^0.30.0",
     "rollup-plugin-uglify": "^6.0.4",
-    "ts-node": "^10.4.0",
-    "typescript": "^4.5.4"
+    "ts-node": "~10.7.0",
+    "typescript": "~4.6.4"
   },
   "peerDependencies": {
     "acey": "^1.5.6"
