@@ -3,7 +3,7 @@ import 'mocha';
 import {config} from 'acey'
 import LocalStorage from 'acey-node-store'
 import fs from 'fs'
-import { Constitution, Script } from 'wallet-script';
+import { Constitution } from 'wallet-script';
 import { Inv } from 'wallet-util'
 import { COIN_UNIT, COUNT_DEFAULT_PROPOSALS, LUGH_AMOUNT, LUGH_EVERY_N_S, MAX_SUPPLY_AMOUNT, N_LUGH_VOTE_DURATION } from '../src/constant';
 import { WalletModel } from '../src/wallet'
@@ -14,10 +14,6 @@ import axios from 'axios';
 import conf from '../src/config'
 import { IConstitutionProposalUnRaw, ICostProposal, REWARD0_KEY, REWARD2_KEY, REWARD1_KEY, UPVOTE_KEY } from 'community-coin-types'
 import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
-
-const {
-    InvBuffer
-} = Inv
 
 // conf.setRootAPIChainUrl('http://134.122.16.30:8080')
 // conf.setRootAPIOffChainUrl('http://134.122.16.30:3020')
