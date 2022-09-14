@@ -78,7 +78,7 @@ export default class TxBuild {
         return availableUTXOs
     }
 
-    newTx = async () => {
+    newTx = () => {
         this._checkStructureBuild()
         const { outputs, utxos } = this._generateMeltingPuts()
         const lastCCH = this.wallet.cch().get().last()
@@ -86,6 +86,7 @@ export default class TxBuild {
             throw LAST_CCH_NOT_FOUND_ERROR
         
         let tx = new TransactionModel({
+            v: 1,
             lh: this.wallet.cch().get().lastHeight(),
             t: Date.now(),
             inputs: utxos.toInputs().to().plain(), 
@@ -93,7 +94,7 @@ export default class TxBuild {
         }, {})
 
         this._makeTxWithFees(tx)
-        return await this.wallet.sign().transaction(tx) ? tx : null
+        return this.wallet.sign().transaction(tx) ? tx : null
     }
 
     _generateMeltingPuts = () => {

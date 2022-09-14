@@ -203,7 +203,7 @@ export default class Wallet extends Model {
             await this.synchronize()
             const targetPKH = thread.get().contentLink().get().output().get().contentPKH()
     
-            const scriptReward = Script.build().rewardScript(targetPKH, 1)
+            const scriptReward = Script.build().rewardScript(targetPKH, new Inv.InvBigInt(1))
             const scriptDistribution = Script.build().lockScript(thread.get().author().get().address().toPKH())
             
             const cost = this.costs().get()[rewardType]()
@@ -265,18 +265,11 @@ export default class Wallet extends Model {
 
     sign = () => {
         const value = (d: Uint8Array | string) => this.keys().get().wallet().sign(d)
-        const transaction = async (tx: TransactionModel) => {
-            const n = await tx.get().inputs().fetchPrevTxList(this.sign().header(), this.utxos().get())
-            n > 0 && this.utxos().get().action().store()
-
+        const transaction = (tx: TransactionModel) => {
             const inputs = tx.get().inputs()
             for (let i = 0; i < inputs.count(); i++){
                 const input = inputs.nodeAt(i) as InputModel
-                const utxo = this.utxos().get().get().UTXOByTxHashAndVout(input.get().prevTxHash()?.hex() || '', input.get().vout())
-                if (!utxo)
-                    throw new Error("Unfound UTXO")
-                const prevTx = utxo.get().tx() as TransactionModel
-                const script_sig = Script.build().unlockScript(value(prevTx.get().hash().bytes()), this.keys().get().pub()).base64() 
+                const script_sig = Script.build().unlockScript(value(input.get().prevTxHash()?.bytes() as Uint8Array), this.keys().get().pub()).base64() 
                 input.setState({ script_sig })
             }
             return true

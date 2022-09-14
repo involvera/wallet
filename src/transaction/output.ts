@@ -45,7 +45,7 @@ export class OutputModel extends Model {
 	toRaw = () => {
 		const def = (): IOutputRaw  => {
 			return {
-				input_src_idxs: Inv.ArrayInvBigInt.fromNumbers(this.get().inputSourceIdxs()).toArrayBuffer('int32').toDoubleUInt8Array(),
+				input_src_idxs: Inv.ArrayInvBigInt.fromNumbers(this.get().inputSourceIdxs()).toArrayBuffer('uint8').toDoubleUInt8Array(),
 				value: this.get().value().bytes('int64').bytes(),
 				script: this.get().script().bytes()
 			}
@@ -53,7 +53,7 @@ export class OutputModel extends Model {
 
 		const base64 = () => {
 			return {
-				input_src_idxs: Inv.ArrayInvBigInt.fromNumbers(this.get().inputSourceIdxs()).toArrayBuffer('int32').toArrayBase64(),
+				input_src_idxs: Inv.ArrayInvBigInt.fromNumbers(this.get().inputSourceIdxs()).toArrayBuffer('uint8').toArrayBase64(),
 				value: this.get().value().base64('int64'),
 				script: this.get().script().base64()
 			}

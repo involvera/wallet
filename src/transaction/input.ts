@@ -42,7 +42,7 @@ export class InputModel extends Model {
         const def = (): IInputRaw => {
             return {
                 prev_transaction_hash: this.get().prevTxHash()?.bytes() || new Uint8Array(),
-                vout: new Inv.InvBigInt(this.get().vout()).bytes('int8').bytes(),
+                vout: new Inv.InvBigInt(this.get().vout()).bytes('int16').bytes(),
                 script_sig: this.get().script().bytes()
             }
         }
@@ -50,7 +50,7 @@ export class InputModel extends Model {
         const base64 = () => {
             return {
                 prev_transaction_hash: this.get().prevTxHash()?.base64() || "",
-                vout: new Inv.InvBigInt(this.get().vout()).base64('int8'),
+                vout: new Inv.InvBigInt(this.get().vout()).base64('int16'),
                 script_sig: this.get().script().base64()
             }
         }

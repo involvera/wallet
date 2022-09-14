@@ -196,7 +196,7 @@ const main = () => {
             const response = await tx.broadcast(wallet)
             expect(response.status).to.eq(201)
             await walletPuts.fetch(wallet.sign().header(), true).all()
-            expect(wallet.balance().big()).to.eq(balance.sub(wallet.costs().get().proposal()).sub(tx.get().fees(wallet.fees().get().feePerByte())).sub(1).big())
+            expect(wallet.balance().big()).to.eq(balance.sub(wallet.costs().get().proposal()).sub(tx.get().fees(wallet.fees().get().feePerByte())).big())
             expect(walletPuts.count()).to.eq(7)
             const lastPut = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
             expect(lastPut.get().value().big()).to.eq(wallet.costs().get().proposal().big())
@@ -427,7 +427,7 @@ const main = () => {
                 expect(response.status).to.eq(201)
                 await walletPuts.fetch(wallet.sign().header(), true).all()
                 expect(walletPuts.count()).to.eq(11)
-                expect(wallet.balance().big()).to.eq(balance.sub(wallet.costs().get().thread()).sub(tx.get().fees(wallet.fees().get().feePerByte()).add(1)).big())
+                expect(wallet.balance().big()).to.eq(balance.sub(wallet.costs().get().thread()).sub(tx.get().fees(wallet.fees().get().feePerByte())).big())
                 const lastPut = walletPuts.sortByCreationDateDesc().first() as UnserializedPutModel
                 expect(lastPut.get().value().big()).to.eq(wallet.costs().get().thread().big())
                 expect(lastPut.get().pkh().get().sender()?.hex()).to.eq(wallet.keys().get().pubHash().hex())
@@ -1307,7 +1307,7 @@ const main = () => {
     it('[ONCHAIN] Trigger lugh transaction', async () => {
         await walletPuts.fetch(wallet.sign().header(), true).all()
         await wallet.synchronize()
-        expect(wallet.balance().number()).to.eq(9908120324944)
+        expect(wallet.balance().number()).to.eq(9908201324946)
         expect(wallet.cch().get().list().length).to.eq(8)
         expect(wallet.utxos().get().count()).to.eq(10)
         expect(walletPuts.count()).to.eq(12)
@@ -1317,13 +1317,11 @@ const main = () => {
         expect(res.status).to.eq(200)
         await walletPuts.fetch(wallet.sign().header(), true).all()
         await wallet.synchronize()
-        expect(wallet.balance().number()).to.eq(19901315369601)
+        expect(wallet.balance().number()).to.eq(19901396314047)
         expect(wallet.cch().get().list().length).to.eq(9)
         expect(wallet.utxos().get().count()).to.eq(11)
         expect(walletPuts.count()).to.eq(13)
     })
-
-
 
     it('[ONCHAIN] Wallet1 -> create a rethread on Proposal', async () => {
         const proposal = await ProposalModel.FetchByIndex(1, 10)
