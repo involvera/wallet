@@ -18,6 +18,7 @@ import TxBuild from './tx-builder'
 import { BURNING_RATIO } from '../constant'
 import { ThreadModel } from '../off-chain'
 import { DEFAULT_PASS, DEFAULT_PASS_HASH } from '../constant/off-chain'
+import { Constant } from 'wallet-script'
 
 const{
     Hash: {
@@ -203,7 +204,7 @@ export default class Wallet extends Model {
             await this.synchronize()
             const targetPKH = thread.get().contentLink().get().output().get().contentPKH()
     
-            const scriptReward = Script.build().rewardScript(targetPKH, new Inv.InvBigInt(1))
+            const scriptReward = Script.build().rewardScript(targetPKH, new Inv.InvBigInt(1), Constant.LAST_TX_VERSION)
             const scriptDistribution = Script.build().lockScript(thread.get().author().get().address().toPKH())
             
             const cost = this.costs().get()[rewardType]()
@@ -267,9 +268,15 @@ export default class Wallet extends Model {
         const value = (d: Uint8Array | string) => this.keys().get().wallet().sign(d)
         const transaction = (tx: TransactionModel) => {
             const inputs = tx.get().inputs()
+            const txToSignBytes = tx.prepareForSignature().bytes().bytes()
+
             for (let i = 0; i < inputs.count(); i++){
                 const input = inputs.nodeAt(i) as InputModel
-                const script_sig = Script.build().unlockScript(value(input.get().prevTxHash()?.bytes() as Uint8Array), this.keys().get().pub()).base64() 
+                let hash = new Inv.InvBuffer(input.get().prevTxHash()?.bytes() as Uint8Array).bytes()
+                if (tx.get().version() >= 1){
+                    hash = Sha256(Inv.InvBuffer.FromUint8s(hash, txToSignBytes).bytes())
+                }
+                const script_sig = Script.build().unlockScript(value(hash), this.keys().get().pub()).base64() 
                 input.setState({ script_sig })
             }
             return true

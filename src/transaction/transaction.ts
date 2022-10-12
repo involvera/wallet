@@ -8,6 +8,7 @@ import { InputModel, InputCollection } from './input'
 import WalletModel from '../wallet/wallet'
 import config from '../config'
 import { Script } from 'wallet-script'
+import { HTML5_FMT } from 'moment'
 
 const {
     Sha256
@@ -45,6 +46,21 @@ export class TransactionModel extends Model {
             outputs: new OutputCollection(this.state.outputs, this.kids()),
         })
     }
+
+    copy = () => new TransactionModel(this.to().plain(), {})
+    prepareForSignature = () => {
+        const ret = this.copy()
+        ret.get().inputs().forEach((i:InputModel) => {
+            i.setState({script_sig: [] as string[]})
+        })
+        return ret
+    }
+
+    bytes = () => {
+        const r = this.toRaw().default()
+        return Inv.InvBuffer.FromUint8s(r.lh, r.t, new Uint8Array([r.v] as number[]), this.get().inputs().bytes().bytes(),this.get().outputs().bytes().bytes())
+    }
+
 
     size = () => {
         const raw = this.toRaw().default()
@@ -91,7 +107,7 @@ export class TransactionModel extends Model {
                 delete p.v
                 return new Inv.TxHash(Sha256(JSON.stringify(p)))
             }
-            if (version() === 1){
+            if (version() >= 1){
                 const inputs = this.get().inputs().map((i: InputModel) => {
                     const r = i.toRaw().default()
                     return Inv.InvBuffer.FromUint8s(

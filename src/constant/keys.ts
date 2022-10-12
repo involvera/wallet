@@ -1,1 +1,0 @@
-// export const TXID_LENGTH = 32

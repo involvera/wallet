@@ -38,6 +38,11 @@ export class InputModel extends Model {
         return { vout, prevTxHash, script }
     }
 
+    bytes = () => {
+        const r = this.toRaw().default()
+        return Inv.InvBuffer.FromUint8s(r.prev_transaction_hash, r.vout, ...r.script_sig)
+    }
+
     toRaw = () => {
         const def = (): IInputRaw => {
             return {
@@ -65,6 +70,8 @@ export class InputCollection extends Collection {
     constructor(initialState: any, options: any){
         super(initialState, [InputModel, InputCollection], options)
     }
+
+    bytes = () => Inv.InvBuffer.FromUint8s(...this.map((inp: InputModel) => inp.bytes().bytes()))
 
     size = (): number => this.reduce((accumulator: number, inp: InputModel) => accumulator + inp.size(), 0) + this.count()
 

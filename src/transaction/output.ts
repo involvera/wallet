@@ -1,5 +1,5 @@
 import { Model, Collection } from 'acey'
-import {IOutputUnRaw, IOutputRaw } from 'community-coin-types'
+import {IOutputUnRaw, IOutputRaw, TByte } from 'community-coin-types'
 import { MAX_IS_2_POW_53 } from '../constant/errors'
 import { Error, Script } from 'wallet-script'
 import { Inv } from 'wallet-util'
@@ -42,6 +42,11 @@ export class OutputModel extends Model {
         return size
     }
 
+	bytes = () => {
+		const r = this.toRaw().default()
+        return Inv.InvBuffer.FromUint8s(r.value , ...r.input_src_idxs, ...r.script)
+	}
+
 	toRaw = () => {
 		const def = (): IOutputRaw  => {
 			return {
@@ -70,14 +75,14 @@ export class OutputModel extends Model {
  		
 		const contentPKH = () => {
 			const s = this.get().script()
-			if (s.is().targetableScript())
+			if (s.is().contentWithAddress())
 				return s.parse().PKHFromContentScript()
 			throw Error.NOT_A_TARGETABLE_CONTENT
 		}
 
 		const targetedContentPKH = () => {
 			const s = this.get().script()
-			if (s.is().targetingcript())
+			if (s.is().contentWithoutAddress())
 				return s.parse().targetPKHFromContentScript()
 			throw Error.NOT_A_TARGETING_CONTENT
 		}
@@ -97,11 +102,11 @@ export class OutputModel extends Model {
 			applicationProposal: () => script.is().applicationProposalScript(),
 			constitutionProposal: () => script.is().constitutionProposalScript(),
 			costProposal: () => script.is().costProposalScript(),
-			reward: () => script.is().rewardScript(),
-			thread: () => script.is().threadD2Script(),
-			rethread: () => script.is().rethreadD2Script(),
+			reward: (version: TByte) => script.is().rewardScript(version),
+			thread: () => script.is().ThreadOnlyScript(),
+			rethread: () => script.is().RethreadOnlyScript(),
 			vote: () => script.is().voteScript(),
-			content: () => script.is().threadD1Script() || script.is().proposalScript()
+			content: () => script.is().contentWithAddress()
 		}
 	}
 }
@@ -111,6 +116,8 @@ export class OutputCollection extends Collection {
         super(initialState, [OutputModel, OutputCollection], options)
     }
 
+
+	bytes = () => Inv.InvBuffer.FromUint8s(...this.map((out: OutputModel) => out.bytes().bytes()))
 	size = (): number => this.reduce((accumulator: number, out: OutputModel) => accumulator + out.size(), 0) + this.count()
 
 	containsPKHInLockScript = (pubKH: Inv.PubKH) => {
