@@ -980,7 +980,7 @@ const main = () => {
                 expect(content[2]).to.eq("Content 3: https://involvera.com/involvera/proposal/8\nhttps://involvera.com/involvera/proposal/9")
 
                 expect(fullProposal1.get().costs().proposal.big()).to.eq(COIN_UNIT.mul(2000).big())
-                expect(fullProposal1.get().costs().thread.number()).to.eq(-1)
+                expect(fullProposal1.get().costs().thread.number()).to.eq(0)
                 expect(fullProposal1.get().pubKH()?.hex()).to.eq("e4c60b0853e76a70d864fafed15964af337313a6")
                 expect(fullProposal1.get().context()).to.not.eq(null)
             }
