@@ -2,7 +2,7 @@ import { Model } from 'acey'
 import { Lib, Inv} from 'wallet-util'
 import { Constitution, Script } from 'wallet-script'
 import axios from 'axios'
-import { T_REWARD } from 'community-coin-types'
+import { TByte, T_REWARD } from 'community-coin-types'
 
 import FeesModel from './fees'
 import CostsModel from './costs'
@@ -106,7 +106,7 @@ export default class Wallet extends Model {
     public balance = (): Inv.InvBigInt => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
     public cch = (): CCHModel => this.state.cch
 
-    buildTX = () => {
+    buildTX = (txVersion: TByte) => {
 
         const proposal = () => {
             
@@ -121,7 +121,7 @@ export default class Wallet extends Model {
                     amount_required: [this.costs().get().proposal()],
                     scripts: [script.bytes()]
                 })
-                return await builder.newTx()
+                return await builder.newTx(txVersion)
             }
 
             const cost = async (threadCost: Inv.InvBigInt, proposalCost: Inv.InvBigInt) => {
@@ -135,7 +135,7 @@ export default class Wallet extends Model {
                     amount_required: [this.costs().get().proposal()],
                     scripts: [script.bytes()]
                 })
-                return await builder.newTx()
+                return await builder.newTx(txVersion)
             }
 
             const constitution = async (constitution: Constitution.TConstitution) => {
@@ -149,7 +149,7 @@ export default class Wallet extends Model {
                     amount_required: [this.costs().get().proposal()],
                     scripts: [script.bytes()]
                 })
-                return await builder.newTx()
+                return await builder.newTx(txVersion)
             }
 
             return { constitution, application, cost }
@@ -166,7 +166,7 @@ export default class Wallet extends Model {
                 scripts: [script.bytes()]
             })
 
-            return await builder.newTx()
+            return await builder.newTx(txVersion)
         }
 
         const thread = async () => {
@@ -181,7 +181,7 @@ export default class Wallet extends Model {
                 scripts: [script.bytes()]
             })
 
-            return await builder.newTx()
+            return await builder.newTx(txVersion)
         }
 
         const rethread = async (targetPKH: Inv.PubKH) => {
@@ -197,14 +197,14 @@ export default class Wallet extends Model {
                 scripts: [script.bytes()]
             })
 
-            return await builder.newTx()
+            return await builder.newTx(txVersion)
         }
 
         const reward = async (thread: ThreadModel, rewardType: T_REWARD) => {
             await this.synchronize()
             const targetPKH = thread.get().contentLink().get().output().get().contentPKH()
     
-            const scriptReward = Script.build().rewardScript(targetPKH, new Inv.InvBigInt(1), Constant.LAST_TX_VERSION)
+            const scriptReward = Script.build().rewardScript(targetPKH, new Inv.InvBigInt(1), txVersion)
             const scriptDistribution = Script.build().lockScript(thread.get().author().get().address().toPKH())
             
             const cost = this.costs().get()[rewardType]()
@@ -217,7 +217,7 @@ export default class Wallet extends Model {
                 scripts: [scriptReward.bytes(), scriptDistribution.bytes()]
             })
 
-            return await builder.newTx()
+            return await builder.newTx(txVersion)
         }
 
         const vote = async (targetPKH: Inv.PubKH, accept: boolean) => {
@@ -230,7 +230,7 @@ export default class Wallet extends Model {
                 scripts: [script.bytes()]
             })
         
-            return await builder.newTx()
+            return await builder.newTx(txVersion)
         }
         
         return { 

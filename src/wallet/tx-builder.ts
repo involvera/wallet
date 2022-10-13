@@ -3,6 +3,7 @@ import {  OutputModel, OutputCollection, TransactionModel, UTXOModel, UTXOCollec
 import { Inv } from "wallet-util";
 import WalletModel from './wallet'
 import { Script } from "wallet-script";
+import { TByte } from "community-coin-types";
 
 export interface ITXBuild {
     wallet:         WalletModel
@@ -78,7 +79,7 @@ export default class TxBuild {
         return availableUTXOs
     }
 
-    newTx = () => {
+    newTx = (txVersion: TByte) => {
         this._checkStructureBuild()
         const { outputs, utxos } = this._generateMeltingPuts()
         const lastCCH = this.wallet.cch().get().last()
@@ -86,7 +87,7 @@ export default class TxBuild {
             throw LAST_CCH_NOT_FOUND_ERROR
         
         let tx = new TransactionModel({
-            v: 1,
+            v: txVersion,
             lh: this.wallet.cch().get().lastHeight(),
             t: Date.now(),
             inputs: utxos.toInputs().to().plain(), 

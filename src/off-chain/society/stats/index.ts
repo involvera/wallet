@@ -1,10 +1,11 @@
 import { Model } from 'acey'
 import { LastCostChangeModel } from './last-cost-change'
 import { IAlias, AliasCollection } from '../../alias'
-import { ICostHistory } from 'community-coin-types'
+import { ICostHistory, TByte } from 'community-coin-types'
 import { Inv } from 'wallet-util'
 
 export interface ISocietyStats {
+    version: TByte
     last_height: number
     total_contributor: number
     total_proposal: number
@@ -17,6 +18,7 @@ export interface ISocietyStats {
 }
 
 const DEFAULT_STATE: ISocietyStats  = {
+    version: 0,
     total_contributor: 0,
     total_proposal: 0,
     last_height: 0,
@@ -43,6 +45,7 @@ export class SocietyStatsModel extends Model {
 
     get = () => {
         return {
+            version: (): TByte => this.state.version,
             lastHeight: (): number => this.state.last_height,
             totalContributor: (): number => this.state.total_contributor,
             totalProposal: (): number => this.state.total_proposal,

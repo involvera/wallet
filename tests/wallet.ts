@@ -12,7 +12,7 @@ import { OutputModel } from '../src/transaction';
 import { ThreadModel, ProposalModel, SocietyModel, RuleModel, ThreadCollection, ProposalCollection, UserModel,UserCollection } from '../src/off-chain';
 import axios from 'axios';
 import conf from '../src/config'
-import { IConstitutionProposalUnRaw, ICostProposal, REWARD0_KEY, REWARD2_KEY, REWARD1_KEY, UPVOTE_KEY } from 'community-coin-types'
+import { IConstitutionProposalUnRaw, ICostProposal, REWARD0_KEY, REWARD2_KEY, REWARD1_KEY, UPVOTE_KEY, TByte } from 'community-coin-types'
 import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 
 // conf.setRootAPIChainUrl('http://134.122.16.30:8080')
@@ -20,6 +20,7 @@ import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 
 const ADMIN_KEY = '2f72e55b962b6cd66ea70e8b6bd8657d1c87a23a65769213d76dcb5da6abf6b5'
 const SOCIETY_ID = 1
+let TX_VERSION: TByte = 0
 
 const wallet = new WalletModel({}, { key: 'wallet', connected: true })
 const wallet2 = new WalletModel({}, {key: 'wallet2', connected: true })
@@ -63,10 +64,12 @@ const main = () => {
         const s = await SocietyModel.fetch(1)
         expect(s).to.not.eq(null)
         if (s){
+            TX_VERSION = s.get().stats().get().version()
             walletPuts.setSociety(s)
             wallet2Puts.setSociety(s)
             wallet3Puts.setSociety(s)            
         }
+
         await wallet.synchronize()
         await wallet2.synchronize()
         await wallet3.synchronize()
@@ -152,7 +155,7 @@ const main = () => {
     it('[ONCHAIN] Wallet1 sends some coins to Wallet2 ', async () => {
         const total = wallet.balance().div(10)
         const balanceBefore = wallet.balance()
-        const tx = await wallet.buildTX().toAddress(wallet2.keys().get().address(), total)
+        const tx = await wallet.buildTX(TX_VERSION).toAddress(wallet2.keys().get().address(), total)
         expect(tx).not.eq(null)
         if (tx){
             const response = await tx.broadcast(wallet)
@@ -190,7 +193,7 @@ const main = () => {
 
     it('[ONCHAIN] Wallet1 -> create a proposal : application', async () => {
         const balance = wallet.balance()
-        const tx = await wallet.buildTX().proposal().application()
+        const tx = await wallet.buildTX(TX_VERSION).proposal().application()
         expect(tx).not.eq(null)
         if (tx){
             const response = await tx.broadcast(wallet)
@@ -282,7 +285,7 @@ const main = () => {
         c[0].title = "Title #0"
         c[0].content = "Content #0"
 
-        const tx = await wallet.buildTX().proposal().constitution(c)
+        const tx = await wallet.buildTX(TX_VERSION).proposal().constitution(c)
         expect(tx).not.eq(null)
         if (tx){
             const response = await tx.broadcast(wallet)
@@ -315,7 +318,7 @@ const main = () => {
     })
 
     it('[ONCHAIN] Wallet1 -> create a proposal : costs', async () => {
-        const tx = await wallet.buildTX().proposal().cost(new Inv.InvBigInt(-1), COIN_UNIT.mul(2000))
+        const tx = await wallet.buildTX(TX_VERSION).proposal().cost(new Inv.InvBigInt(-1), COIN_UNIT.mul(2000))
         const balance = wallet.balance()
         expect(tx).not.eq(null)
         if (tx){
@@ -352,7 +355,7 @@ const main = () => {
         const proposal = await ProposalModel.FetchByIndex(SOCIETY_ID, 10, wallet.sign().header())
         expect(proposal).not.eq(undefined)
         if (proposal){
-            const tx = await wallet.buildTX().vote(proposal.get().pubKH() as Inv.PubKH, true)
+            const tx = await wallet.buildTX(TX_VERSION).vote(proposal.get().pubKH() as Inv.PubKH, true)
             expect(tx).not.eq(null)
             if (tx){
                 const response = await tx.broadcast(wallet)
@@ -364,7 +367,7 @@ const main = () => {
 
     let pkhContent0: Inv.PubKH
     it('[ONCHAIN] Wallet1 -> create a thread', async () => {
-        const tx = await wallet.buildTX().thread()
+        const tx = await wallet.buildTX(TX_VERSION).thread()
         const balance = wallet.balance()
         expect(tx).not.eq(null)
 
@@ -417,7 +420,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent0)
         expect(thread).not.eq(null)
         if (thread){
-            const tx = await wallet.buildTX().rethread(thread.get().pubKH())
+            const tx = await wallet.buildTX(TX_VERSION).rethread(thread.get().pubKH())
             const balance = wallet.balance()
             expect(tx).not.eq(null)
             if (tx){
@@ -512,7 +515,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent0)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet2.buildTX().reward(thread, UPVOTE_KEY)        
+            const tx = await wallet2.buildTX(TX_VERSION).reward(thread, UPVOTE_KEY)        
             const balance = wallet2.balance()
             const balance2 = wallet.balance()
             expect(tx).not.eq(null)
@@ -550,7 +553,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet2.buildTX().reward(thread, REWARD0_KEY)
+            const tx = await wallet2.buildTX(TX_VERSION).reward(thread, REWARD0_KEY)
             const balance = wallet2.balance()
             const balanceWallet = wallet.balance()
             expect(tx).not.eq(null)
@@ -620,7 +623,7 @@ const main = () => {
     it('[ONCHAIN] Wallet1 sends some coins to Wallet3 ', async () => {
         const costs = wallet.costs().get()
         const total = costs.reward0().add(costs.reward1()).add(costs.reward2().mul(2)).add(costs.upvote())
-        const tx = await wallet.buildTX().toAddress(wallet3.keys().get().address(), total)
+        const tx = await wallet.buildTX(TX_VERSION).toAddress(wallet3.keys().get().address(), total)
         expect(tx).not.eq(null)
         if (tx){
             const response = await tx.broadcast(wallet)
@@ -727,7 +730,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet3.buildTX().reward(thread, REWARD0_KEY)
+            const tx = await wallet3.buildTX(TX_VERSION).reward(thread, REWARD0_KEY)
             expect(tx).not.eq(null)
             if (tx){
                 const response = await tx.broadcast(wallet3)
@@ -754,13 +757,11 @@ const main = () => {
         }
     })
 
-
-
     it('[ONCHAIN] Wallet3 -> create a reward : reaction1', async () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet3.buildTX().reward(thread, REWARD1_KEY)
+            const tx = await wallet3.buildTX(TX_VERSION).reward(thread, REWARD1_KEY)
             expect(tx).not.eq(null)
             if (thread){
                 if (tx){
@@ -789,13 +790,11 @@ const main = () => {
         }
     })
 
-
-
     it('[ONCHAIN] Wallet3 -> create a reward : reaction2', async () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)        
         if (thread){
-            const tx = await wallet3.buildTX().reward(thread, REWARD2_KEY)
+            const tx = await wallet3.buildTX(TX_VERSION).reward(thread, REWARD2_KEY)
             expect(tx).not.eq(null)
 
             if (tx){
@@ -828,7 +827,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet3.buildTX().reward(thread, 'upvote')
+            const tx = await wallet3.buildTX(TX_VERSION).reward(thread, 'upvote')
             expect(tx).not.eq(null)
             if (tx){
                 const response = await tx.broadcast(wallet3)
@@ -1321,12 +1320,16 @@ const main = () => {
         expect(wallet.cch().get().list().length).to.eq(9)
         expect(wallet.utxos().get().count()).to.eq(11)
         expect(walletPuts.count()).to.eq(13)
+        const society = await SocietyModel.fetch(1)
+        if (society){
+            TX_VERSION = society.get().stats().get().version()
+        }
     })
 
     it('[ONCHAIN] Wallet1 -> create a rethread on Proposal', async () => {
         const proposal = await ProposalModel.FetchByIndex(1, 10)
         expect(proposal).not.eq(undefined)
-        const tx = await wallet.buildTX().rethread(proposal?.get().contentLink().get().output().get().contentPKH() as Inv.PubKH)
+        const tx = await wallet.buildTX(TX_VERSION).rethread(proposal?.get().contentLink().get().output().get().contentPKH() as Inv.PubKH)
         const balance = wallet.balance()
         expect(tx).not.eq(null)
         if (tx){
@@ -1477,7 +1480,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, Inv.PubKH.fromHex("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642"))
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet.buildTX().rethread(thread.get().pubKH())
+            const tx = await wallet.buildTX(TX_VERSION).rethread(thread.get().pubKH())
             const balance = wallet.balance()
             expect(tx).not.eq(null)
             if (tx){
