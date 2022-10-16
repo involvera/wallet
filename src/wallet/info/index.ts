@@ -19,9 +19,9 @@ export default class InfoModel extends Model {
 
     static DefaultState: IWalletInfo = DEFAULT_STATE
 
-    static fetch = async (userPubKH: string) => {
+    static fetch = async (userPubKH: Inv.PubKH) => {
         try {
-             const res = await axios(config.getRootAPIChainUrl() + '/wallet/' + userPubKH, {
+             const res = await axios(config.getRootAPIChainUrl() + '/wallet/' + userPubKH.hex(), {
                  timeout: 10000,
                  validateStatus: function (status) {
                      return status >= 200 && status < 500;

@@ -205,7 +205,7 @@ export default class Wallet extends Model {
             const targetPKH = thread.get().contentLink().get().output().get().contentPKH()
     
             const scriptReward = Script.build().rewardScript(targetPKH, new Inv.InvBigInt(1), txVersion)
-            const scriptDistribution = Script.build().lockScript(thread.get().author().get().address().toPKH())
+            const scriptDistribution = Script.build().lockScript((thread.get().author().get().address() as Inv.Address).toPKH())
             
             const cost = this.costs().get()[rewardType]()
             const burned = new Inv.InvBigInt(cost.mulDecimals(BURNING_RATIO))

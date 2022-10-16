@@ -33,7 +33,7 @@ export class ContributorModel extends Model {
 
     get = () => {
         return {
-            addr: (): Inv.Address => new Inv.Address(this.state.addr),
+            addr: (): Inv.Address | null => this.state.addr ? new Inv.Address(this.state.addr) : null,
             position: (): number => this.state.position,
             sid: (): number => this.state.sid,
             contentNonce: (): number => this.state.content_nonce,

@@ -57,7 +57,7 @@ const main = () => {
         config.setStoreEngine(new LocalStorage('./db'))
         await config.done()
         await initWallets()
-        expect(wallet.keys().get().address().get()).to.eq(wallet.keys().get().alias().get().address().get())
+        expect(wallet.keys().get().address()?.get()).to.eq(wallet.keys().get().alias().get().address()?.get())
     })
 
     it('refresh wallets', async () => {
@@ -74,9 +74,9 @@ const main = () => {
         await wallet2.synchronize()
         await wallet3.synchronize()
 
-        expect(wallet.keys().get().address().get()).to.eq(wallet.keys().get().alias().get().address().get())
-        expect(wallet2.keys().get().address().get()).to.eq(wallet2.keys().get().alias().get().address().get())
-        expect(wallet3.keys().get().address().get()).to.eq(wallet3.keys().get().alias().get().address().get())
+        expect(wallet.keys().get().address().get()).to.eq(wallet.keys().get().alias().get().address()?.get())
+        expect(wallet2.keys().get().address().get()).to.eq(wallet2.keys().get().alias().get().address()?.get())
+        expect(wallet3.keys().get().address().get()).to.eq(wallet3.keys().get().alias().get().address()?.get())
 
         await walletPuts.fetch(wallet.sign().header(), true).all()
         await wallet2Puts.fetch(wallet2.sign().header(), true).all()
@@ -228,14 +228,14 @@ const main = () => {
 
     it('[OFFCHAIN] Create an alias on Wallet 1', async () => {        
         let alias = wallet.keys().get().alias()
-        expect(alias.get().address().get()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
-        expect(wallet.keys().get().address().get()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
+        expect(alias.get().address()?.get()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
+        expect(wallet.keys().get().address()?.get()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
         alias.setUsername('fantasim')
         const res = await alias.updateUsername(wallet.keys().get().wallet(), SOCIETY_ID)
         expect(res.status).to.eq(201)
 
         alias = wallet.keys().get().alias()
-        expect(alias.get().address().get()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
+        expect(alias.get().address()?.get()).to.eq("1DHA8m54a1Vi3oR6LkqkkKYRBR9ZhPjZvC")
         expect(alias.get().username()).to.eq('fantasim')
         expect(alias.get().pp()).to.eq(null)
         const urlpp500 = await alias.fetchBigPP()
@@ -474,14 +474,14 @@ const main = () => {
 
     it('[OFFCHAIN] Create an alias on Wallet 2', async () => {
         const alias = wallet2.keys().get().alias()
-        expect(alias.get().address().get()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
+        expect(alias.get().address()?.get()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
         expect(wallet2.keys().get().address().get()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
         alias.setUsername('skily')
         const res = await alias.updateUsername(wallet2.keys().get().wallet(), SOCIETY_ID)
         expect(res.status).to.eq(201)
 
         const alias2 = wallet2.keys().get().alias()
-        expect(alias2.get().address().get()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
+        expect(alias2.get().address()?.get()).to.eq("13gLGwTcdN5YAvhCKpLLY3v3VdCX6UNKU4")
         expect(alias2.get().username()).to.eq('skily')
         expect(alias2.get().pp()).to.eq(null)
         const urlpp500 = await alias.fetchBigPP()
@@ -544,7 +544,7 @@ const main = () => {
                 expect(p.isReward2()).to.eq(false)
                 expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
                 expect(p.get().otherPartyAlias()?.get().pp()).to.eq(wallet.keys().get().alias().get().pp())
-                expect(p.get().otherPartyAlias()?.get().address().get()).to.eq(wallet.keys().get().alias().get().address().get())
+                expect(p.get().otherPartyAlias()?.get().address()?.get()).to.eq(wallet.keys().get().alias().get().address()?.get())
             }
         }
     })
@@ -580,7 +580,7 @@ const main = () => {
                 expect(p.isUpvote()).to.eq(false)
                 expect(p.isReward0()).to.eq(true)
                 expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
-                expect(p.get().otherPartyAlias()?.get().address().get()).to.eq(wallet.keys().get().alias().get().address().get())
+                expect(p.get().otherPartyAlias()?.get().address()?.get()).to.eq(wallet.keys().get().alias().get().address()?.get())
                 expect(p.get().otherPartyAlias()?.get().pp()).to.eq(wallet.keys().get().alias().get().pp())
             }
         }
@@ -646,7 +646,7 @@ const main = () => {
             expect(p.isVote()).to.eq(false)
             expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
             expect(p.get().otherPartyAlias()?.get().pp()).to.eq(wallet.keys().get().alias().get().pp())
-            expect(p.get().otherPartyAlias()?.get().address().get()).to.eq(wallet.keys().get().alias().get().address().get())
+            expect(p.get().otherPartyAlias()?.get().address()?.get()).to.eq(wallet.keys().get().alias().get().address()?.get())
 
             const p2 = walletPuts.last() as UnserializedPutModel
             expect(p2.get().value().big()).to.eq(total.big())
@@ -662,21 +662,21 @@ const main = () => {
 
     it('[OFFCHAIN] Create an alias on Wallet 3', async () => {
         const alias = wallet3.keys().get().alias()
-        expect(alias.get().address().get()).to.eq("14GVaurTY892xBxnrTK9vrPEFZZnHYBNBR")
-        expect(wallet3.keys().get().address().get()).to.eq("14GVaurTY892xBxnrTK9vrPEFZZnHYBNBR")
+        expect(alias.get().address()?.get()).to.eq("14GVaurTY892xBxnrTK9vrPEFZZnHYBNBR")
+        expect(wallet3.keys().get().address()?.get()).to.eq("14GVaurTY892xBxnrTK9vrPEFZZnHYBNBR")
         alias.setUsername('wallet3')
         const res = await alias.updateUsername(wallet3.keys().get().wallet(), SOCIETY_ID)
         expect(res.status).to.eq(201)
 
         const alias2 = wallet3.keys().get().alias()
-        expect(alias2.get().address().get()).to.eq("14GVaurTY892xBxnrTK9vrPEFZZnHYBNBR")
+        expect(alias2.get().address()?.get()).to.eq("14GVaurTY892xBxnrTK9vrPEFZZnHYBNBR")
         expect(alias2.get().username()).to.eq('wallet3')
         expect(alias2.get().pp()).to.eq(null)
     })
 
     it('[OFFCHAIN] Update PP on Wallet 3', async () => {
         const alias = wallet3.keys().get().alias()
-        expect(alias.get().address().get()).to.eq("14GVaurTY892xBxnrTK9vrPEFZZnHYBNBR")
+        expect(alias.get().address()?.get()).to.eq("14GVaurTY892xBxnrTK9vrPEFZZnHYBNBR")
         expect(alias.get().username()).to.eq("wallet3")
         expect(alias.get().pp()).to.eq(null)
 
@@ -722,7 +722,7 @@ const main = () => {
         const p = walletPuts.last() as UnserializedPutModel
         expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet3.keys().get().alias().get().username())
         expect(p.get().otherPartyAlias()?.get().pp()).to.eq(wallet3.keys().get().alias().get().pp())
-        expect(p.get().otherPartyAlias()?.get().address().get()).to.eq(wallet3.keys().get().alias().get().address().get())
+        expect(p.get().otherPartyAlias()?.get().address()?.get()).to.eq(wallet3.keys().get().alias().get().address()?.get())
     })
 
 
@@ -752,7 +752,7 @@ const main = () => {
                 expect(p.isReward0()).to.eq(true)
                 expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
                 expect(p.get().otherPartyAlias()?.get().pp()).to.eq(wallet.keys().get().alias().get().pp())
-                expect(p.get().otherPartyAlias()?.get().address().get()).to.eq(wallet.keys().get().alias().get().address().get())
+                expect(p.get().otherPartyAlias()?.get().address()?.get()).to.eq(wallet.keys().get().alias().get().address()?.get())
             }
         }
     })
@@ -784,7 +784,7 @@ const main = () => {
                     expect(p.isReward1()).to.eq(true)
                     expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
                     expect(p.get().otherPartyAlias()?.get().pp()).to.eq(wallet.keys().get().alias().get().pp())
-                    expect(p.get().otherPartyAlias()?.get().address().get()).to.eq(wallet.keys().get().alias().get().address().get())
+                    expect(p.get().otherPartyAlias()?.get().address()?.get()).to.eq(wallet.keys().get().alias().get().address()?.get())
                 }
             }
         }
@@ -817,7 +817,7 @@ const main = () => {
                 expect(p.isReward0()).to.eq(false)
                 expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
                 expect(p.get().otherPartyAlias()?.get().pp()).to.eq(wallet.keys().get().alias().get().pp())
-                expect(p.get().otherPartyAlias()?.get().address().get()).to.eq(wallet.keys().get().alias().get().address().get())
+                expect(p.get().otherPartyAlias()?.get().address()?.get()).to.eq(wallet.keys().get().alias().get().address()?.get())
             }
         }
     })
@@ -852,7 +852,7 @@ const main = () => {
                 expect(p.isReward0()).to.eq(false)
                 expect(p.get().otherPartyAlias()?.get().username()).to.eq(wallet.keys().get().alias().get().username())
                 expect(p.get().otherPartyAlias()?.get().pp()).to.eq(wallet.keys().get().alias().get().pp())
-                expect(p.get().otherPartyAlias()?.get().address().get()).to.eq(wallet.keys().get().alias().get().address().get())
+                expect(p.get().otherPartyAlias()?.get().address()?.get()).to.eq(wallet.keys().get().alias().get().address()?.get())
             }
         }
     })
@@ -962,7 +962,7 @@ const main = () => {
             const userVote = proposal1.get().userVote() as UserVoteModel
             expect(userVote.get().hasApproved()).to.eq(true)
 
-            expect(proposal1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(proposal1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(proposal1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(proposal1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
 
@@ -997,7 +997,7 @@ const main = () => {
             expect(() => proposal2.get().costs()).to.throw(Error)
             expect(proposal2.get().context()).to.eq(null)
             expect(proposal2.get().pubKH()).to.eq(null)
-            expect(proposal2.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(proposal2.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(proposal2.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(proposal2.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
 
@@ -1011,7 +1011,7 @@ const main = () => {
                 expect(content[1]).to.eq("Content 2: https://involvera.com/involvera/proposal/8")
                 expect(content[2]).to.eq("Content 3: https://involvera.com/involvera/proposal/8")
 
-                expect(fullProposal2.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+                expect(fullProposal2.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
                 expect(fullProposal2.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
                 expect(fullProposal2.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
                 expect(fullProposal2.get().pubKH()?.hex()).to.eq("b4cb71271efc2ac6d75d1a337fc1873d10ffa5da")
@@ -1041,7 +1041,7 @@ const main = () => {
             expect(proposal3.get().vote().get().approved()).to.eq(-1)
             expect(proposal3.get().endAtLH()).to.eq(28)
             expect(proposal3.get().userVote()).to.eq(null)
-            expect(proposal3.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(proposal3.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(proposal3.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(proposal3.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
 
@@ -1058,7 +1058,7 @@ const main = () => {
                 expect(content[2]).to.eq("Content 3")
                 expect(content[3]).to.eq("Content 4")
                 expect(fullProposal3.get().context()).to.eq(null)
-                expect(fullProposal3.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+                expect(fullProposal3.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
                 expect(fullProposal3.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
                 expect(fullProposal3.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
                 expect(fullProposal3.get().pubKH()?.hex()).to.eq("41c7fb5001fdb63ebd4638fc6e900d192c4c0041")
@@ -1077,7 +1077,7 @@ const main = () => {
         if (threads){
             expect(threads.count()).to.eq(1)
             const thread1 = threads.nodeAt(0) as ThreadModel
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread1.get().title()).to.eq("This is a title.")
@@ -1103,7 +1103,7 @@ const main = () => {
         if (thread1){
             const target = thread1.get().target() as ThreadModel
         
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread1.get().title()).to.eq("This is a title.")
@@ -1122,7 +1122,7 @@ const main = () => {
             expect(thread1.get().replyCount()).to.eq(0)
             expect(thread1.get().target()).to.not.eq(null)
 
-            expect(target.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(target.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(target.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(target.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(target.get().title()).to.eq("This is a title.")
@@ -1155,7 +1155,7 @@ const main = () => {
         if (threads){
             expect(threads.count()).to.eq(1)
             const thread1 = threads.nodeAt(0) as ThreadModel
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread1.get().title()).to.eq("This is a title.")
@@ -1190,7 +1190,7 @@ const main = () => {
             const thread1 = threads.nodeAt(0) as ThreadModel
             const thread2 = threads.nodeAt(1) as ThreadModel
 
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread1.get().title()).to.eq("This is a title.")
@@ -1227,7 +1227,7 @@ const main = () => {
                 expect(target.get().pubKH().hex()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
             }
 
-            expect(thread2.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread2.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread2.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread2.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread2.get().title()).to.eq("This is a title.")
@@ -1263,7 +1263,7 @@ const main = () => {
             const thread1 = threads.nodeAt(0) as ThreadModel
             const thread2 = threads.nodeAt(1) as ThreadModel
 
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq("This is a title.")
             expect(thread1.get().pubKH().hex()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
@@ -1286,7 +1286,7 @@ const main = () => {
             expect(target.get().target()).to.eq(null)
             expect(target.get().pubKH().hex()).to.eq("4001282825b5b91d792787c1b69ce72d996a3e2e")
 
-            expect(thread2.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread2.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread2.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread2.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread2.get().title()).to.eq("This is a title.")
@@ -1374,7 +1374,7 @@ const main = () => {
         if (threads){
             expect(threads.count()).to.eq(1)
             const thread1 = threads.nodeAt(0) as ThreadModel
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread1.get().title()).to.eq('')
@@ -1408,7 +1408,7 @@ const main = () => {
             expect(threads.count()).to.eq(3)
             const thread1 = threads.nodeAt(0) as ThreadModel
 
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread1.get().title()).to.eq('')
@@ -1454,7 +1454,7 @@ const main = () => {
             expect(threads.count()).to.eq(3)
             const thread1 = threads.nodeAt(0) as ThreadModel
 
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread1.get().title()).to.eq('')
@@ -1553,7 +1553,7 @@ const main = () => {
         if (threads){
             expect(threads.count()).to.eq(1)
             const thread1 = threads.nodeAt(0) as ThreadModel
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread1.get().title()).to.eq('')
@@ -1584,7 +1584,7 @@ const main = () => {
         if (thread1){
             const target = thread1.get().target() as ThreadModel
         
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().title()).to.eq("")
@@ -1603,7 +1603,7 @@ const main = () => {
             expect(thread1.get().replyCount()).to.eq(0)
             expect(thread1.get().target()).to.not.eq(null) 
 
-            expect(target.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(target.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(target.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(target.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(target.get().title()).to.eq("This is a title.")
@@ -1635,7 +1635,7 @@ const main = () => {
         if (threads){
             expect(threads.count()).to.eq(1)
             const thread1 = threads.nodeAt(0) as ThreadModel
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread1.get().title()).to.eq('')
@@ -1668,7 +1668,7 @@ const main = () => {
         if (threads){
             expect(threads.count()).to.eq(1)
             const thread1 = threads.nodeAt(0) as ThreadModel
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread1.get().title()).to.eq('')
@@ -1702,7 +1702,7 @@ const main = () => {
             expect(thread2.get().pubKH().hex()).to.eq("0e01d4ea4c3b4e090b5287bbc4efb024f6d38642")
             expect(thread2.get().replyCount()).to.eq(1)
             
-            expect(thread1.get().author().get().address().get()).eq(wallet.keys().get().address().get())
+            expect(thread1.get().author().get().address()?.get()).eq(wallet.keys().get().address()?.get())
             expect(thread1.get().author().get().username()).eq(wallet.keys().get().alias().get().username())
             expect(thread1.get().author().get().pp()).eq(wallet.keys().get().alias().get().pp())
             expect(thread1.get().title()).to.eq('')

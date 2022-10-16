@@ -94,10 +94,14 @@ export class AliasModel extends Model {
 
     fetchWalletInfo = async () => {
         try {
-            const wi = await WalletInfoModel.fetch(this.get().address().toPKH().hex())
-            if (wi)
-                this._walletInfo = wi
-            return wi
+            const addr = this.get().address()
+            if (addr){
+                const wi = await WalletInfoModel.fetch(addr.toPKH())
+                if (wi)
+                    this._walletInfo = wi
+                return wi   
+            }
+            return null
         } catch (e: any){
             throw new Error(e)
         }
@@ -180,7 +184,7 @@ export class AliasModel extends Model {
         return {
             pp: (): null | string => this.state.pp,
             username: (): string => this.state.username,
-            address: () => new Inv.Address(this.state.address)
+            address: () => this.state.address ? new Inv.Address(this.state.address) : null
         }
     }
 }
