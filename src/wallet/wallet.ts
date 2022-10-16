@@ -45,12 +45,12 @@ export default class Wallet extends Model {
         })
     }
 
-    generateRandomSeed = () => {
-        this.keys().set(Inv.Mnemonic.random().get(), DEFAULT_PASS)
+    generateRandomSeed = async () => {
+        await this.keys().set(Inv.Mnemonic.random().get(), DEFAULT_PASS)
         return this.action()
     }
 
-    reset = () => {
+    reset = async () => {
         this.setState({
             seed: new KeysModel(undefined, this.kids()),
             utxos: new UTXOCollection([], this.kids()),

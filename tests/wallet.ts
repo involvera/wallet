@@ -70,8 +70,11 @@ const main = () => {
             wallet3Puts.setSociety(s)            
         }
 
+        await wallet.keys().unlock('coucou')
         await wallet.synchronize()
+        await wallet2.keys().unlock('coucou')
         await wallet2.synchronize()
+        await wallet3.keys().unlock('coucou')
         await wallet3.synchronize()
 
         expect(wallet.keys().get().address().get()).to.eq(wallet.keys().get().alias().get().address()?.get())
