@@ -46,14 +46,17 @@ export default class KeysModel extends Model {
         this.unlock(this.get().passwordClear())
     }
 
-    unlock = (password: string = DEFAULT_PASS) => {
+    unlock = async (password: string = DEFAULT_PASS) => {
         if (this._hashPass(password) !== this.get().passHash()){
             throw new Error("wrong unlocking password")
         }
         this._password = password
-        AES.decrypt(this._256BitsPass(), Inv.InvBuffer.fromHex(this.state.mnemonic).bytes()).then((val: Uint8Array) => {
+        try {
+            const val = await AES.decrypt(this._256BitsPass(), Inv.InvBuffer.fromHex(this.state.mnemonic).bytes())
             this._mnemonic = new Inv.InvBuffer(val).toString()
-        })
+        } catch (e){
+            throw new Error("internal error")
+        }
     }
 
     lock = () => {
@@ -77,8 +80,8 @@ export default class KeysModel extends Model {
 
     is2 = () => {
         return {
-            locked: () => !this._password,
-            unlocked: () => !!this._password,
+            locked: () => !this._mnemonic,
+            unlocked: () => !!this._mnemonic,
             set: () => this.state.mnemonic.length > 0
         }
     }
