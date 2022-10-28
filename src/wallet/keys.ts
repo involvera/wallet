@@ -54,8 +54,8 @@ export default class KeysModel extends Model {
         try {
             const val = await AES.decrypt(this._256BitsPass(), Inv.InvBuffer.fromHex(this.state.mnemonic).bytes())
             this._mnemonic = new Inv.InvBuffer(val).toString()
-        } catch (e){
-            throw new Error("internal error")
+        } catch (e: any){
+            throw new Error("internal error " + e.toString())
         }
     }
 
@@ -67,11 +67,11 @@ export default class KeysModel extends Model {
     set = async (mnemonic: string, unlockingPassword: string = DEFAULT_PASS) => {
         if (unlockingPassword.length === 0){
             throw new Error("unlocking password cannot be empty")
-        } 
+        }
         //checking error
         this._mnemonic = new Inv.Mnemonic(mnemonic).get()
+        this._password = unlockingPassword
         this.setState({ pass_hash: this._hashPass(unlockingPassword)})
-        this.unlock(unlockingPassword)
         const mnemonicEncrypted = new Inv.InvBuffer(await AES.encrypt(this._256BitsPass(), Inv.InvBuffer.fromRaw(mnemonic).bytes()))
         this.setState({  mnemonic: mnemonicEncrypted.hex() })
         this.get().alias().setAddress(this.get().address())
@@ -104,6 +104,9 @@ export default class KeysModel extends Model {
         const passHash = (): string => this.state.pass_hash
         const mnemonic = () => {
             this._triggerPasswordError()
+            if (!this._mnemonic){
+                throw new Error("wallet is still locked")
+            }
             return new Inv.Mnemonic(this._mnemonic)
         } 
         const alias = (): AliasModel => this.state.alias 

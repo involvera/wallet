@@ -18,6 +18,7 @@ import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 // conf.setRootAPIChainUrl('http://134.122.16.30:8080')
 // conf.setRootAPIOffChainUrl('http://134.122.16.30:3020')
 
+const PASSWORD = 'coucou'
 const ADMIN_KEY = '2f72e55b962b6cd66ea70e8b6bd8657d1c87a23a65769213d76dcb5da6abf6b5'
 const SOCIETY_ID = 1
 let TX_VERSION: TByte = 0
@@ -33,11 +34,11 @@ const wallet3Puts = new UnserializedPutCollection([], {connected: true, key: 'wa
 const userList = new UserCollection([], {connected: true, key: 'users'})
 
 const initWallets = async () => {
-    const w = await wallet.keys().set("film dirt damage apart carry horse enroll carry power prison flush bulb", "coucou")
+    const w = await wallet.keys().set("film dirt damage apart carry horse enroll carry power prison flush bulb", PASSWORD)
     w.store()
-    const w2 = await wallet2.keys().set("social brief stool panel scene whale pledge tribe domain proof essence clog", "coucou")
+    const w2 = await wallet2.keys().set("social brief stool panel scene whale pledge tribe domain proof essence clog", PASSWORD)
     w2.store()
-    const w3 = await wallet3.keys().set("toy elder edge wait antique approve carry prize acid believe human shine", "coucou")
+    const w3 = await wallet3.keys().set("toy elder edge wait antique approve carry prize acid believe human shine", PASSWORD)
     w3.store()
 }
 
@@ -60,6 +61,24 @@ const main = () => {
         expect(wallet.keys().get().address()?.get()).to.eq(wallet.keys().get().alias().get().address()?.get())
     })
 
+    it('lock and unlock wallet', async () => {
+        wallet.keys().lock()
+        wallet2.keys().lock()
+        wallet3.keys().lock()
+
+        expect(() => wallet.keys().get().address()).to.throw(Error)
+        expect(() => wallet2.keys().get().address()).to.throw(Error)
+        expect(() => wallet3.keys().get().address()).to.throw(Error)
+
+        await wallet.keys().unlock(PASSWORD)
+        await wallet2.keys().unlock(PASSWORD)
+        await wallet3.keys().unlock(PASSWORD)
+
+        expect(wallet.keys().get().address().get()).to.eq(wallet.keys().get().alias().get().address()?.get())
+        expect(wallet2.keys().get().address().get()).to.eq(wallet2.keys().get().alias().get().address()?.get())
+        expect(wallet3.keys().get().address().get()).to.eq(wallet3.keys().get().alias().get().address()?.get())
+    })
+
     it('refresh wallets', async () => {
         const s = await SocietyModel.fetch(1)
         expect(s).to.not.eq(null)
@@ -70,11 +89,11 @@ const main = () => {
             wallet3Puts.setSociety(s)            
         }
 
-        await wallet.keys().unlock('coucou')
+        await wallet.keys().unlock(PASSWORD)
         await wallet.synchronize()
-        await wallet2.keys().unlock('coucou')
+        await wallet2.keys().unlock(PASSWORD)
         await wallet2.synchronize()
-        await wallet3.keys().unlock('coucou')
+        await wallet3.keys().unlock(PASSWORD)
         await wallet3.synchronize()
 
         expect(wallet.keys().get().address().get()).to.eq(wallet.keys().get().alias().get().address()?.get())
@@ -102,6 +121,7 @@ const main = () => {
         expect(wallet.keys().get().mnemonic().get()).to.eq("film dirt damage apart carry horse enroll carry power prison flush bulb")
     })
 
+    
     it('Wallet1 -> Check Costs: ', () => {
         expect(wallet.costs().get().thread().big()).to.eq(LUGH_AMOUNT.div(200).big())
         expect(wallet.costs().get().proposal().big()).to.eq(LUGH_AMOUNT.div(20).big())
