@@ -396,7 +396,7 @@ export class ThreadCollection extends Collection {
 
     add = (node: ThreadModel | ThreadCollection) => {        
         const addNode = (n: ThreadModel) => {
-            const idx = this.findIndex({public_key_hashed: n.get().pubKH()})
+            const idx = this.findIndexByPKH(n.get().pubKH())
             if (idx == -1)
                 this.push(n.to().plain())
             else
@@ -405,6 +405,8 @@ export class ThreadCollection extends Collection {
         node instanceof ThreadModel ? addNode(node) : node.forEach((p: ThreadModel) => addNode(p))
         return this.action()
     }
+
+    findIndexByPKH = (pkh: Inv.PubKH): number => this.findIndex((t: ThreadModel) => t.get().pubKH().eq(pkh))
 
     findByPKH = (pkh: Inv.PubKH): ThreadModel | undefined  => {
         const idx = this.findIndex((t: ThreadModel) => t.get().pubKH().eq(pkh))

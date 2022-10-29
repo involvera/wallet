@@ -1,5 +1,6 @@
 import { Model } from 'acey'
 import { IThreadReward } from 'community-coin-types'
+import { Inv } from 'wallet-util'
 import { RewardCountModel } from './reward'
 
 const DEFAULT_STATE: IThreadReward = {
@@ -22,7 +23,7 @@ export class ThreadRewardModel extends Model{
     
     get = () => {
         return {
-            threadPKH: (): string => this.state.thread_pkh,
+            threadPKH: (): Inv.PubKH => Inv.PubKH.fromHex(this.state.thread_pkh),
             threadReward: (): RewardCountModel => this.state.reward_count,
             userReward: (): RewardCountModel => this.state.user_reward_count,
         }
