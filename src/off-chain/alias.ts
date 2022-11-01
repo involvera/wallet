@@ -187,6 +187,17 @@ export class AliasModel extends Model {
             address: () => this.state.address ? new Inv.Address(this.state.address) : null
         }
     }
+
+    //Copy the meta data of the src alias to the current one, if the addresses are same.
+    copyMetaData = (src: AliasModel) => {
+        if (src.get().address()?.get() === this.get().address()?.get()){
+            const pp = src.get().pp()
+            const username = src.get().username()
+            pp && this.setPP(pp)
+            username && this.setUsername(username)
+        }
+        return this.action()
+    }
 }
 
 export class AliasCollection extends Collection {
@@ -222,4 +233,10 @@ export class AliasCollection extends Collection {
             return e.toString()
         }
     }
+
+    updateAuthor = (author: AliasModel) => {
+        this.forEach((a: AliasModel) => a.copyMetaData(a))
+        return this.action()
+    }
+
 }

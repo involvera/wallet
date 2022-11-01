@@ -207,6 +207,13 @@ export class UnserializedPutModel extends Model {
             // currentValue,
         }
     }
+
+    setAuthor = (author: AliasModel) => {
+        const a = this.get().otherPartyAlias()
+        a && a.copyMetaData(author)
+        return this.action()    
+    }
+
 }
 
 export type T_FETCH_FILTER = 'all' | 'lugh' | 'non_lugh'
@@ -316,4 +323,9 @@ export class UnserializedPutCollection extends Collection {
     }
 
     sortByCreationDateDesc = () => this.orderBy('time', 'desc') as UnserializedPutCollection
+
+    setAuthor = (author: AliasModel) => {
+        this.forEach((t: UnserializedPutModel) => t.setAuthor(author))
+        return this.action()
+    }
 }

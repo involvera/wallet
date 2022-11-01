@@ -96,13 +96,7 @@ export class ProposalModel extends Model {
         }))
     }
 
-    setAuthor = (author: AliasModel) => {
-        const pp = author.get().pp()
-        const username = author.get().username()
-        pp && this.get().author().setPP(pp)
-        username && this.get().author().setUsername(username)
-        return this.action()
-    }
+    setAuthor = (author: AliasModel) => this.get().author().copyMetaData(author)
 
     setUserVote = (uVote: IUserVote) => {
         return this.setState({

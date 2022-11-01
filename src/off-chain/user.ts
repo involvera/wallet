@@ -75,6 +75,8 @@ export class UserModel extends Model {
             info: (): InfoModel => this.state.info
         }
     }
+
+    setAlias = (alias: AliasModel) => this.get().alias().copyMetaData(alias)
 }
 
 export class UserCollection extends Collection {
@@ -90,5 +92,10 @@ export class UserCollection extends Collection {
         return index === -1 ? this.push(user) : this.updateAt(user, index)
     }
     findByAddress = (address: Inv.Address) => this.find((u: UserModel) => (u.get().alias().get().address() as Inv.Address).eq(address)) as UserModel
+
+    setAuthor = (author: AliasModel) => {
+        this.forEach((t: UserModel) => t.setAlias(author))
+        return this.action()
+    }
 }
 
