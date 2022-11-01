@@ -1,6 +1,6 @@
 import { Model } from 'acey'
 import { LastCostChangeModel } from './last-cost-change'
-import { IAlias, AliasCollection } from '../../alias'
+import { IAlias, AliasCollection, AliasModel } from '../../alias'
 import { ICostHistory, TByte } from 'community-coin-types'
 import { Inv } from 'wallet-util'
 
@@ -56,5 +56,12 @@ export class SocietyStatsModel extends Model {
             lastThreadCostChange: (): LastCostChangeModel => this.state.last_thread_cost_change,
             lastProposalCostChange: (): LastCostChangeModel => this.state.last_proposal_cost_change
         }
+    }
+
+    setAuthor = (author: AliasModel) => {
+        this.get().mostActiveAddresses().forEach((a: AliasModel) => {
+            a.copyMetaData(author)
+        })
+        return this.action()
     }
 }

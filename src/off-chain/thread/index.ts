@@ -184,7 +184,11 @@ export class ThreadModel extends Model {
 
     incrementReplyCount = () => this.setState({reply_count: this.get().replyCount() + 1 })
 
-    setAuthor = (author: AliasModel) => this.get().author().copyMetaData(author)
+    setAuthor = (author: AliasModel) => {
+        const target = this.get().target()
+        target && target.setAuthor(author)
+        return this.get().author().copyMetaData(author)
+    }
 }
 
 export class ThreadCollection extends Collection {
