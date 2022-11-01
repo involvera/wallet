@@ -157,8 +157,6 @@ export class ThreadModel extends Model {
         }
     }
 
-    incrementReplyCount = () => this.setState({reply_count: this.get().replyCount() + 1 })
-
     get = () => {
         const societyID = (): number => this.state.sid
         
@@ -182,6 +180,16 @@ export class ThreadModel extends Model {
             content, createdAt, societyID,
             pubKH, reward, target,
         }
+    }
+
+    incrementReplyCount = () => this.setState({reply_count: this.get().replyCount() + 1 })
+
+    setAuthor = (author: AliasModel) => {
+        const pp = author.get().pp()
+        const username = author.get().username()
+        pp && this.get().author().setPP(pp)
+        username && this.get().author().setUsername(username)
+        return this.action()
     }
 }
 
@@ -238,7 +246,6 @@ export class ThreadCollection extends Collection {
 
     private _incrementThreadsFetched = (n: number) => this._threadsFetched += n
     public countThreadsFetched = () => this._threadsFetched
-
 
     setSociety = (s: SocietyModel) => {
         this._pageFetched = 0
@@ -411,6 +418,11 @@ export class ThreadCollection extends Collection {
     findByPKH = (pkh: Inv.PubKH): ThreadModel | undefined  => {
         const idx = this.findIndex((t: ThreadModel) => t.get().pubKH().eq(pkh))
         return idx >= 0 ? this.nodeAt(idx) as ThreadModel : undefined
+    }
+
+    setAuthor = (author: AliasModel) => {
+        this.forEach((t: ThreadModel) => t.setAuthor(author))
+        return this.action()
     }
 
 }
