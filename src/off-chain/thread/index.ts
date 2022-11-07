@@ -1,37 +1,16 @@
 import axios from 'axios'
-import { IHeaderSignature, IKindLinkUnRaw, IThreadReward  } from 'community-coin-types'
+import { ONCHAIN, OFFCHAIN  } from 'community-coin-types'
 import { Model, Collection } from "acey";
 import { KindLinkModel } from "../../transaction";
 import config from '../../config'
-import { AliasModel, IAlias } from '../alias';
+import { AliasModel } from '../alias'
 import { ThreadRewardModel } from './thread-rewards'
 import { SocietyModel } from '../society';
 import { IParsedPreview, StringToParsedPreview } from 'involvera-content-embedding';
-import { IProposal, ProposalModel } from '../proposal';
+import { ProposalModel } from '../proposal';
 import { Inv } from 'wallet-util';
 
-export interface IPreviewThread {
-    preview_code: string
-    content_link: IKindLinkUnRaw
-    reward: IThreadReward
-    reply_count: number
-}
-
-export interface IThread {
-    sid: number
-    content_link?: IKindLinkUnRaw
-    author?: IAlias
-    reply_count: number
-    title: string
-    content: string
-    public_key_hashed: string
-    reward?: IThreadReward
-    embeds?: string[]
-    created_at?: Date
-    target: IThread | IProposal | null
-}
-
-const DEFAULT_STATE: IThread = {
+const DEFAULT_STATE: OFFCHAIN.IThreadViewGroup = {
     sid: 0,
     content_link: KindLinkModel.DefaultState,
     author: AliasModel.DefaultState,
@@ -40,16 +19,14 @@ const DEFAULT_STATE: IThread = {
     reply_count: 0,
     public_key_hashed: "",
     reward: ThreadRewardModel.DefaultState,
-    embeds: [],
     created_at: new Date(),
-    target: null
 }
 
 export class ThreadModel extends Model {
 
-    static DefaultState: IThread = DEFAULT_STATE
+    static DefaultState: OFFCHAIN.IThreadViewGroup = DEFAULT_STATE
 
-    static FetchByPKH = async (societyID: number, pubkh: Inv.PubKH, headerSig: IHeaderSignature | void) => {
+    static FetchByPKH = async (societyID: number, pubkh: Inv.PubKH, headerSig: ONCHAIN.IHeaderSignature | void) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/thread/${societyID}/${pubkh.hex()}`,  {
                 timeout: 10_000,
@@ -75,7 +52,7 @@ export class ThreadModel extends Model {
         return new ThreadModel({sid, content, title} as any, {})
     }
 
-    static NewTarget = (target: IThread | IProposal | null): ThreadModel | ProposalModel | null => {
+    static NewTarget = (target: OFFCHAIN.IThreadTargetGroup | OFFCHAIN.IPreviewProposal2 | null | void): ThreadModel | ProposalModel | null => {
         if (!target)
             return null
         if ((target as any).index)
@@ -115,7 +92,7 @@ export class ThreadModel extends Model {
         return null
     }
 
-    constructor(state: IThread = DEFAULT_STATE, options: any){
+    constructor(state: OFFCHAIN.IThreadViewGroup = DEFAULT_STATE, options: any){
         super(state, options) 
         this.setState(Object.assign(state, { 
             content_link: !!state.content_link ? new KindLinkModel(state.content_link, this.kids()) : null,
@@ -143,7 +120,7 @@ export class ThreadModel extends Model {
                     return status >= 200 && status < 500;
                 },
             })
-            const state = res.data as IThread
+            const state = res.data as OFFCHAIN.IThreadViewGroup
             res.status == 201 && this.setState(Object.assign(state, { 
                 content_link: new KindLinkModel(state.content_link, this.kids()),
                 author: new AliasModel(state.author, this.kids()),
@@ -269,7 +246,7 @@ export class ThreadCollection extends Collection {
         this._targetPKH = target
     }
 
-    public fetchUserThreads = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
+    public fetchUserThreads = async (headerSignature: ONCHAIN.IHeaderSignature, disablePageSystem: void | boolean) => {
         const MAX_PER_PAGE = 10
 
         if (this._shouldStopExecution(disablePageSystem))
@@ -292,7 +269,7 @@ export class ThreadCollection extends Collection {
                 },
             })
             if (response.status == 200){
-                const json = (response.data || []) as IPreviewThread[]
+                const json = (response.data || []) as OFFCHAIN.IPreviewThread1[]
                 this._updateFetchingInternalData(json.length, MAX_PER_PAGE, disablePageSystem)
                 const list = new ThreadCollection([], {})
                 for (const o of json){
@@ -320,7 +297,7 @@ export class ThreadCollection extends Collection {
         }
     }
 
-    public fetchFullReplies = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
+    public fetchFullReplies = async (headerSignature: ONCHAIN.IHeaderSignature, disablePageSystem: void | boolean) => {
         const MAX_PER_PAGE = 5
 
         if (this._shouldStopExecution(disablePageSystem))
@@ -351,7 +328,7 @@ export class ThreadCollection extends Collection {
         }
     }
 
-    fetch = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
+    fetch = async (headerSignature: ONCHAIN.IHeaderSignature, disablePageSystem: void | boolean) => {
         const MAX_PER_PAGE = 10
 
         if (this._shouldStopExecution(disablePageSystem))
@@ -371,7 +348,7 @@ export class ThreadCollection extends Collection {
                 },
             })
             if (response.status == 200){
-                const json = (response.data || []) as IPreviewThread[]
+                const json = (response.data || []) as OFFCHAIN.IPreviewThread1[]
                 this._updateFetchingInternalData(json.length, MAX_PER_PAGE, disablePageSystem)
                 const list = new ThreadCollection([], {})
                 for (const o of json){

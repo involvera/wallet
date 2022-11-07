@@ -1,33 +1,16 @@
 import { Model, Collection } from "acey";
-import { ICostProposal } from 'community-coin-types'
 import axios from 'axios'
 import moment from "moment";
-
-import config from "../../config";
-import {ConstitutionModel  } from '../constitution'
-import Costs from '../../wallet/costs'
-import { IConstitutionData } from '../constitution'
-import { SocietyStatsModel,ISocietyStats } from './stats'
-import { IContributorStats, ContributorCollection } from './contributor'
+import { OFFCHAIN } from 'community-coin-types'
 import { Inv } from "wallet-util";
 
-export interface ISociety {
-    id: number
-    name: string
-    path_name: string
-    created_at: Date
-    currency_symbol: string
-    description: string
-    domain: string,
-    currency_route_api: string
-    pp: null
-    stats: ISocietyStats
-    costs: ICostProposal
-    constitution: IConstitutionData
-    contributors: IContributorStats[]
-}
+import config from "../../config";
+import CostsModel from '../../wallet/costs'
+import { SocietyStatsModel } from './stats'
+import {ContributorCollection  } from './contributor'
+import { ConstitutionModel} from '../constitution'
 
-const DEFAULT_STATE: ISociety = {
+const DEFAULT_STATE: OFFCHAIN.ISociety = {
     id: 0,
     created_at: new Date(),
     name: '',
@@ -38,14 +21,13 @@ const DEFAULT_STATE: ISociety = {
     currency_symbol: '',
     pp: null,
     stats: SocietyStatsModel.DefaultState,
-    contributors: [],
     constitution: ConstitutionModel.DefaultState,
-    costs: Costs.DefaultState
+    costs: CostsModel.DefaultState
 }
 
 export class SocietyModel extends Model {
 
-    static DefaultState: ISociety = DEFAULT_STATE 
+    static DefaultState: OFFCHAIN.ISociety = DEFAULT_STATE 
 
     static fetch = async (id: number): Promise<SocietyModel|null> => {
         try {
@@ -70,9 +52,9 @@ export class SocietyModel extends Model {
         super(state, options)
         this.setState({
             stats: new SocietyStatsModel(state.stats, this.kids()),
-            costs: new Costs(state.costs, this.kids()),
+            costs: new CostsModel(state.costs, this.kids()),
             constitution: new ConstitutionModel(state.constitution, this.kids()),
-            contributors: new ContributorCollection(state.contributors, this.kids()),
+            contributors: new ContributorCollection((state as any).contributors || [], this.kids()),
             created_at: state.created_at ? new Date(state.created_at) : new Date()
         })
     }
@@ -108,7 +90,7 @@ export class SocietyModel extends Model {
         const currencySymbol = (): string => this.state.currency_symbol
         const currencyRouteAPI = (): string => this.state.currency_route_api
         const stats = (): SocietyStatsModel => this.state.stats
-        const costs = (): Costs => this.state.costs
+        const costs = (): CostsModel => this.state.costs
         const constitution = (): ConstitutionModel => this.state.constitution
         const contributors = (): ContributorCollection => this.state.contributors
         const pp = (): string | null => this.state.pp || null

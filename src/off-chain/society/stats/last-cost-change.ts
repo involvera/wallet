@@ -1,8 +1,8 @@
 import { Model } from 'acey'
-import { ICostHistory } from 'community-coin-types'
+import { ONCHAIN } from 'community-coin-types'
 import { Inv } from 'wallet-util'
 
-const DEFAULT_STATE: ICostHistory = {
+const DEFAULT_STATE: ONCHAIN.ICostHistory = {
     proposal_index: 0,
     from_lh: 0,
     validated_at_time: 0,
@@ -13,9 +13,9 @@ const DEFAULT_STATE: ICostHistory = {
 
 export class LastCostChangeModel extends Model{
 
-    static DefaultState: ICostHistory = DEFAULT_STATE
+    static DefaultState: ONCHAIN.ICostHistory = DEFAULT_STATE
 
-    constructor(state: ICostHistory = DEFAULT_STATE, options: any){
+    constructor(state: ONCHAIN.ICostHistory = DEFAULT_STATE, options: any){
         super(state, options)
     }
 

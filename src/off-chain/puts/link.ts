@@ -1,16 +1,16 @@
 import { Model } from 'acey' 
-import { ILink } from 'community-coin-types'
+import { ONCHAIN } from 'community-coin-types'
 
-const DEFAULT_VALUE: ILink = {
+const DEFAULT_VALUE: ONCHAIN.ILink = {
     from: '',
     to: ''
 }
 
 export class LinkModel extends Model {
 
-    static DefaultState: ILink = DEFAULT_VALUE
+    static DefaultState: ONCHAIN.ILink = DEFAULT_VALUE
 
-    constructor(state: ILink, options: any){
+    constructor(state: ONCHAIN.ILink, options: any){
         super(state, options)
     }
 

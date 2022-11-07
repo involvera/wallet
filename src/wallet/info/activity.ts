@@ -1,16 +1,16 @@
 import { Model } from 'acey' 
-import { IUserActivity } from 'community-coin-types'
+import { ONCHAIN } from 'community-coin-types'
 
-const DEFAULT_VALUE: IUserActivity = {
+const DEFAULT_VALUE: ONCHAIN.IUserActivity = {
     activity: [],
     last_lugh_height: 0
 }
 
 export default class UserActivityModel extends Model {
 
-    static DefaultState: IUserActivity = DEFAULT_VALUE
+    static DefaultState: ONCHAIN.IUserActivity = DEFAULT_VALUE
 
-    constructor(state: IUserActivity, options: any){
+    constructor(state: ONCHAIN.IUserActivity, options: any){
         super(state, options)
     }
 

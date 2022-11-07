@@ -1,17 +1,17 @@
 import { Model } from 'acey' 
-import { IPubKH } from 'community-coin-types'
+import { ONCHAIN } from 'community-coin-types'
 import { Inv } from 'wallet-util'
 
-const DEFAULT_VALUE: IPubKH = {
+const DEFAULT_VALUE: ONCHAIN.IPubKH = {
     sender: '',
     recipient: ''
 }
 
 export class PubKHModel extends Model {
 
-    static DefaultState: IPubKH = DEFAULT_VALUE
+    static DefaultState: ONCHAIN.IPubKH = DEFAULT_VALUE
 
-    constructor(state: IPubKH, options: any){
+    constructor(state: ONCHAIN.IPubKH, options: any){
         super(state, options)
     }
 

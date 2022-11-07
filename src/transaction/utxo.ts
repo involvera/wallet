@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { ITransactionUnRaw, IOutputUnRaw } from 'community-coin-types'
+import { ONCHAIN} from 'community-coin-types'
 import { Collection, Model } from 'acey'
 import { Inv } from 'wallet-util'
 import config from '../config'
@@ -7,25 +7,15 @@ import config from '../config'
 import { OutputModel } from './output'
 import { CYCLE_IN_LUGH } from '../constant'
 import {TransactionModel} from './transaction'
-import { IHeaderSignature } from '../wallet/wallet'
 import { InputModel, InputCollection } from './input'
  
-export interface IUTXO {
-    tx_id: string
-    idx: number
-    output: IOutputUnRaw
-    tx: null | ITransactionUnRaw 
-    mr: number
-    cch: string
-}
-
 export const CalculateOutputMeltedValue = (amount: Inv.InvBigInt, meltedRatio: number): Inv.InvBigInt => {
     return new Inv.InvBigInt(amount.mulDecimals(meltedRatio))
 }
 
 export class UTXOModel extends Model {
     
-    constructor(utxo: IUTXO, options: any) {
+    constructor(utxo: ONCHAIN.IUTXOUnRaw, options: any) {
         super(utxo, options)
         this.setState({
             output: new OutputModel(this.state.output, this.kids()),
@@ -37,32 +27,29 @@ export class UTXOModel extends Model {
         const txID = (): Inv.TxHash => Inv.TxHash.fromHex(this.state.tx_id)
         const idx = (): number => this.state.idx
         const output = (): OutputModel => this.state.output
-        const MR = (): number => this.state.mr
-        const CCH = (): string => this.state.cch
+        const meltedRatio = (): number => this.state.mr
+        const lughHeight = (): number => this.state.lh
         const tx = (): TransactionModel | null => this.state.tx
     
-        const meltedValueRatio = (CCHList: string[]) => {
-            let count = 0
-            for (const cch of CCHList){
-                if (cch === CCH())
-                    break
-                count++
-            }
-            if (count == CCHList.length) 
-                return 0
-            
-            const r = MR() - ((1 / CYCLE_IN_LUGH) * count)
+        const meltedValueRatio = (currentHeight: number) => {
+           const diff = currentHeight - lughHeight()
+           if (meltedRatio() == -1)
+            return meltedRatio()
+           if (diff >= CYCLE_IN_LUGH)
+            return 0
+
+            const r = meltedRatio() - ((1 / CYCLE_IN_LUGH) * diff)
             if (r > 1 || r < 0) 
                 return 0
 
             return r
         }
-
-        const meltedValue = (CCHList: string[]) => CalculateOutputMeltedValue(output().get().value(), meltedValueRatio(CCHList))
+           
+        const meltedValue = (currentHeight: number) => CalculateOutputMeltedValue(output().get().value(), meltedValueRatio(currentHeight))
 
         return { 
             meltedValue, meltedValueRatio,
-            cch: CCH, mr: MR, txID, idx, output,
+            lughHeight, meltedRatio, txID, idx, output,
             tx
         }
     }
@@ -70,7 +57,7 @@ export class UTXOModel extends Model {
 
 export class UTXOCollection extends Collection {
 
-    constructor(list: IUTXO[] = [], options: any){
+    constructor(list: ONCHAIN.IUTXOUnRaw[] = [], options: any){
         super(list, [UTXOModel, UTXOCollection], options)
     }
 
@@ -92,7 +79,7 @@ export class UTXOCollection extends Collection {
         return this.action()
     }
 
-    fetchPrevTxList = async (headerSignature: IHeaderSignature) => {
+    fetchPrevTxList = async (headerSignature: ONCHAIN.IHeaderSignature) => {
         const listUnFetchedTxHash = this.get().listUnFetchedTxHash()
         if (listUnFetchedTxHash.length == 0)
             return 
@@ -128,14 +115,14 @@ export class UTXOCollection extends Collection {
             return UTXOByTxHash(txHashHex)?.find((utxo: UTXOModel) => utxo.get().idx() === vout) as UTXOModel
         }
 
-        const requiredList = (amountRequired: Inv.InvBigInt, CCHList: string[]): UTXOCollection => {
+        const requiredList = (amountRequired: Inv.InvBigInt, currentHeight: number): UTXOCollection => {
             let ret: UTXOModel[] = []
             let amountGot = new Inv.InvBigInt(0)
 
             for (let i = 0; i < this.count(); i++){
                 const utxo = (this.nodeAt(i) as UTXOModel)
                 ret.push(utxo)
-                amountGot.addEq(utxo.get().meltedValue(CCHList))
+                amountGot.addEq(utxo.get().meltedValue(currentHeight))
                 if (amountGot.gt(amountRequired))
                     break
             }
@@ -143,7 +130,7 @@ export class UTXOCollection extends Collection {
         }
 
         const totalValue = (): Inv.InvBigInt => this.reduce((accumulator: Inv.InvBigInt, utxo: UTXOModel) => accumulator.add(utxo.get().output().get().value()), new Inv.InvBigInt(0))
-        const totalMeltedValue = (CCHList: string[]): Inv.InvBigInt => this.reduce((accumulator: Inv.InvBigInt, utxo: UTXOModel) => accumulator.add(utxo.get().meltedValue(CCHList)), new Inv.InvBigInt(0))
+        const totalMeltedValue = (currentHeight: number): Inv.InvBigInt => this.reduce((accumulator: Inv.InvBigInt, utxo: UTXOModel) => accumulator.add(utxo.get().meltedValue(currentHeight)), new Inv.InvBigInt(0))
 
         return { 
             totalMeltedValue, requiredList, 

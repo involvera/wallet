@@ -1,7 +1,7 @@
 import { Model } from 'acey'
-import { IRewardCount } from 'community-coin-types'
+import { ONCHAIN } from 'community-coin-types'
 
-const DEFAULT_STATE: IRewardCount = {
+const DEFAULT_STATE: ONCHAIN.IRewardCount = {
     n_upvote: 0, 
     n_reward0: 0, 
     n_reward1: 0,
@@ -10,9 +10,9 @@ const DEFAULT_STATE: IRewardCount = {
 
 export class RewardCountModel extends Model{
 
-    static DefaultState: IRewardCount = DEFAULT_STATE
+    static DefaultState: ONCHAIN.IRewardCount = DEFAULT_STATE
 
-    constructor(state: IRewardCount = DEFAULT_STATE, options: any){
+    constructor(state: ONCHAIN.IRewardCount = DEFAULT_STATE, options: any){
         super(state, options)
     }
 

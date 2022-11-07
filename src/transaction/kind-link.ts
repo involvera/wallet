@@ -1,9 +1,9 @@
 import { Model } from 'acey'
-import { IKindLinkUnRaw } from 'community-coin-types'
+import { ONCHAIN } from 'community-coin-types'
 import { Inv } from 'wallet-util';
 import { OutputModel } from './output';
 
-const DEFAULT_STATE: IKindLinkUnRaw = {
+const DEFAULT_STATE: ONCHAIN.IKindLinkUnRaw = {
     tx_id: '',
     lh: 0,
     vout: 0,
@@ -13,9 +13,9 @@ const DEFAULT_STATE: IKindLinkUnRaw = {
 
 export class KindLinkModel extends Model {
 
-    static DefaultState: IKindLinkUnRaw = DEFAULT_STATE
+    static DefaultState: ONCHAIN.IKindLinkUnRaw = DEFAULT_STATE
 
-    constructor(state: IKindLinkUnRaw = DEFAULT_STATE, options: any){
+    constructor(state: ONCHAIN.IKindLinkUnRaw = DEFAULT_STATE, options: any){
         super(state, options)
         this.setState({
             output: new OutputModel(state.output, this.kids())

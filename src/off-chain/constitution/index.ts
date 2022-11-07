@@ -1,25 +1,21 @@
 import { Model } from 'acey'
 import axios from 'axios'
 import config from '../../config'
-import { Constitution as C } from 'wallet-script'
-import { IProposal, ProposalModel } from '../proposal'
+import { OFFCHAIN} from 'community-coin-types'
+import { ProposalModel } from '../proposal'
 import { RuleCollection } from './rule'
 
-export interface IConstitutionData {
-    proposal: IProposal
-    constitution: C.TConstitution
-}
 
-const DEFAULT_STATE: IConstitutionData = {
+const DEFAULT_STATE: OFFCHAIN.IConstitutionData = {
     proposal: ProposalModel.DefaultState,
     constitution: [] 
 }
 
 export class ConstitutionModel extends Model {
 
-    static DefaultState: IConstitutionData = DEFAULT_STATE
+    static DefaultState: OFFCHAIN.IConstitutionData = DEFAULT_STATE
 
-    private _setNestedModel = (state: IConstitutionData) => {
+    private _setNestedModel = (state: OFFCHAIN.IConstitutionData) => {
         if (state){
             this.setState({
                 proposal: state.proposal ? new ProposalModel(state.proposal, this.kids()) : null,

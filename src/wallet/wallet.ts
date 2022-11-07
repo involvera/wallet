@@ -2,15 +2,14 @@ import { Model } from 'acey'
 import { Lib, Inv} from 'wallet-util'
 import { Constitution, Script } from 'wallet-script'
 import axios from 'axios'
-import { TByte, T_REWARD } from 'community-coin-types'
+import { ONCHAIN, Constant as Types} from 'community-coin-types'
 
 import FeesModel from './fees'
 import CostsModel from './costs'
 import KeysModel from './keys'
-import CCHModel from './cch'
 import InfoModel from './info'
 
-import { InputModel, OutputModel, TransactionModel, UTXOCollection } from '../transaction'
+import { InputModel, TransactionModel, UTXOCollection } from '../transaction'
 
 import config from '../config'
 import TxBuild from './tx-builder' 
@@ -18,18 +17,12 @@ import TxBuild from './tx-builder'
 import { BURNING_RATIO } from '../constant'
 import { ThreadModel } from '../off-chain'
 import { DEFAULT_PASS, DEFAULT_PASS_HASH } from '../constant/off-chain'
-import { Constant } from 'wallet-script'
 
 const{
     Hash: {
         Sha256
     }
 } = Lib
-
-export interface IHeaderSignature {
-    pubkey: string
-    signature: string
-}
 
 export default class Wallet extends Model {
 
@@ -38,7 +31,6 @@ export default class Wallet extends Model {
         this.setState({
             seed: new KeysModel(initialState.seed, this.kids()),
             utxos: new UTXOCollection(initialState.utxos || [], this.kids()),
-            cch: new CCHModel(initialState.cch, this.kids()),
             fees: new FeesModel(initialState.fees, this.kids()),
             info: new InfoModel(initialState.info, this.kids()),
             costs: new CostsModel(initialState.costs, this.kids()),
@@ -54,10 +46,10 @@ export default class Wallet extends Model {
         this.setState({
             seed: new KeysModel(undefined, this.kids()),
             utxos: new UTXOCollection([], this.kids()),
-            cch: new CCHModel(undefined, this.kids()),
             fees: new FeesModel(undefined, this.kids()),
             info: new InfoModel(undefined, this.kids()),
             costs: new CostsModel(undefined, this.kids()),
+            last_height: 0,
         })
 
         return this.generateRandomSeed()
@@ -66,9 +58,7 @@ export default class Wallet extends Model {
     synchronize = async () => {
         try {
             const response = await axios(config.getRootAPIChainUrl() + '/wallet', {
-                headers: Object.assign(this.sign().header() as any, {
-                    last_cch: this.cch().get().last(),
-                }),
+                headers: Object.assign(this.sign().header() as any, {}),
                 validateStatus: function (status) {
                     return status >= 200 && status < 500;
                 },
@@ -77,10 +67,10 @@ export default class Wallet extends Model {
             if (response.status == 200){
                 const json = response.data
                 this.setState({ info: new InfoModel(json.info, this.kids()) })
-                this.cch().assignJSONResponse(json.cch)
                 this.fees().setState(json.fees)
                 this.utxos().get().setState(json.utxos || [])
                 this.costs().setState(json.costs)
+                this.setState({last_height: json.last_height})
                 this.action().store()
                 await this.keys().fetch().alias()
             }
@@ -103,10 +93,10 @@ export default class Wallet extends Model {
     public fees = (): FeesModel => this.state.fees
     public costs = (): CostsModel => this.state.costs
     public info = (): InfoModel => this.state.info
-    public balance = (): Inv.InvBigInt => this.utxos().get().get().totalMeltedValue(this.cch().get().list()) 
-    public cch = (): CCHModel => this.state.cch
+    public balance = (): Inv.InvBigInt => this.utxos().get().get().totalMeltedValue(this.lastHeight()) 
+    public lastHeight = (): number => this.state.last_height
 
-    buildTX = (txVersion: TByte) => {
+    buildTX = (txVersion: Types.TByte) => {
 
         const proposal = () => {
             
@@ -200,7 +190,7 @@ export default class Wallet extends Model {
             return await builder.newTx(txVersion)
         }
 
-        const reward = async (thread: ThreadModel, rewardType: T_REWARD) => {
+        const reward = async (thread: ThreadModel, rewardType: Types.T_REWARD) => {
             await this.synchronize()
             const targetPKH = thread.get().contentLink().get().output().get().contentPKH()
     
@@ -285,7 +275,7 @@ export default class Wallet extends Model {
         return {
             value,
             transaction,
-            header: (): IHeaderSignature => {
+            header: (): ONCHAIN.IHeaderSignature => {
                 const now = new Date()
                 const year = now.getUTCFullYear().toString()
                 let month = (now.getUTCMonth() + 1).toString()

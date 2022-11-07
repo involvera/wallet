@@ -1,29 +1,16 @@
 import { Model } from 'acey'
 import { LastCostChangeModel } from './last-cost-change'
-import { IAlias, AliasCollection, AliasModel } from '../../alias'
-import { ICostHistory, TByte } from 'community-coin-types'
+import { AliasCollection, AliasModel } from '../../alias'
+import { Constant as Types, OFFCHAIN } from 'community-coin-types'
 import { Inv } from 'wallet-util'
 
-export interface ISocietyStats {
-    version: TByte
-    last_height: number
-    total_contributor: number
-    total_proposal: number
-    active_addresses: number
-    most_active_addresses: IAlias[]
-    circulating_supply: string
-    circulating_vp_supply: string
-    last_thread_cost_change: ICostHistory
-    last_proposal_cost_change: ICostHistory
-}
-
-const DEFAULT_STATE: ISocietyStats  = {
+const DEFAULT_STATE: OFFCHAIN.ISocietyStats = {
     version: 0,
     total_contributor: 0,
     total_proposal: 0,
     last_height: 0,
     active_addresses: 0,
-    most_active_addresses: [] as IAlias[],
+    most_active_addresses: [],
     circulating_supply:  '',
     circulating_vp_supply : '',
     last_thread_cost_change: LastCostChangeModel.DefaultState,
@@ -32,9 +19,9 @@ const DEFAULT_STATE: ISocietyStats  = {
 
 export class SocietyStatsModel extends Model {
     
-    static DefaultState: ISocietyStats = DEFAULT_STATE 
+    static DefaultState: OFFCHAIN.ISocietyStats = DEFAULT_STATE 
     
-    constructor(state: ISocietyStats = DEFAULT_STATE, options: any){
+    constructor(state: OFFCHAIN.ISocietyStats = DEFAULT_STATE, options: any){
         super(state, options)
         this.setState({
             most_active_addresses: new AliasCollection(state.most_active_addresses, this.kids()),
@@ -45,7 +32,7 @@ export class SocietyStatsModel extends Model {
 
     get = () => {
         return {
-            version: (): TByte => this.state.version,
+            version: (): Types.TByte => this.state.version,
             lastHeight: (): number => this.state.last_height,
             totalContributor: (): number => this.state.total_contributor,
             totalProposal: (): number => this.state.total_proposal,

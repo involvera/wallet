@@ -1,16 +1,14 @@
 import { Collection, Model } from 'acey'
-import { IPubKH, ILink, IValue, REWARD0_KEY, REWARD1_KEY, REWARD2_KEY, UPVOTE_KEY } from 'community-coin-types'
-import { COIN_UNIT, /* CYCLE_IN_LUGH */ } from '../../constant';
+import { ONCHAIN, Constant as Types, OFFCHAIN} from 'community-coin-types'
 import {  Inv } from 'wallet-util';
 import axios from 'axios'
 import config from '../../config'
-import { IHeaderSignature } from '../../wallet/wallet';
-
+import { COIN_UNIT, /* CYCLE_IN_LUGH */ } from '../../constant';
 import { LinkModel } from './link'
 import { PubKHModel } from './pubkh'
 import ValueModel from './value'
-import { SocietyModel } from '../';
-import { AliasModel, IAlias } from '../alias';
+import { AliasModel } from '../alias'
+import { SocietyModel } from '../society'
 
 export interface IUnSerializedPut {
     time: number,
@@ -18,11 +16,11 @@ export interface IUnSerializedPut {
     lh: number,
     tx_id: string,
     put_idx: number,
-    pubkh: IPubKH
-    link: ILink
-    value: IValue,
+    link: ONCHAIN.ILink
+    pubkh: ONCHAIN.IPubKH
+    value: ONCHAIN.IValue,
     extra_data: string,
-    alias: IAlias | null
+    alias: OFFCHAIN.IAuthor | null
 }
 
 const INITIAL_STATE: IUnSerializedPut = {
@@ -54,10 +52,10 @@ export class UnserializedPutModel extends Model {
 
     isReward = () => this.isUpvote() || this.isReward0() || this.isReward1() || this.isReward2()
 
-    isUpvote = () => this.get().extraData() === UPVOTE_KEY
-    isReward0 = () => this.get().extraData() === REWARD0_KEY
-    isReward1 = () => this.get().extraData() === REWARD1_KEY
-    isReward2 = () => this.get().extraData() === REWARD2_KEY
+    isUpvote = () => this.get().extraData() === Types.UPVOTE_KEY
+    isReward0 = () => this.get().extraData() === Types.REWARD0_KEY
+    isReward1 = () => this.get().extraData() === Types.REWARD1_KEY
+    isReward2 = () => this.get().extraData() === Types.REWARD2_KEY
 
     isAcceptedVote = () => this.get().extraData() === "accepted"
     isDeclinedVote = () => this.get().extraData() === "declined"
@@ -138,31 +136,8 @@ export class UnserializedPutModel extends Model {
 
         const pkh = (): PubKHModel => this.state.pubkh
         const link = (): LinkModel => this.state.link
-        // const value = (): ValueModel => this.state.value
 
         const index = (): number => this.state.put_idx
-
-        // const CCH = (): string => this.state.fetched_at_cch
-        // const MR = () => Number(value().get().now() / value().get().atCreationTime() )
-
-        /*
-        const meltedValueRatio = (CCHList: string[]) => {
-            let count = 0
-            for (const cch of CCHList){
-                if (cch === CCH())
-                    break
-                count++
-            }
-            if (count == CCHList.length) 
-                return 0
-            
-            const r = MR() - ((1 / CYCLE_IN_LUGH) * count)
-            if (r > 1 || r < 0) 
-                return 0
-    
-            return r
-        }
-        */
 
         const contentPKH = () => {
             const from = link().get().from()
@@ -189,22 +164,19 @@ export class UnserializedPutModel extends Model {
             return -1
         }
         
-        // const currentValue = (CCHList: string[]) => CalculateOutputMeltedValue(BigInt(value().get().atCreationTime()), meltedValueRatio(CCHList))
-     
         return {
             pkh,
             link,
             index,
             value: () => (this.state.value as ValueModel).get().atCreationTime(),
             txID: (): Inv.TxHash => Inv.TxHash.fromHex(this.state.tx_id),
-            createdAt: () => new Date(this.state.time),
+            createdAt: () => new Date(this.state.time / 1000),
             height: (): number => this.state.lh,
             contentPKH,
             contentPKHTargeted,
             indexProposalTargeted,
             otherPartyAlias,
             extraData: (): string => this.state.extra_data,
-            // currentValue,
         }
     }
 
@@ -275,7 +247,7 @@ export class UnserializedPutCollection extends Collection {
         this.save()
     }
 
-    private _fetch = async (headerSignature: IHeaderSignature, filter: T_FETCH_FILTER, disablePageSystem: void | boolean) => {
+    private _fetch = async (headerSignature: ONCHAIN.IHeaderSignature, filter: T_FETCH_FILTER, disablePageSystem: void | boolean) => {
         const MAX_PER_PAGE = 10
 
         if (this._maxReached[filter] == true && disablePageSystem != true){
@@ -314,7 +286,7 @@ export class UnserializedPutCollection extends Collection {
         }
     }
 
-    fetch = (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
+    fetch = (headerSignature: ONCHAIN.IHeaderSignature, disablePageSystem: void | boolean) => {
         return {
             all: () => this._fetch(headerSignature, 'all', disablePageSystem),
             lughPuts: () => this._fetch(headerSignature, 'lugh', disablePageSystem),

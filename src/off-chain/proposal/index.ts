@@ -2,47 +2,25 @@ import moment from 'moment'
 import axios from 'axios'
 import { Collection, Model } from "acey";
 import { 
-    IConstitutionProposalUnRaw, ICostProposal, IUserVote, 
-    IKindLinkUnRaw,IVoteSummary, IContentLink 
+    OFFCHAIN, ONCHAIN
 } from 'community-coin-types'
 import { StringToParsedPreview } from 'involvera-content-embedding'
 import { Constant } from 'wallet-script'
-import { TProposalType } from 'wallet-script/dist/src/content-code'
 import { Inv } from 'wallet-util'
 
 import config from "../../config";
 import { KindLinkModel } from '../../transaction/kind-link'
-import { IAlias, AliasModel  } from '../alias'
-import {VoteModel, } from './vote'
+import { AliasModel, } from '../alias'
+import {VoteModel  } from './vote'
 import { UserVoteModel } from './user-vote'
 import { COUNT_DEFAULT_PROPOSALS, LUGH_EVERY_N_S, N_LUGH_VOTE_DURATION } from '../../constant';
-import { IHeaderSignature } from '../../wallet';
 import { SocietyModel } from '../society';
 import { Transaction } from '../../..';
 
 export type TLayer = 'Economy' | 'Application' | 'Constitution'
 
-export interface IPreviewProposal {
-    preview_code: string
-    user_vote: IUserVote
-    vote: IVoteSummary
-}
 
-export interface IProposal {
-    sid: number
-    content_link: IKindLinkUnRaw
-    vote: IVoteSummary
-    index: number
-    created_at: Date
-    public_key_hashed: string
-    title: string,
-    content: string[3]
-    author: IAlias
-    pubkh_origin: string
-    user_vote: IUserVote | null
-}
-
-const DEFAULT_STATE: IProposal = {
+const DEFAULT_STATE: OFFCHAIN.IProposal = {
     sid: 0,
     content_link: KindLinkModel.DefaultState,
     vote: VoteModel.DefaultState,
@@ -58,9 +36,9 @@ const DEFAULT_STATE: IProposal = {
 
 export class ProposalModel extends Model {
 
-    static DefaultState: IProposal = DEFAULT_STATE
+    static DefaultState: OFFCHAIN.IProposal = DEFAULT_STATE
 
-    static FetchByIndex = async (societyID: number, index: number, headerSig: IHeaderSignature | void) => {
+    static FetchByIndex = async (societyID: number, index: number, headerSig: ONCHAIN.IHeaderSignature | void) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/proposal/${societyID}/${index}`,  {
                 timeout: 10_000,
@@ -85,20 +63,20 @@ export class ProposalModel extends Model {
         return new ProposalModel({sid, content, title} as any, {})
     }
 
-    constructor(state: IProposal = DEFAULT_STATE, options: any){
+    constructor(state: OFFCHAIN.IProposal | OFFCHAIN.IPreviewProposal2 = DEFAULT_STATE, options: any){
         super(state || DEFAULT_STATE, options) 
         state && this.setState(Object.assign(state, { 
-            content_link: state.content_link ? new KindLinkModel(state.content_link, this.kids()) : null,
+            content_link: 'content_link' in state && state.content_link ? new KindLinkModel(state.content_link, this.kids()) : null,
             vote: state.vote ? new VoteModel(state.vote, this.kids()) : null, 
             author: new AliasModel(state.author, this.kids()),
-            user_vote: state.user_vote ? new UserVoteModel(state.user_vote, this.kids()) : null,
+            user_vote: 'user_vote' in state && state.user_vote ? new UserVoteModel(state.user_vote, this.kids()) : null,
             created_at: state.created_at ? new Date(state.created_at) : undefined
-        }))
+        }, state  ))
     }
 
     setAuthor = (author: AliasModel) => this.get().author().copyMetaData(author)
 
-    setUserVote = (uVote: IUserVote) => {
+    setUserVote = (uVote: ONCHAIN.IUserVote) => {
         return this.setState({
             user_vote: new UserVoteModel(uVote, this.kids())
         })
@@ -207,8 +185,8 @@ export class ProposalModel extends Model {
         const dataToSign = (): string => this.get().content().join('~~~_~~~_~~~_~~~')
 
         const layer = (): TLayer => {
-            const formatToLayer = (pt: TProposalType) => {
-                const layer = pt as TProposalType
+            const formatToLayer = (pt: ONCHAIN.TProposalType) => {
+                const layer = pt as ONCHAIN.TProposalType
                 if (layer === 'COSTS')
                     return 'Economy'
                 return (layer.charAt(0).toUpperCase() + layer.slice(1).toLowerCase()) as TLayer
@@ -218,7 +196,7 @@ export class ProposalModel extends Model {
                 if (!content.get().output().get().script().is().proposalScript()){
                     throw new Error("Not a proposal")
                 }
-                return formatToLayer(content.get().output().get().script().typeD2() as TProposalType)
+                return formatToLayer(content.get().output().get().script().typeD2() as ONCHAIN.TProposalType)
             } catch (e){
                 const { layer } = this.state
                 if (!layer)
@@ -230,13 +208,13 @@ export class ProposalModel extends Model {
         const pubKH = () => this.state.public_key_hashed ? Inv.PubKH.fromHex(this.state.public_key_hashed) : null
         const pubKHOrigin = () => this.state.pubkh_origin ? Inv.PubKH.fromHex(this.state.pubkh_origin) : null
 
-        const context = (): ICostProposal | IConstitutionProposalUnRaw | null => {
+        const context = (): ONCHAIN.ICostProposal | ONCHAIN.IConstitutionProposalUnRaw | null => {
             if (this.state.context){
                 switch (this.get().layer()) {
                     case 'Economy':
-                        return JSON.parse(this.state.context) as ICostProposal
+                        return JSON.parse(this.state.context) as ONCHAIN.ICostProposal
                     case 'Constitution':
-                        return JSON.parse(this.state.context) as IConstitutionProposalUnRaw
+                        return JSON.parse(this.state.context) as ONCHAIN.IConstitutionProposalUnRaw
                 }
             }
             return null
@@ -315,7 +293,7 @@ export class ProposalCollection extends Collection {
             })
             if (response.status == 200){
                 const list = new ProposalCollection([], {})
-                const json = (response.data || []) as IContentLink[]
+                const json = (response.data || []) as ONCHAIN.IContentLink[]
                 for (const o of json){
                     const link = new Transaction.KindLinkModel(o.link, {})
                     const t = link.get().output().get().script().typeD2()
@@ -342,7 +320,7 @@ export class ProposalCollection extends Collection {
         }
     }
 
-    fetch = async (headerSignature: IHeaderSignature, disablePageSystem: void | boolean) => {
+    fetch = async (headerSignature: ONCHAIN.IHeaderSignature, disablePageSystem: void | boolean) => {
         const MAX_PER_PAGE = 5
         
         this._throwErrorIfNoSocietySet()
@@ -364,7 +342,7 @@ export class ProposalCollection extends Collection {
                 },
             })
             if (response.status == 200){
-                const json = (response.data || []) as IPreviewProposal[]
+                const json = (response.data || []) as OFFCHAIN.IPreviewProposal1[]
                 
                 if (disablePageSystem != true){
                     if (json.length < MAX_PER_PAGE){
@@ -395,28 +373,6 @@ export class ProposalCollection extends Collection {
             throw new Error(e)
         }
     }
-
-    /*
-    pullUserVotes = async (headerSig: IHeaderSignature) => {
-        const list = this.filter((p: ProposalModel) => !p.get().userVote()).map((p: ProposalModel) => p.get().pubKH()).join(',')
-        try {
-            const res = await axios(config.getRootAPIChainUrl() + '/proposals/uvote', {
-                headers: Object.assign({ list}, headerSig)
-            })
-            if (res.status == 200){
-                const array = res.data as IUserVoteProposal[]
-                for (const elem of array){
-                    const m = this.find({public_key_hashed: elem.pubkh}) as ProposalModel
-                    elem.user_vote && m.setState({ user_vote: new UserVoteModel(elem.user_vote, m.kids()) })
-                }
-                return this.action()
-            } else 
-                return res.data as string
-        } catch (e: any){
-            throw new Error(e.toString())
-        }
-    }
-    */
 
     getByIndex = (proposalIndex: number) => this.find((p: ProposalModel) => p.get().index() === proposalIndex) as ProposalModel
 

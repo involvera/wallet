@@ -1,9 +1,9 @@
 import { Model } from 'acey'
-import { IThreadReward } from 'community-coin-types'
+import { ONCHAIN } from 'community-coin-types'
 import { Inv } from 'wallet-util'
 import { RewardCountModel } from './reward'
 
-const DEFAULT_STATE: IThreadReward = {
+const DEFAULT_STATE: ONCHAIN.IThreadReward = {
     thread_pkh: '',
     reward_count: RewardCountModel.DefaultState,
     user_reward_count: RewardCountModel.DefaultState,
@@ -11,9 +11,9 @@ const DEFAULT_STATE: IThreadReward = {
 
 export class ThreadRewardModel extends Model{
 
-    static DefaultState: IThreadReward = DEFAULT_STATE
+    static DefaultState: ONCHAIN.IThreadReward = DEFAULT_STATE
 
-    constructor(state: IThreadReward = DEFAULT_STATE, options: any){
+    constructor(state: ONCHAIN.IThreadReward = DEFAULT_STATE, options: any){
         super(state, options)
         this.setState({
             reward_count: new RewardCountModel(state.reward_count, this.kids()),

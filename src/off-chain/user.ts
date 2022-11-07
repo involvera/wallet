@@ -1,24 +1,19 @@
 import axios from 'axios'
 import { Model, Collection } from 'acey'
-import { IHeaderSignature } from '../wallet'
-import InfoModel from '../wallet/info'
-import { IWalletInfo } from 'community-coin-types'
-import { AliasModel, IAlias } from './alias'
-import config from '../config'
+import { OFFCHAIN, ONCHAIN  } from 'community-coin-types'
 import { Inv } from 'wallet-util'
 
-export interface IUser {
-    alias: IAlias
-    info: IWalletInfo
-}
+import InfoModel from '../wallet/info'
+import { AliasModel } from './alias'
+import config from '../config'
 
-const DEFAULT_STATE = {
+const DEFAULT_STATE: OFFCHAIN.IUser = {
     alias: AliasModel.DefaultState,
     info: InfoModel.DefaultState
 }
 
 export class UserModel extends Model {
-    static DefaultState: IUser = DEFAULT_STATE
+    static DefaultState: OFFCHAIN.IUser = DEFAULT_STATE
 
     static RandomUsername = async () =>{
         try {
@@ -38,7 +33,7 @@ export class UserModel extends Model {
         return null
     }
 
-    static FetchByAddress = async (societyID: number, address: Inv.Address, headerSig: IHeaderSignature | void) => {
+    static FetchByAddress = async (societyID: number, address: Inv.Address, headerSig: ONCHAIN.IHeaderSignature | void) => {
         try {
             const res = await axios(config.getRootAPIOffChainUrl() + `/user/${societyID}/${address.get()}`,  {
                 timeout: 10_000,
@@ -61,7 +56,7 @@ export class UserModel extends Model {
         return null
     }
 
-    constructor(state: IUser = DEFAULT_STATE, options: any){
+    constructor(state: OFFCHAIN.IUser = DEFAULT_STATE, options: any){
         super(state, options)
         this.setState({
             info: new InfoModel(state.info, this.kids()),

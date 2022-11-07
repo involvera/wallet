@@ -1,9 +1,9 @@
-import { CANT_SEND_0_VALUE, LAST_CCH_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
+import { CANT_SEND_0_VALUE, LAST_HEIGHT_NOT_FOUND_ERROR, NOT_ENOUGH_FUNDS_ERROR, WRONG_TX_BUILDER_STRUCTURE_ERROR } from "../constant/errors";
 import {  OutputModel, OutputCollection, TransactionModel, UTXOModel, UTXOCollection } from "../transaction"
 import { Inv } from "wallet-util";
 import WalletModel from './wallet'
 import { Script } from "wallet-script";
-import { TByte } from "community-coin-types";
+import { Constant as Types } from "community-coin-types";
 
 export interface ITXBuild {
     wallet:         WalletModel
@@ -71,24 +71,24 @@ export default class TxBuild {
     }
 
     setupUTXOs = (amountRequired: Inv.InvBigInt) => {
-        const availableUTXOs = this.wallet.utxos().get().get().requiredList(amountRequired, this.wallet.cch().get().list())
-        const totalEscrow = availableUTXOs.get().totalMeltedValue(this.wallet.cch().get().list())
+        const availableUTXOs = this.wallet.utxos().get().get().requiredList(amountRequired, this.wallet.lastHeight())
+        const totalEscrow = availableUTXOs.get().totalMeltedValue(this.wallet.lastHeight())
         if (totalEscrow.lw(amountRequired)){
             throw NOT_ENOUGH_FUNDS_ERROR            
         }
         return availableUTXOs
     }
 
-    newTx = (txVersion: TByte) => {
+    newTx = (txVersion: Types.TByte) => {
         this._checkStructureBuild()
         const { outputs, utxos } = this._generateMeltingPuts()
-        const lastCCH = this.wallet.cch().get().last()
-        if (!lastCCH)
-            throw LAST_CCH_NOT_FOUND_ERROR
+        const lastheight = this.wallet.lastHeight()
+        if (lastheight <= 0)
+            throw LAST_HEIGHT_NOT_FOUND_ERROR
         
         let tx = new TransactionModel({
             v: txVersion,
-            lh: this.wallet.cch().get().lastHeight(),
+            lh: this.wallet.lastHeight(),
             t: Date.now(),
             inputs: utxos.toInputs().to().plain(), 
             outputs: outputs.to().plain(),
@@ -103,7 +103,7 @@ export default class TxBuild {
         const utxos = this.setupUTXOs(this.totalAmount())
         const amounts = this.amount_required.slice()
         const nInputs = utxos.count()
-        const CCHList = this.wallet.cch().get().list()
+        const lastHeight = this.wallet.lastHeight()
 
         let currentRealAmountToSend = new Inv.InvBigInt(0) 
         let toIndex = 0
@@ -117,11 +117,11 @@ export default class TxBuild {
         }
 
         const getMeltedValueAtUTXOIndex = (index: number) => {
-            return (utxos.nodeAt(index) as UTXOModel).get().meltedValue(CCHList)
+            return (utxos.nodeAt(index) as UTXOModel).get().meltedValue(lastHeight)
         }
 
         const refreshCurrentRealAmountToSend = (val: Inv.InvBigInt) => {
-            const mr = (utxos.nodeAt(utxoIndex) as UTXOModel).get().meltedValueRatio(CCHList)
+            const mr = (utxos.nodeAt(utxoIndex) as UTXOModel).get().meltedValueRatio(lastHeight)
             currentRealAmountToSend.addEq(CalculateOutputValueFromMelted(val, mr))
         }
 
@@ -137,7 +137,7 @@ export default class TxBuild {
             outputs.push(OutputModel.NewOutput(utxos.get().totalValue().sub(totalUsed), newIntArrayFilled(nInputs-lastUTXOIdx, lastUTXOIdx), lockScript.base64()).to().plain())
         }
 
-        const totalInEscrow = utxos.get().totalMeltedValue(CCHList)
+        const totalInEscrow = utxos.get().totalMeltedValue(lastHeight)
         const totalToSend = this.totalAmount()
         let totalToSendLeft = new Inv.InvBigInt(totalToSend)
         let amountsLeftToTakeInCurrentUTXO = getMeltedValueAtUTXOIndex(utxoIndex)

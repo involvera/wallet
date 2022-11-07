@@ -1,11 +1,11 @@
 
 import axios from 'axios'
-import { ICostProposal }  from 'community-coin-types'
+import { ONCHAIN }  from 'community-coin-types'
 import { Model } from 'acey'
 import config from '../config'
 import { Inv } from 'wallet-util'
 
-const DEFAULT_STATE: ICostProposal = {
+const DEFAULT_STATE: ONCHAIN.ICostProposal = {
     thread: 0, 
     proposal: 0, 
     upvote: 0, 
@@ -16,7 +16,7 @@ const DEFAULT_STATE: ICostProposal = {
 
 export default class CostsModel extends Model {
 
-    static DefaultState: ICostProposal = DEFAULT_STATE
+    static DefaultState: ONCHAIN.ICostProposal = DEFAULT_STATE
 
     constructor(initialState = DEFAULT_STATE, options: any){
         super(initialState, options)

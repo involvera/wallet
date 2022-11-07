@@ -1,7 +1,6 @@
 import { Collection, Model } from 'acey'
 import config from '../config'
-import { IInputRaw, IInputUnRaw } from 'community-coin-types'
-import { IHeaderSignature } from '../wallet'
+import { ONCHAIN} from 'community-coin-types'
 import { UTXOCollection, UTXOModel } from './utxo'
 import axios from 'axios'
 import { TransactionModel } from './transaction'
@@ -9,7 +8,7 @@ import { Script } from 'wallet-script'
 import { Inv } from 'wallet-util'
 
 
-const DEFAULT_STATE: IInputUnRaw = {
+const DEFAULT_STATE: ONCHAIN.IInputUnRaw = {
 	prev_transaction_hash: '',
 	vout: -1,
 	script_sig: []
@@ -17,9 +16,9 @@ const DEFAULT_STATE: IInputUnRaw = {
 
 export class InputModel extends Model {
 
-    static DefaultState: IInputUnRaw = DEFAULT_STATE
+    static DefaultState: ONCHAIN.IInputUnRaw = DEFAULT_STATE
 
-    constructor(input: IInputUnRaw, options: any) {
+    constructor(input: ONCHAIN.IInputUnRaw, options: any) {
         super(input, options)
     }
 
@@ -44,7 +43,7 @@ export class InputModel extends Model {
     }
 
     toRaw = () => {
-        const def = (): IInputRaw => {
+        const def = ():  ONCHAIN.IInputRaw => {
             return {
                 prev_transaction_hash: this.get().prevTxHash()?.bytes() || new Uint8Array(),
                 vout: new Inv.InvBigInt(this.get().vout()).bytes('int16').bytes(),
@@ -84,7 +83,7 @@ export class InputCollection extends Collection {
         })
     }
 
-    fetchPrevTxList = async (headerSignature: IHeaderSignature, userTxList: UTXOCollection) => {
+    fetchPrevTxList = async (headerSignature: ONCHAIN.IHeaderSignature, userTxList: UTXOCollection) => {
         const utxos: UTXOModel[] = []
         for (let {tx_id, vout} of this.prevTxIDndVoutList()){
             const u = userTxList.get().UTXOByTxHashAndVout(tx_id, vout)

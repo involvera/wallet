@@ -1,12 +1,12 @@
 import { Model } from 'acey'
 import UserActivityModel from './activity'
 import axios from 'axios'
-import { IWalletInfo } from 'community-coin-types'
+import { ONCHAIN } from 'community-coin-types'
 import { Inv, Util } from 'wallet-util'
 import config from '../../config'
 import { CYCLE_IN_LUGH, LUGH_AMOUNT } from '../../constant'
 
-const DEFAULT_STATE: IWalletInfo = {
+const DEFAULT_STATE: ONCHAIN.IWalletInfo = {
     content_nonce: 0,
     balance: 0,
     vote_power_count: 0,
@@ -17,7 +17,7 @@ const DEFAULT_STATE: IWalletInfo = {
 
 export default class InfoModel extends Model {
 
-    static DefaultState: IWalletInfo = DEFAULT_STATE
+    static DefaultState: ONCHAIN.IWalletInfo = DEFAULT_STATE
 
     static fetch = async (userPubKH: Inv.PubKH) => {
         try {

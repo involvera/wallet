@@ -1,6 +1,7 @@
 import { Model } from 'acey'
-import { AliasModel, IAlias } from '../off-chain'
+import { AliasModel } from '../off-chain'
 import { DEFAULT_PASS } from '../constant/off-chain'
+import { OFFCHAIN } from 'community-coin-types'
 import { Inv, Lib } from 'wallet-util'
 
 const {
@@ -14,7 +15,7 @@ const {
 export interface IKey {
     pass_hash: string
     mnemonic: string
-    alias: IAlias
+    alias: OFFCHAIN.IAuthor
 }
 
 const DEFAULT_STATE = {

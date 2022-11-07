@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { ITransactionUnRaw, ITransactionRaw, IOutputRaw, IInputRaw, TByte } from 'community-coin-types'
+import { ONCHAIN, Constant as Types  } from 'community-coin-types'
 import { Collection, Model } from 'acey'
 import { Inv, Lib } from 'wallet-util'
 
@@ -8,13 +8,12 @@ import { InputModel, InputCollection } from './input'
 import WalletModel from '../wallet/wallet'
 import config from '../config'
 import { Script } from 'wallet-script'
-import { HTML5_FMT } from 'moment'
 
 const {
     Sha256
 } = Lib.Hash
 
-const DEFAULT_STATE: ITransactionUnRaw = {
+const DEFAULT_STATE: ONCHAIN.ITransactionUnRaw = {
     lh: 0,
     t: 0,
     inputs: [],
@@ -23,7 +22,7 @@ const DEFAULT_STATE: ITransactionUnRaw = {
 
 export class TransactionModel extends Model {
 
-    static DefaultState: ITransactionUnRaw = DEFAULT_STATE
+    static DefaultState: ONCHAIN.ITransactionUnRaw = DEFAULT_STATE
 
     static FetchTX = async (hash: string) => {
         const response = await axios(config.getRootAPIChainUrl() + '/transaction/' + hash, {
@@ -39,7 +38,7 @@ export class TransactionModel extends Model {
         throw new Error(response.data)
     }
 
-    constructor(tx: ITransactionUnRaw = DEFAULT_STATE, options: any) {
+    constructor(tx: ONCHAIN.ITransactionUnRaw = DEFAULT_STATE, options: any) {
         super(tx, options)
         this.setState({
             inputs: new InputCollection(this.state.inputs, this.kids()),
@@ -100,7 +99,7 @@ export class TransactionModel extends Model {
     get = () => {
         const time = () => new Inv.InvBigInt(this.state.t)
         const lughHeight = (): number =>this.state.lh
-        const version = (): TByte => this.state.v || 0
+        const version = (): Types.TByte => this.state.v || 0
         const hash = () => {
             if (version() === 0){
                 const p = this.to().plain()
@@ -159,7 +158,7 @@ export class TransactionModel extends Model {
     }
 
     toRaw = () => {
-        const def = (): ITransactionRaw => {
+        const def = (): ONCHAIN.ITransactionRaw => {
             return {
                 v: this.get().version(),
                 lh: new Inv.InvBigInt(this.get().lughHeight()).bytes('int32').bytes(),

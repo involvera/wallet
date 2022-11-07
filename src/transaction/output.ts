@@ -1,11 +1,11 @@
 import { Model, Collection } from 'acey'
-import {IOutputUnRaw, IOutputRaw, TByte } from 'community-coin-types'
+import { ONCHAIN, Constant as Types } from 'community-coin-types'
 import { MAX_IS_2_POW_53 } from '../constant/errors'
 import { Error, Script } from 'wallet-script'
 import { Inv } from 'wallet-util'
 
 
-const DEFAULT_STATE: IOutputUnRaw = {
+const DEFAULT_STATE: ONCHAIN.IOutputUnRaw = {
 	input_src_idxs: [],
 	value: 0,
 	script: []
@@ -13,13 +13,13 @@ const DEFAULT_STATE: IOutputUnRaw = {
 
 export class OutputModel extends Model {
 
-	static DefaultState: IOutputUnRaw = DEFAULT_STATE
+	static DefaultState: ONCHAIN.IOutputUnRaw = DEFAULT_STATE
 
 	static NewOutput = (value: Inv.InvBigInt, InputSrcIdxs: number[], script: string[]) => {
 		if (value.gt(Math.pow(2, 53)))
 			throw MAX_IS_2_POW_53
 		
-		const out: IOutputUnRaw = {
+		const out: ONCHAIN.IOutputUnRaw = {
 			input_src_idxs: InputSrcIdxs,
 			value: value.number(),
 			script
@@ -27,7 +27,7 @@ export class OutputModel extends Model {
 		return new OutputModel(out, {})
 	}
 	
-    constructor(output: IOutputUnRaw = DEFAULT_STATE, options: any) {
+    constructor(output: ONCHAIN.IOutputUnRaw = DEFAULT_STATE, options: any) {
 		super(output, options)
 		output && !output.input_src_idxs && this.setState({ input_src_idxs: [] })
 		output && !output.script && this.setState({ ta: [] })
@@ -48,7 +48,7 @@ export class OutputModel extends Model {
 	}
 
 	toRaw = () => {
-		const def = (): IOutputRaw  => {
+		const def = (): ONCHAIN.IOutputRaw  => {
 			return {
 				input_src_idxs: Inv.ArrayInvBigInt.fromNumbers(this.get().inputSourceIdxs()).toArrayBuffer('uint8').toDoubleUInt8Array(),
 				value: this.get().value().bytes('int64').bytes(),
@@ -102,7 +102,7 @@ export class OutputModel extends Model {
 			applicationProposal: () => script.is().applicationProposalScript(),
 			constitutionProposal: () => script.is().constitutionProposalScript(),
 			costProposal: () => script.is().costProposalScript(),
-			reward: (version: TByte) => script.is().rewardScript(version),
+			reward: (version: Types.TByte) => script.is().rewardScript(version),
 			thread: () => script.is().ThreadOnlyScript(),
 			rethread: () => script.is().RethreadOnlyScript(),
 			vote: () => script.is().voteScript(),

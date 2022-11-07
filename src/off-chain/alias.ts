@@ -1,16 +1,12 @@
 import { Collection, Model } from "acey";
-import WalletInfoModel from '../wallet/info'
 import axios from 'axios'
-import config from "../config";
 import { Inv } from "wallet-util";
+import { OFFCHAIN } from 'community-coin-types'
 
-export interface IAlias {
-    pp: string | null,
-    username: string,
-    address: string
-}
+import WalletInfoModel from '../wallet/info'
+import config from "../config";
 
-const DEFAULT_STATE: IAlias = {
+const DEFAULT_STATE: OFFCHAIN.IAuthor = {
     pp: null,
     username: '',
     address: ''
@@ -18,7 +14,7 @@ const DEFAULT_STATE: IAlias = {
 
 export class AliasModel extends Model {
 
-    static DefaultState: IAlias = DEFAULT_STATE
+    static DefaultState: OFFCHAIN.IAuthor = DEFAULT_STATE
 
     _walletInfo: WalletInfoModel | null = null
 
@@ -61,7 +57,7 @@ export class AliasModel extends Model {
         return null
     }
 
-    constructor(state: IAlias = DEFAULT_STATE, options: any){
+    constructor(state: OFFCHAIN.IAuthor = DEFAULT_STATE, options: any){
         super(state, options) 
     }
 
