@@ -12,7 +12,7 @@ import { OutputModel } from '../src/transaction';
 import { ThreadModel, ProposalModel, SocietyModel, RuleModel, ThreadCollection, ProposalCollection, UserModel,UserCollection } from '../src/off-chain';
 import axios from 'axios';
 import conf from '../src/config'
-import { IConstitutionProposalUnRaw, ICostProposal, REWARD0_KEY, REWARD2_KEY, REWARD1_KEY, UPVOTE_KEY, TByte } from 'community-coin-types'
+import { ONCHAIN, Constant as Types } from 'community-coin-types'
 import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 
 // conf.setRootAPIChainUrl('http://134.122.16.30:8080')
@@ -21,7 +21,7 @@ import { UserVoteModel } from '../src/off-chain/proposal/user-vote';
 const PASSWORD = 'coucou'
 const ADMIN_KEY = '2f72e55b962b6cd66ea70e8b6bd8657d1c87a23a65769213d76dcb5da6abf6b5'
 const SOCIETY_ID = 1
-let TX_VERSION: TByte = 0
+let TX_VERSION: Types.TByte = 0
 
 const wallet = new WalletModel({}, { key: 'wallet', connected: true })
 const wallet2 = new WalletModel({}, {key: 'wallet2', connected: true })
@@ -106,12 +106,12 @@ const main = () => {
     })
 
     it('[ONCHAIN] Wallet1 -> Fetch and check UTXOS: ', () => {
-        const CCHList = wallet.cch().get().list()
+        const lastHeight = wallet.lastHeight()
         const utxos = wallet.utxos().get().get()
-        expect(utxos.totalMeltedValue(CCHList).big()).to.equal(13001154805503n)
+        expect(utxos.totalMeltedValue(lastHeight).big()).to.equal(13001154805503n)
         expect(wallet.balance().big()).to.equal(13001154805503n)
         expect(utxos.totalValue().big()).to.equal(BigInt(13022498650876n))
-        const list = utxos.requiredList(MAX_SUPPLY_AMOUNT, CCHList)
+        const list = utxos.requiredList(MAX_SUPPLY_AMOUNT, lastHeight)
         expect(list.count()).to.equal(7)
         expect(utxos.listUnFetchedTxHash().length).to.eq(7)
     });
@@ -130,7 +130,7 @@ const main = () => {
     it('[ONCHAIN] Wallet1 -> Check Puts/Info: ', () => {
         expect(walletPuts.count()).to.eq(5)
         expect(wallet.info().get().votePowerCount().big()).to.eq(13170731707316n)
-        expect(wallet.info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('16.463')
+        expect(wallet.info().get().votePowerPercent(wallet.lastHeight()).toFixed(3)).to.eq('16.463')
         expect(wallet.info().get().activity().get().lastLughHeight()).to.eq(7)
         const activity = wallet.info().get().activity().get().activity()
         expect(activity.length).to.eq(3) 
@@ -149,7 +149,7 @@ const main = () => {
             expect(userList.count()).to.eq(1)
             expect(user.get().alias().get().username()).to.eq('')
             expect(user.get().info().get().votePowerCount().big()).to.eq(13170731707316n)
-            expect(user.get().info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('16.463')
+            expect(user.get().info().get().votePowerPercent(wallet.lastHeight()).toFixed(3)).to.eq('16.463')
             expect(user.get().info().get().activity().get().lastLughHeight()).to.eq(7)
             expect(user.get().info().get().rewardsReceivedLast90D().big()).to.eq(1800000000n)
             expect(user.get().info().get().contributorRank()).to.eq(1)
@@ -234,7 +234,6 @@ const main = () => {
         }
     })
 
-
     it('[OFFCHAIN] Wallet1 -> create a proposal: application failed 2/4', async () => {
         const p = ProposalModel.NewContent(1, "This is the title of an application proposal", ["Content 1", "Content 2", "Content 3"])
         const res = await p.broadcast(wallet.keys().get().contentWallet(wallet.info().get().contentNonce()))
@@ -275,7 +274,7 @@ const main = () => {
             expect(user.get().alias().get().username()).to.eq('fantasim')
             expect(user.get().alias().get().pp()).to.eq(null)
             expect(user.get().info().get().votePowerCount().big()).to.eq(13170731707316n)
-            expect(user.get().info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('16.463')
+            expect(user.get().info().get().votePowerPercent(wallet.lastHeight()).toFixed(3)).to.eq('16.463')
             expect(user.get().info().get().activity().get().lastLughHeight()).to.eq(7)
             expect(user.get().info().get().rewardsReceivedLast90D().big()).to.eq(1800000000n)
             expect(user.get().info().get().contributorRank()).to.eq(1)
@@ -520,7 +519,7 @@ const main = () => {
             expect(user.get().alias().get().username()).to.eq('skily')
             expect(user.get().alias().get().pp()).to.eq(null)
             expect(user.get().info().get().votePowerCount().number()).to.eq(0)
-            expect(user.get().info().get().votePowerPercent(wallet.cch().get().lastHeight())).to.eq(0)
+            expect(user.get().info().get().votePowerPercent(wallet.lastHeight())).to.eq(0)
             expect(user.get().info().get().activity().get().lastLughHeight()).to.eq(7)
             expect(user.get().info().get().rewardsReceivedLast90D().number()).to.eq(0)
             expect(user.get().info().get().contributorRank()).to.eq(150)
@@ -538,7 +537,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent0)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet2.buildTX(TX_VERSION).reward(thread, UPVOTE_KEY)        
+            const tx = await wallet2.buildTX(TX_VERSION).reward(thread, Types.UPVOTE_KEY)        
             const balance = wallet2.balance()
             const balance2 = wallet.balance()
             expect(tx).not.eq(null)
@@ -576,7 +575,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet2.buildTX(TX_VERSION).reward(thread, REWARD0_KEY)
+            const tx = await wallet2.buildTX(TX_VERSION).reward(thread, Types.REWARD0_KEY)
             const balance = wallet2.balance()
             const balanceWallet = wallet.balance()
             expect(tx).not.eq(null)
@@ -618,7 +617,7 @@ const main = () => {
             expect(user.get().alias().get().username()).to.eq('fantasim')
             expect(user.get().alias().get().pp()).to.eq(null)
             expect(user.get().info().get().votePowerCount().big()).to.eq(13170731707316n)
-            expect(user.get().info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('16.463')
+            expect(user.get().info().get().votePowerPercent(wallet.lastHeight()).toFixed(3)).to.eq('16.463')
             expect(user.get().info().get().activity().get().lastLughHeight()).to.eq(7)
             expect(user.get().info().get().rewardsReceivedLast90D().big()).to.eq(4050000000n)
             expect(user.get().info().get().contributorRank()).to.eq(1)
@@ -633,7 +632,7 @@ const main = () => {
     it('[ONCHAIN] Wallet1 -> Check puts:', async () => {
         expect(walletPuts.count()).to.eq(11)
         expect(wallet.info().get().votePowerCount().big()).to.eq(13170731707316n)
-        expect(wallet.info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('16.463')
+        expect(wallet.info().get().votePowerPercent(wallet.lastHeight()).toFixed(3)).to.eq('16.463')
     })
 
     it('[ONCHAIN] Wallet1 -> Check filters on Puts.', () => {
@@ -727,7 +726,7 @@ const main = () => {
             expect(user.get().alias().get().username()).to.eq('wallet3')
             expect(user.get().alias().get().pp()).to.not.eq(null)
             expect(user.get().info().get().votePowerCount().number()).to.eq(0)
-            expect(user.get().info().get().votePowerPercent(wallet.cch().get().lastHeight())).to.eq(0)
+            expect(user.get().info().get().votePowerPercent(wallet.lastHeight())).to.eq(0)
             expect(user.get().info().get().activity().get().lastLughHeight()).to.eq(7)
             expect(user.get().info().get().rewardsReceivedLast90D().number()).to.eq(0)
             expect(user.get().info().get().contributorRank()).to.eq(150)
@@ -753,7 +752,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet3.buildTX(TX_VERSION).reward(thread, REWARD0_KEY)
+            const tx = await wallet3.buildTX(TX_VERSION).reward(thread, Types.REWARD0_KEY)
             expect(tx).not.eq(null)
             if (tx){
                 const response = await tx.broadcast(wallet3)
@@ -784,7 +783,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)
         if (thread){
-            const tx = await wallet3.buildTX(TX_VERSION).reward(thread, REWARD1_KEY)
+            const tx = await wallet3.buildTX(TX_VERSION).reward(thread, Types.REWARD1_KEY)
             expect(tx).not.eq(null)
             if (thread){
                 if (tx){
@@ -817,7 +816,7 @@ const main = () => {
         const thread = await ThreadModel.FetchByPKH(SOCIETY_ID, pkhContent2)
         expect(thread).not.eq(undefined)        
         if (thread){
-            const tx = await wallet3.buildTX(TX_VERSION).reward(thread, REWARD2_KEY)
+            const tx = await wallet3.buildTX(TX_VERSION).reward(thread, Types.REWARD2_KEY)
             expect(tx).not.eq(null)
 
             if (tx){
@@ -889,7 +888,7 @@ const main = () => {
             expect(user.get().alias().get().username()).to.eq('fantasim')
             expect(user.get().alias().get().pp()).to.eq(null)
             expect(user.get().info().get().votePowerCount().number()).to.eq(13170731707316)
-            expect(user.get().info().get().votePowerPercent(wallet.cch().get().lastHeight()).toFixed(3)).to.eq('16.463')
+            expect(user.get().info().get().votePowerPercent(wallet.lastHeight()).toFixed(3)).to.eq('16.463')
             expect(user.get().info().get().activity().get().lastLughHeight()).to.eq(7)
             expect(user.get().info().get().rewardsReceivedLast90D().number()).to.eq(43800000000)
             expect(user.get().info().get().contributorRank()).to.eq(1)
@@ -992,8 +991,8 @@ const main = () => {
             const fullProposal1 = await ProposalModel.FetchByIndex(1, 10, wallet.sign().header())            
             if (fullProposal1){
                 const context = fullProposal1.get().context()
-                expect((context as ICostProposal).proposal).to.eq(500000000000)
-                expect((context as ICostProposal).thread).to.eq(50000000000)
+                expect((context as ONCHAIN.ICostProposal).proposal).to.eq(500000000000)
+                expect((context as ONCHAIN.ICostProposal).thread).to.eq(50000000000)
 
                 const content = fullProposal1.get().content()
                 expect(content.length).to.eq(3)
@@ -1029,7 +1028,7 @@ const main = () => {
                 const content = fullProposal2.get().content()
                 expect(content.length).to.eq(3)
                 const context = fullProposal2.get().context()
-                expect((context as IConstitutionProposalUnRaw).constitution.length).to.eq(10)
+                expect((context as ONCHAIN.IConstitutionProposalUnRaw).constitution.length).to.eq(10)
                 expect(content[0]).to.eq("Content 1: https://involvera.com/involvera/proposal/8")
                 expect(content[1]).to.eq("Content 2: https://involvera.com/involvera/proposal/8")
                 expect(content[2]).to.eq("Content 3: https://involvera.com/involvera/proposal/8")
@@ -1089,7 +1088,6 @@ const main = () => {
         }
     })
     
-
     it('Fetch Target Thread List - PREVIEW MODE', async () => {
         const society = await SocietyModel.fetch(1)
         const threads = new ThreadCollection([],{})
@@ -1330,7 +1328,7 @@ const main = () => {
         await walletPuts.fetch(wallet.sign().header(), true).all()
         await wallet.synchronize()
         expect(wallet.balance().number()).to.eq(9908201324946)
-        expect(wallet.cch().get().list().length).to.eq(8)
+        expect(wallet.lastHeight()).to.eq(8)
         expect(wallet.utxos().get().count()).to.eq(10)
         expect(walletPuts.count()).to.eq(12)
         const res = await axios(`${conf.getRootAPIChainUrl()}/lugh`, {
@@ -1340,7 +1338,7 @@ const main = () => {
         await walletPuts.fetch(wallet.sign().header(), true).all()
         await wallet.synchronize()
         expect(wallet.balance().number()).to.eq(19901396314047)
-        expect(wallet.cch().get().list().length).to.eq(9)
+        expect(wallet.lastHeight()).to.eq(9)
         expect(wallet.utxos().get().count()).to.eq(11)
         expect(walletPuts.count()).to.eq(13)
         const society = await SocietyModel.fetch(1)
@@ -1381,7 +1379,7 @@ const main = () => {
         expect(res.status).to.eq(201)
     })
 
-    
+
     it('Fetch Target Thread List 2 - PREVIEW MODE ', async () => {
         const society = await SocietyModel.fetch(1)
         const threads = new ThreadCollection([],{})
